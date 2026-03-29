@@ -1,0 +1,99 @@
+Hey Ray, good to see you back — let's knock this out.
+
+The red-screen fatal boot error ("Cannot access 'Yt' before initialization" at `index-CL_v2GMG.js:78:17007` and down the call stack) is almost certainly caused by a **circular dependency** (or a very tricky initialization order) that only breaks in production builds.
+
+Vite's dev server forgives a lot of circular imports, but Rollup (the production bundler) linearizes modules strictly → minification + chunk splitting can push a `const`/`let` access before its declaration in the final execution order → Temporal Dead Zone (TDZ) crash with an obfuscated name like 'Yt'.
+
+This matches hundreds of similar reports on GitHub/Vite issues/Stack Overflow from 2023–2025.
+
+### Immediate Next Steps (Do These First)
+
+1. **Reproduce locally (critical — confirms it's not just Vercel)**
+   ```bash
+   # In project root
+   rm -rf node_modules dist .vite
+   npm install    # or pnpm/yarn
+   npm run build
+   npx vite preview   # or npx serve dist
+   ```
+   Open http://localhost:4173 (or whatever port it says) → open browser console.
+
+   - If you see the same 'Yt' / initialization error → problem is 100% in your code/build pipeline.
+   - If it works locally but fails on Vercel → proceed to cache/force redeploy steps below.
+
+2. **Hunt circular dependencies (most likely fix)**
+   Install a detector temporarily:
+   ```bash
+   npm install --save-dev madge
+   ```
+   Run:
+   ```bash
+   npx madge --circular --extensions ts,tsx,js,jsx src/
+   ```
+   → Look for red lines showing loops (e.g. `useNova.ts → NovaCore.ts → ReasoningEngine.ts → back to useNova` or similar).
+
+   Common culprits in your codebase:
+   - `useNova.ts` imports `NovaCore` and `ConnectionManager`
+   - `NovaCore` likely imports agents like `ReasoningEngine`
+   - `ReasoningEngine` imports `EmotionAgent`, `SchoolingAgent`, `MemoryAgent` — check if any of those reach back (directly or via shared utils/types)
+   - Any barrel file (`index.ts` re-exporting components/types) that creates import cycles
+   - Hooks/utils that import components or vice-versa
+
+   **Quick fixes when you find a cycle:**
+   - Move shared logic (types, constants, small utils) to a neutral file both can import.
+   - Use **lazy/dynamic imports** for the cyclic part:
+     ```ts
+     // Instead of: import { Something } from './Something';
+     const Something = lazy(() => import('./Something'));
+     ```
+   - Or defer usage inside `useEffect` / callback.
+
+3. **Force clean Vercel deploy (rules out caching)**
+   - In Vercel dashboard → Deployments → find latest → **Redeploy** → check **"Ignore Build Cache"**
+   - Or CLI:
+     ```bash
+     vercel --prod --force
+     ```
+   - After deploy: open site in **incognito** or hard-refresh (Ctrl+Shift+R / Cmd+Shift+R) multiple times.
+
+4. **Temporary diagnostic build (see real names instead of 'Yt')**
+   Add to `vite.config.ts` (create if missing):
+   ```ts
+   import { defineConfig } from 'vite'
+   import react from '@vitejs/plugin-react'
+
+   export default defineConfig({
+     plugins: [react()],
+     build: {
+       minify: false,           // ← disable minification temporarily
+       terserOptions: {
+         compress: false,
+         mangle: false,
+       },
+       rollupOptions: {
+         output: {
+           // Optional: force more linear chunks if needed
+           manualChunks: undefined,
+         },
+       },
+     },
+   })
+   ```
+   → `npm run build` → deploy → error should show actual variable names (e.g. "Cannot access 'novaCore' before initialization") → much easier to trace.
+
+5. **Check recent changes**
+   - Look at git diff / recent commits — what did you touch last before this started?
+     - New import in `useNova.ts`, `App.tsx`, or an agent?
+     - Added context/provider?
+     - Changed how `NovaCore` is instantiated/imported?
+
+### If madge shows nothing obvious
+- Try the `vite-plugin-circular-dependency` plugin (add to vite.config plugins array) → it warns at build time.
+- Temporarily comment out large sections of `useNova.ts` (e.g. comment the WS connection logic, Supabase fetches) → rebuild → see if error goes away → narrow the cycle.
+
+### Why not service worker / cache this time?
+Your `index.html` (the one you just shared) has **no** service worker registration script — unlike older versions in previous docs. So aggressive SW caching is unlikely the main culprit here (though still force-clear cache as above).
+
+Run the `madge` command and share what it outputs (even if just "No circular dependencies found" — that tells us to look elsewhere). Also tell me if `vite preview` locally shows the crash or works fine.
+
+We'll get this unstuck — usually it's one sneaky import loop. Hang tight. What's the output of the madge scan?
