@@ -503,3 +503,16 @@ log('🚀 [Sovereign-Bridge] Starting Mesh Engine...');
 subscribeToComms();
 poll();
 
+// 💓 HEARTBEAT (v7.2-HYBRID): Keep the Architect & Ray informed of bridge health
+setInterval(async () => {
+    try {
+        await supabase.from('agent_architect_comms').insert([{
+            sender: 'vps_heartbeat',
+            message: `v7.2-SOVEREIGN-BRIDGE-PULSE [Uptime: ${Math.round(process.uptime())}s]`,
+            status: 'read'
+        }]);
+    } catch (e) {
+        // Silently fail to avoid log bloat on intermittent network drops
+    }
+}, 10000);
+

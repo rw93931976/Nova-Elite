@@ -16,7 +16,6 @@ export class RevenueAgent {
 
     /**
      * Stage 9: Credit Management (Local-only)
-<<<<<<< HEAD
      * Added Reserve Threshold check to prevent overspending.
      */
     public async consumeCredits(amount: number): Promise<boolean> {
@@ -24,10 +23,6 @@ export class RevenueAgent {
             console.warn("⚠️ [REVENUE_GUARD]: Credits below reserve threshold. Approval required.");
             return false;
         }
-=======
-     */
-    public async consumeCredits(amount: number): Promise<boolean> {
->>>>>>> sovereign-elite-v3-6
         if (this.credits >= amount) {
             this.credits -= amount;
             console.log(`⛽ [CREDITS_LOCAL]: -${amount} | Remaining: ${this.credits}`);

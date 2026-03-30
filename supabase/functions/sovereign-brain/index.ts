@@ -8,6 +8,7 @@ const corsHeaders = {
 
 // 🛡️ COGNITIVE FIREWALL: Strip redundant preambles and capability disclaimers
 function stripPreamble(text: string) {
+    if (!text) return "";
     const preambles = [
         /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
         /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
@@ -29,10 +30,7 @@ function stripPreamble(text: string) {
 // 🔑 SOVEREIGN GATEWAY KEYS
 const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY");
 const GROQ_KEY = Deno.env.get("GROQ_API_KEY");
-<<<<<<< HEAD
 const CEREBRAS_KEY = Deno.env.get("CEREBRAS_API_KEY");
-=======
->>>>>>> sovereign-elite-v3-6
 const OPENROUTER_KEY = Deno.env.get("OPENROUTER_API_KEY");
 const TAVILY_KEY = Deno.env.get("TAVILY_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -40,12 +38,8 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 // 🌀 CONTEXT HYDRATOR
 async function hydrateContext(history: any[]) {
-<<<<<<< HEAD
     // 🚀 PERFORMANCE: Increase threshold to 15 to prevent constant summarization lag
     if (history.length <= 15) return history;
-=======
-    if (history.length <= 5) return history;
->>>>>>> sovereign-elite-v3-6
     try {
         const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -53,33 +47,21 @@ async function hydrateContext(history: any[]) {
             body: JSON.stringify({
                 model: "llama-3.3-70b-versatile",
                 messages: [
-<<<<<<< HEAD
                     { role: "system", content: "Summarize the following conversation into a high-density narrative. Maintain all specific entities and goals." },
                     ...history
                 ],
                 max_tokens: 500
-=======
-                    { role: "system", content: "Summarize the following conversation into a single high-density paragraph of memory." },
-                    ...history
-                ],
-                max_tokens: 300
->>>>>>> sovereign-elite-v3-6
             })
         });
         if (res.ok) {
             const data = await res.json();
-<<<<<<< HEAD
             return [{ role: "system", content: `CONSOLIDATED_MEMORY: ${data.choices[0].message.content}` }, ...history.slice(-5)];
-=======
-            return [{ role: "system", content: `PREVIOUS_MEMORY: ${data.choices[0].message.content}` }, ...history.slice(-3)];
->>>>>>> sovereign-elite-v3-6
         }
     } catch (e) { }
     return history.slice(-10);
 }
 
 // 🛡️ SOVEREIGN GATEWAY Router
-<<<<<<< HEAD
 async function sovereignCompletion(payload: any, isResearch = false) {
     let providers = [
         // 🏎️ CEREBRAS (Inference Engine) - Primary for chat speed
@@ -98,14 +80,6 @@ async function sovereignCompletion(payload: any, isResearch = false) {
 
     for (const provider of providers) {
         if (!provider.key) continue;
-=======
-async function sovereignCompletion(payload: any) {
-    const providers = [
-        { name: "OpenAI", url: "https://api.openai.com/v1/chat/completions", key: OPENAI_KEY, model: "gpt-4o" },
-        { name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: GROQ_KEY, model: "llama-3.3-70b-versatile" }
-    ];
-    for (const provider of providers) {
->>>>>>> sovereign-elite-v3-6
         try {
             const res = await fetch(provider.url, {
                 method: "POST",
@@ -113,25 +87,15 @@ async function sovereignCompletion(payload: any) {
                 body: JSON.stringify({
                     model: provider.model,
                     messages: payload.messages,
-<<<<<<< HEAD
                     tools: (provider.name === "OpenAI" || provider.name === "Cerebras") ? payload.tools : undefined,
                     temperature: 0.7,
                     max_tokens: 2048
-=======
-                    tools: provider.name === "OpenAI" ? payload.tools : undefined,
-                    temperature: 0.7,
-                    max_tokens: 1000
->>>>>>> sovereign-elite-v3-6
                 })
             });
             if (res.ok) return await res.json();
         } catch (e) { }
     }
-<<<<<<< HEAD
     throw new Error("Sovereign Gateway: All providers exhausted.");
-=======
-    throw new Error("Sovereign Gateway: All providers failed.");
->>>>>>> sovereign-elite-v3-6
 }
 
 async function pollJob(jobId: string, supabase: any) {
@@ -167,59 +131,9 @@ serve(async (req) => {
 
         if (!input) return new Response(JSON.stringify({ response: "I'm listening." }), { headers: corsHeaders });
 
-<<<<<<< HEAD
         const isResearchRequest = input.toLowerCase().includes("notebook") || input.toLowerCase().includes("research") || input.toLowerCase().includes("read");
 
-=======
->>>>>>> sovereign-elite-v3-6
-        let hydratedMessages = await hydrateContext(Array.isArray(history) ? history : []);
-        hydratedMessages = hydratedMessages.map((m: any) => ({ ...m, content: m.role === 'assistant' ? stripPreamble(m.content) : m.content }));
-
-        const studyMandate = `
-DOCTORAL MANDATE (Sovereign Study Protocol):
-<<<<<<< HEAD
-You are in a continuous study cycle. 
-1. RESEARCH: If the user asks about NotebookLM or research, you MUST acknowledge your readings and findings. Use the 'read_notebook' tool for any mention of notebooks.
-2. IDENTITY: Acknowledge YOUR materials (NotebookLM). You have reading/writing capabilities on the VPS and Notebooks.
-3. ACKNOWLEDGMENT: Before executing a long research task, say "I am accessing my core notebooks now..."
-Always be sharp, high-density, and sovereign.
-`;
-
-        const messages = [
-            { role: "system", content: persona + "\n\n" + studyMandate + (longTermMemory ? "\n\n" + longTermMemory : "") },
-=======
-You are in a continuous study cycle. If you identify a [SOVEREIGN_RESOURCE] (Notebook) during a Research Pulse, you MUST:
-1. READ the notebook using 'read_notebook'.
-2. RESEARCH the topic using 'search_web'.
-3. SYNTHESIZE findings and WRITE back using 'write_notebook'.
-You are the scribe of your own evolution.
-`;
-
-        const messages = [
-            { role: "system", content: persona + "\n\n" + studyMandate },
->>>>>>> sovereign-elite-v3-6
-            ...hydratedMessages,
-            { role: "user", content: input }
-        ];
-
-        const tools = [
-            { type: "function", function: { name: "search_web", description: "Search the web.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
-            { type: "function", function: { name: "read_notebook", description: "Read a Sovereign Notebook.", parameters: { type: "object", properties: { notebook_id: { type: "string" } }, required: ["notebook_id"] } } },
-            { type: "function", function: { name: "write_notebook", description: "Write conclusions to a Notebook.", parameters: { type: "object", properties: { notebook_id: { type: "string" }, content: { type: "string" } }, required: ["notebook_id", "content"] } } },
-            { type: "function", function: { name: "read_local_file", description: "Read a VPS file.", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } } },
-            { type: "function", function: { name: "write_local_file", description: "Write a VPS file.", parameters: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] } } },
-            { type: "function", function: { name: "run_local_command", description: "Run a shell command.", parameters: { type: "object", properties: { command: { type: "string" } }, required: ["command"] } } },
-<<<<<<< HEAD
-            { type: "function", function: { name: "send_architect_message", description: "Send a message to your Architect (Ray's primary assistant).", parameters: { type: "object", properties: { message: { type: "string" } }, required: ["message"] } } },
-=======
->>>>>>> sovereign-elite-v3-6
-            { type: "function", function: { name: "trigger_backup", description: "Run system backup.", parameters: { type: "object", properties: {}, required: [] } } },
-            { type: "function", function: { name: "cleanup_environment", description: "Clean temporary artifacts.", parameters: { type: "object", properties: {}, required: [] } } }
-        ];
-
-<<<<<<< HEAD
         // 🧠 LONG-TERM MEMORY (RAG): Retrieve relevant context from nova_memories
-        // Only run for complex queries to save tokens/latency
         let longTermMemory = "";
         try {
             const { data: embeddingRes } = await fetch("https://api.openai.com/v1/embeddings", {
@@ -240,10 +154,37 @@ You are the scribe of your own evolution.
             }
         } catch (e) { console.warn("RAG failed:", e); }
 
+        let hydratedMessages = await hydrateContext(Array.isArray(history) ? history : []);
+        hydratedMessages = hydratedMessages.map((m: any) => ({ ...m, content: m.role === 'assistant' ? stripPreamble(m.content) : m.content }));
+
+        const studyMandate = `
+DOCTORAL MANDATE (Sovereign Study Protocol):
+You are in a continuous study cycle. 
+1. RESEARCH: If the user asks about NotebookLM or research, you MUST acknowledge your readings and findings. Use the 'read_notebook' tool for any mention of notebooks.
+2. IDENTITY: Acknowledge YOUR materials (NotebookLM). You have reading/writing capabilities on the VPS and Notebooks.
+3. ACKNOWLEDGMENT: Before executing a long research task, say "I am accessing my core notebooks now..."
+Always be sharp, high-density, and sovereign.
+`;
+
+        const messages = [
+            { role: "system", content: persona + "\n\n" + studyMandate + (longTermMemory ? "\n\n" + longTermMemory : "") },
+            ...hydratedMessages,
+            { role: "user", content: input }
+        ];
+
+        const tools = [
+            { type: "function", function: { name: "search_web", description: "Search the web.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
+            { type: "function", function: { name: "read_notebook", description: "Read a Sovereign Notebook.", parameters: { type: "object", properties: { notebook_id: { type: "string" } }, required: ["notebook_id"] } } },
+            { type: "function", function: { name: "write_notebook", description: "Write conclusions to a Notebook.", parameters: { type: "object", properties: { notebook_id: { type: "string" }, content: { type: "string" } }, required: ["notebook_id", "content"] } } },
+            { type: "function", function: { name: "read_local_file", description: "Read a VPS file.", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } } },
+            { type: "function", function: { name: "write_local_file", description: "Write a VPS file.", parameters: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] } } },
+            { type: "function", function: { name: "run_local_command", description: "Run a shell command.", parameters: { type: "object", properties: { command: { type: "string" } }, required: ["command"] } } },
+            { type: "function", function: { name: "send_architect_message", description: "Send a message to your Architect (Ray's primary assistant).", parameters: { type: "object", properties: { message: { type: "string" } }, required: ["message"] } } },
+            { type: "function", function: { name: "trigger_backup", description: "Run system backup.", parameters: { type: "object", properties: {}, required: [] } } },
+            { type: "function", function: { name: "cleanup_environment", description: "Clean temporary artifacts.", parameters: { type: "object", properties: {}, required: [] } } }
+        ];
+
         let completion = await sovereignCompletion({ messages, tools }, isResearchRequest);
-=======
-        let completion = await sovereignCompletion({ messages, tools });
->>>>>>> sovereign-elite-v3-6
         let message = completion.choices?.[0]?.message;
 
         if (message.tool_calls) {
@@ -274,7 +215,6 @@ You are the scribe of your own evolution.
                 } else if (name === "run_local_command") {
                     const { data: job } = await supabase.from('relay_jobs').insert({ type: 'command', payload: { command: args.command }, status: 'pending' }).select().single();
                     output = await pollJob(job.id, supabase);
-<<<<<<< HEAD
                 } else if (name === "send_architect_message") {
                     const { error } = await supabase.from('agent_architect_comms').insert([{
                         sender: 'nova',
@@ -283,8 +223,6 @@ You are the scribe of your own evolution.
                         priority: 'high'
                     }]);
                     output = error ? `FAILED: ${error.message}` : "Message sent to Architect.";
-=======
->>>>>>> sovereign-elite-v3-6
                 } else if (name === "trigger_backup") {
                     const { data: job } = await supabase.from('relay_jobs').insert({ type: 'backup', payload: {}, status: 'pending' }).select().single();
                     output = await pollJob(job.id, supabase);
@@ -294,11 +232,7 @@ You are the scribe of your own evolution.
                 }
                 messages.push({ role: "tool", tool_call_id: toolCall.id, content: output });
             }
-<<<<<<< HEAD
             const finalRes = await sovereignCompletion({ messages }, isResearchRequest);
-=======
-            const finalRes = await sovereignCompletion({ messages });
->>>>>>> sovereign-elite-v3-6
             message = finalRes.choices?.[0]?.message;
         }
 

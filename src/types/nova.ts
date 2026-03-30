@@ -24,11 +24,8 @@ export interface NovaStatus {
         bridge: 'online' | 'offline';
         apiKey: 'online' | 'offline';
         internet: 'online' | 'offline';
-<<<<<<< HEAD
         api?: 'online' | 'offline';
         database?: 'online' | 'offline';
-=======
->>>>>>> sovereign-elite-v3-6
     };
     knowledgeCount: number;
     agentCount: number;
@@ -39,22 +36,14 @@ export interface NovaStatus {
 
 export interface Message {
     id: string;
-<<<<<<< HEAD
     from: 'user' | 'nova' | 'cascade' | 'antigravity' | 'bridge' | 'assistant' | 'swarm' | 'windsurf' | 'nova_core';
     to: 'user' | 'nova' | 'cascade' | 'antigravity' | 'bridge' | 'assistant' | 'swarm' | 'windsurf' | 'nova_core';
-=======
-    from: 'user' | 'nova' | 'cascade' | 'antigravity' | 'bridge' | 'assistant' | 'swarm' | 'windsurf';
-    to: 'user' | 'nova' | 'cascade' | 'antigravity' | 'bridge' | 'assistant' | 'swarm' | 'windsurf';
->>>>>>> sovereign-elite-v3-6
     content: string;
     timestamp: number;
     type: 'sent' | 'received';
     status: 'pending' | 'delivered' | 'failed';
+    metadata?: any;
 }
 
-<<<<<<< HEAD
 // 🛡️ v3.6.1-ALIGNED: Explicit value export to prevent SyntaxError in certain Vite builds
-=======
-// 🛡️ v3.5.8 Fix: Explicit value export to prevent SyntaxError in certain Vite builds
->>>>>>> sovereign-elite-v3-6
 export const NOVA_VERSION_TOKEN = "SOVEREIGN_V9";

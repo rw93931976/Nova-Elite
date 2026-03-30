@@ -4,7 +4,6 @@ export class SecuritySentinel {
     constructor() { }
 
     /**
-<<<<<<< HEAD
      * NO-DELETE MANDATE:
      * This is the definitive safety gate. It forbids any deletion-style operations.
      */
@@ -23,25 +22,15 @@ export class SecuritySentinel {
 
     public checkSystemIntegrity(isHalted: boolean): string {
         if (isHalted) return "SYSTEM_HALTED";
-        return this.isRogueDetected ? "THREAT_DETECTED" : "INTEGRITY_SAFE";
-=======
-     * Stage 12 Prototype: Integrity Check
-     * Monitors other agents for non-compliant behavior.
-     */
-    public checkSystemIntegrity(isHalted: boolean): string {
-        if (isHalted) {
-            return "SYSTEM_HALTED: All security monitors in stasis.";
-        }
 
         // Simulated anomaly detection
-        if (Math.random() > 0.99) {
+        if (this.isRogueDetected || Math.random() > 0.999) {
             this.isRogueDetected = true;
-            console.warn("🚨 [SECURITY]: Anomaly detected in Sub-Agent #4. Quarantining...");
-            return "ANOMALY_DETECTED: Sentinel is responding.";
+            console.warn("🚨 [SECURITY]: Anomaly detected. Sentinel is responding.");
+            return "ANOMALY_DETECTED";
         }
 
-        return "INTEGRITY_SAFE: Monitoring all nodes.";
->>>>>>> sovereign-elite-v3-6
+        return "INTEGRITY_SAFE";
     }
 
     public getStatus() {

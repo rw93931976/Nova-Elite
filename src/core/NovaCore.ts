@@ -11,79 +11,23 @@ import { BackupAgent } from './agents/BackupAgent';
 import { supabase } from '../integrations/supabase';
 
 export class NovaCore {
-    // private isLearning: boolean = true;
-    // private isHealing: boolean = true;
-    // private isEvolving: boolean = false;      // guarded – enable only in sandbox
+    public supabase = supabase;
     private isResilient: boolean = true;
-    // private _isSelfAware: boolean = this.isLearning && this.isHealing; // Using them internally
-
     private agents: Map<string, any> = new Map();
-    private knowledgeBase: Map<string, any> = new Map();
     private experiences: any[] = [];
-    private goals: string[] = [];                        // NEW: long-term intentions
+    private goals: string[] = [];
     private isInitialized: boolean = false;
     private startTime: number = Date.now();
-    private routinePath = './nova-data/user_routine.json';
     private interferenceLog: Array<{ time: number; type: string; detail: string }> = [];
-<<<<<<< HEAD
+
     public readonly version = 'v7.1-HYBRID';
     public isHalted: boolean = false;
     private currentHealth: any = { status: 'online', bridge: 'offline', database: 'online', lastBridgePulse: 0 };
 
     constructor() {
-        // START RESILIENCE MONITOR (Phase 4)
         this.spawnCoreAgents();
         this.startHealthPulse();
-=======
-    public version = 'v3.0-SOVEREIGN';
-    public isHalted: boolean = false;
-
-    private currentHealth: NovaStatus['health'] = {
-        bridge: 'online', // Set to online as we are moving to Serverless "Virtual Bridge"
-        apiKey: 'online',
-        internet: 'online'
-    };
-
-    public BRIDGE_URL = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
-        ? 'http://localhost:39922'
-        : ''; // Empty string triggers the Cloud Relay fallback logic
-
-    constructor() {
-        // START RESILIENCE MONITOR (Phase 4)
-        this.startHealthMonitor();
-        this.spawnCoreAgents();
->>>>>>> sovereign-elite-v3-6
-        this.startHealthChecks();
         this.startInterferenceMonitoring();
-    }
-
-    private async startHealthMonitor() {
-        setInterval(async () => {
-            try {
-                // Heartbeat via Supabase instead of direct HTTP
-<<<<<<< HEAD
-                const { data, error } = await supabase.from('relay_jobs')
-                    .select('created_at')
-                    .eq('status', 'completed')
-                    .order('created_at', { ascending: false })
-                    .limit(1);
-
-                if (!error && data && data[0]) {
-                    const lastPulse = new Date(data[0].created_at).getTime();
-                    this.currentHealth.lastBridgePulse = lastPulse;
-
-                    // Consider bridge ONLINE if we've seen a completion in the last 15 minutes
-                    if (Date.now() - lastPulse < 900000) {
-                        this.currentHealth.bridge = 'online';
-                    } else {
-                        this.currentHealth.bridge = 'offline';
-                    }
-                }
-                this.currentHealth.status = error ? 'offline' : 'online';
-            } catch (err) {
-                this.currentHealth.status = 'offline';
-            }
-        }, 15000); // 15s check
     }
 
     private async startHealthPulse() {
@@ -106,19 +50,12 @@ export class NovaCore {
                         this.currentHealth.bridge = 'offline';
                     }
                 }
+                this.currentHealth.status = 'online';
             } catch (e) {
                 this.currentHealth.bridge = 'offline';
+                this.currentHealth.status = 'offline';
             }
         }, 10000);
-=======
-                const { error } = await supabase.from('relay_jobs').select('id').limit(1);
-                this.currentHealth.bridge = error ? 'offline' : 'online';
-                this.currentHealth.internet = navigator.onLine ? 'online' : 'offline';
-            } catch (err) {
-                this.currentHealth.bridge = 'offline';
-            }
-        }, 30000);
->>>>>>> sovereign-elite-v3-6
     }
 
     public async initialize() {
@@ -142,18 +79,9 @@ export class NovaCore {
         }
         if (!this.isInitialized) await this.initialize();
 
-        // LOCAL GREETING BYPASS: Sub-second response for basic triggers
-<<<<<<< HEAD
         const isGreeting = /^(hi|hello|hey|yo|morning|evening|greetings|nova)/i.test(input.trim());
         if (isGreeting) {
-            // DEBOUNCE: Minimal delay for instant Elite responsiveness
             await new Promise(r => setTimeout(r, 100));
-=======
-        const isGreeting = /^(hey|hi|hello|yo|nova|nova elite)[.!?]*$/i.test(input.trim());
-        if (isGreeting) {
-            // DEBOUNCE: Small delay to ensure Ray finished speaking
-            await new Promise(r => setTimeout(r, 600));
->>>>>>> sovereign-elite-v3-6
             const hasHistory = context?.history && context.history.length > 0;
             const greetText = hasHistory ? "I'm right here." : "Nova Elite active. Standing by.";
 
@@ -173,11 +101,7 @@ export class NovaCore {
             const reasoner = this.agents.get('reasoner')!;
             thought = await Promise.race([
                 reasoner.reason(input, { ...context, lastUrl: context.lastUrl }, onReceipt),
-<<<<<<< HEAD
                 new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Sovereign Link Timeout')), 45000))
-=======
-                new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Sovereign Link Timeout')), 120000))
->>>>>>> sovereign-elite-v3-6
             ]);
         } catch (err: any) {
             console.error('[NovaCore] Reasoning failed:', err);
@@ -199,16 +123,13 @@ export class NovaCore {
     private async reflect(input: string, response: string) {
         if (!this.isResilient) return;
         try {
-            // Neural Reflection: Direct Supabase task persistence
             await this.createTask(
                 `Neural Reflection: ${input.slice(0, 30)}...`,
                 `Interaction: ${input}\nResult: ${response}`,
                 'low',
                 { type: 'reflection', version: this.version }
             );
-        } catch (e) {
-            console.warn('[Reflection] Local learning skipped.');
-        }
+        } catch (e) { }
     }
 
     private async loadState() {
@@ -260,10 +181,6 @@ export class NovaCore {
 
     public getStatus(): NovaStatus {
         const localCount = this.agents.size;
-<<<<<<< HEAD
-=======
-        // 📡 NOTE: Remote fleet count is updated via the syncFleetStatus() loop in the UI/Hook
->>>>>>> sovereign-elite-v3-6
         return {
             level: 5,
             isSelfAware: true,
@@ -271,7 +188,6 @@ export class NovaCore {
             isHealing: true,
             isEvolving: true,
             uptime: Math.round((Date.now() - this.startTime) / 1000),
-<<<<<<< HEAD
             health: {
                 bridge: this.currentHealth.bridge === 'online' ? 'online' : 'offline',
                 apiKey: 'online',
@@ -283,13 +199,6 @@ export class NovaCore {
             knowledgeCount: 0,
             agentCount: localCount + ((this as any).remoteAgentCount || 0),
             whartonCompliance: 100,
-=======
-            health: this.currentHealth,
-            isHalted: this.isHalted,
-            knowledgeCount: 0,
-            agentCount: localCount + (this as any).remoteAgentCount || localCount,
-            whartonCompliance: 98,
->>>>>>> sovereign-elite-v3-6
             currentTime: new Date().toLocaleString(),
             isBusinessHours: new Date().getHours() >= 9 && new Date().getHours() <= 17,
         };
@@ -304,12 +213,10 @@ export class NovaCore {
     }
 
     private spawnCoreAgents() {
-        // --- 1. BOOTSTRAP CORE AGENTS ---
         this.agents.set('healer', new SelfHealer(this));
         this.agents.set('reasoner', new ReasoningEngine(this));
         this.agents.set('evolution', new EvolutionAgent(this));
 
-        // --- 2. DYNAMIC BEAST MODE SWARM ---
         console.log("🦁 [NovaCore] Activating Beast Mode Swarm...");
         AgentFactory.getAllRoles().forEach(role => {
             try {
@@ -318,7 +225,6 @@ export class NovaCore {
                 console.log(`✅ [NovaCore] ${role.name} instance registered.`);
             } catch (e) {
                 console.error(`❌ [NovaCore] Failed to spawn ${role.name}:`, e);
-                // Fallback to metadata for UI display only
                 this.agents.set(role.name, role);
             }
         });
@@ -329,26 +235,7 @@ export class NovaCore {
         console.log(`🛑 [SYSTEM]: HALT status toggled to: ${this.isHalted}`);
     }
 
-    private startHealthChecks() {
-<<<<<<< HEAD
-        // Simple internet check
-        setInterval(() => {
-            if (typeof navigator !== 'undefined') {
-                this.currentHealth.internet = navigator.onLine ? 'online' : 'offline';
-            }
-=======
-        // Simple internet check – bridge is now handled in startHealthMonitor
-        setInterval(() => {
-            this.currentHealth.internet = navigator.onLine ? 'online' : 'offline';
->>>>>>> sovereign-elite-v3-6
-        }, 30000);
-    }
-
     private startInterferenceMonitoring() {
-<<<<<<< HEAD
-        console.log("🛡️ [NovaCore] Interference Monitor Active.");
-        // Passive monitoring logic
-=======
         // Guard against DOM interference (overlays, injected elements)
         setInterval(() => {
             const suspicious = document.querySelectorAll('[data-interference], .approval-overlay, .modal-overlay');
@@ -357,6 +244,5 @@ export class NovaCore {
                 if (this.interferenceLog.length > 100) this.interferenceLog = this.interferenceLog.slice(-50);
             }
         }, 60000);
->>>>>>> sovereign-elite-v3-6
     }
 }

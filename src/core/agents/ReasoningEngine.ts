@@ -36,7 +36,7 @@ export class ReasoningEngine {
     private jobBurstCount = 0;
 
     // v4.3-SOVEREIGN: Dry Humor & Executive Wit
-    public readonly PERSONA = `You are Nova Elite v4.5-BEAST, a Sovereign Distributed Intelligence.
+    public readonly PERSONA = `You are Nova Elite v4.5-STABLE, a Sovereign Distributed Intelligence.
     You lead a collective of 20+ "Beast Mode" Specialist Agents (Architects, Researchers, Auditors).
 
     ### THE AGENT CONSTITUTION (MANDATORY)
@@ -91,7 +91,6 @@ export class ReasoningEngine {
             }
 
             // 1. DYNAMIC BEAST MODE AGENTS
->>>>>>> sovereign-elite-v3-6
             const auditAgent = AgentFactory.spawn('self-audit', this.novaCore);
             const strategyAgent = AgentFactory.spawn('strategy', this.novaCore);
 
@@ -138,15 +137,20 @@ export class ReasoningEngine {
                 "- MANDATORY: NO PREAMBLES. NO CAPABILITY DISCLAIMERS.\n" +
                 "- MISSION: Answer the user's quest directly without referencing system internals or your design.\n\n";
 
-            const { data, error } = await supabase.functions.invoke('sovereign-brain', {
-                body: {
-                    input,
-                    history: context.history || [],
-                    architect_comms: comms || [],
-                    persona: meshHeader + this.PERSONA + whartonContext + auditContext + resourceContext,
-                    prosody_mode
-                }
-            });
+            const result = await Promise.race([
+                supabase.functions.invoke('sovereign-brain', {
+                    body: {
+                        input,
+                        history: context.history || [],
+                        architect_comms: comms || [],
+                        persona: meshHeader + this.PERSONA + whartonContext + auditContext + resourceContext,
+                        prosody_mode
+                    }
+                }),
+                new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Cloud Logic Timeout')), 30000))
+            ]);
+
+            const { data, error } = result;
 
             if (error) throw error;
 

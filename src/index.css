@@ -15,22 +15,12 @@
 
   html,
   body {
-<<<<<<< HEAD
-    background: radial-gradient(circle at 15% 50%, #94a3b8 0%, #cbd5e1 100%),
-      radial-gradient(circle at 85% 30%, rgba(34, 211, 238, 0.6) 0%, transparent 60%),
-      radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.4) 0%, transparent 60%);
-    background-size: cover;
-    background-attachment: fixed;
-    color: #0f172a;
-    /* Dark text for light background */
-=======
     background: radial-gradient(circle at 15% 50%, #475569 0%, #1e293b 100%),
       radial-gradient(circle at 85% 30%, rgba(34, 211, 238, 0.4) 0%, transparent 60%),
       radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 60%);
     background-size: cover;
     background-attachment: fixed;
     color: #f8fafc;
->>>>>>> sovereign-elite-v3-6
     -webkit-font-smoothing: antialiased;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
@@ -92,17 +82,6 @@
 .glass-card {
   position: relative;
   overflow: hidden;
-<<<<<<< HEAD
-  background: rgba(255, 255, 255, 0.85);
-  /* High contrast light mode */
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 2px solid rgba(15, 23, 42, 0.2);
-  /* Stronger dark border */
-  border-top: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 1.5rem;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.5);
-=======
   background: rgba(30, 41, 59, 0.7);
   /* Lightened for better contrast */
   backdrop-filter: blur(32px) saturate(200%);
@@ -114,7 +93,6 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.8);
   border-radius: 1.5rem;
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.2);
->>>>>>> sovereign-elite-v3-6
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -274,19 +252,15 @@
   background: transparent;
   cursor: pointer;
   z-index: 20;
-<<<<<<< HEAD
   height: 48px;
   display: flex;
   align-items: center;
-=======
->>>>>>> sovereign-elite-v3-6
 }
 
 .volume-slider::-webkit-slider-runnable-track {
   width: 100%;
   height: 12px;
   cursor: pointer;
-<<<<<<< HEAD
   background: rgba(255, 255, 255, 0.25);
   /* Increased contrast */
   border-radius: 9999px;
@@ -296,44 +270,19 @@
 .volume-slider::-webkit-slider-thumb {
   height: 32px;
   width: 32px;
-=======
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.volume-slider::-webkit-slider-thumb {
-  height: 36px;
-  width: 36px;
->>>>>>> sovereign-elite-v3-6
   border-radius: 50%;
   background: #fff;
   cursor: pointer;
   -webkit-appearance: none;
-<<<<<<< HEAD
   margin-top: -11px;
   box-shadow: 0 0 20px rgba(6, 182, 212, 1);
   border: 4px solid #06b6d4;
   transition: all 0.2s ease;
-=======
-  margin-top: -12px;
-  box-shadow: 0 0 35px rgba(6, 182, 212, 1), 0 0 70px rgba(6, 182, 212, 0.5);
-  filter: drop-shadow(0 0 15px rgba(6, 182, 212, 1));
-  border: 4px solid #06b6d4;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  position: relative;
-  z-index: 100;
->>>>>>> sovereign-elite-v3-6
 }
 
 .volume-slider:active::-webkit-slider-thumb {
   transform: scale(1.2);
-<<<<<<< HEAD
   box-shadow: 0 0 30px rgba(6, 182, 212, 1);
-=======
-  box-shadow: 0 0 50px rgba(6, 182, 212, 1), 0 0 100px rgba(6, 182, 212, 0.7);
-  filter: drop-shadow(0 0 25px rgba(6, 182, 212, 1));
->>>>>>> sovereign-elite-v3-6
 }
 
 .volume-slider::-moz-range-track {
@@ -432,7 +381,6 @@
 .glow-intensive {
   filter: drop-shadow(0 0 25px rgba(34, 211, 238, 0.8));
   box-shadow: 0 0 40px rgba(34, 211, 238, 0.4);
-<<<<<<< HEAD
 }
 
 .thought-stream-container {
@@ -464,6 +412,4 @@
   background: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(34, 211, 238, 0.4) !important;
   transform: translateY(-2px);
-=======
->>>>>>> sovereign-elite-v3-6
 }

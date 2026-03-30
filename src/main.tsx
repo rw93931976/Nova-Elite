@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 // v3.6.2-ALIGNED-FINAL: Root mount
-=======
-// v3.5.8-RECOVERY: Root mount
->>>>>>> sovereign-elite-v3-6
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
