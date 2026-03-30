@@ -1,0 +1,15 @@
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useNova } from './hooks/useNova';
+import { useSpeech } from './hooks/useSpeech';
+import {
+  Home, Shield, Database, Settings as SettingsIcon, Mic,
+  AlertTriangle, Check, Brain, Wrench,
+  Briefcase, Activity, RotateCw, Trash2
+} from 'lucide-react';
+import { StatusBadge } from './components/StatusBadge';
+
+const CURRENT_VERSION = "v2.6.48-Sovereign-Direct-Aligned";
+
+function App() {
+  const nova = useNova();
+// ... rest of file (I'll use replace_file_content for the version only to be safe)

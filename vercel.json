@@ -1,0 +1,32 @@
+{
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-cache, no-store, must-revalidate"
+                }
+            ]
+        },
+        {
+            "source": "/assets/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=0, must-revalidate"
+                }
+            ]
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/bridge-vps/(.*)",
+            "destination": "https://31.220.59.237:39922/$1"
+        },
+        {
+            "source": "/((?!assets/|rescue.html|icon.png|manifest.json).*)",
+            "destination": "/index.html"
+        }
+    ]
+}

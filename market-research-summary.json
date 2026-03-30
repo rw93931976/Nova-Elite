@@ -1,0 +1,18 @@
+{
+    "region": "Dallas-Fort Worth / North Texas",
+    "year": "2026",
+    "pain_points": [
+        "Skilled labor shortage (technician retention)",
+        "New refrigerant regulations (R-32 / R-454B transition)",
+        "High cost-per-lead on Google LSA",
+        "Digital reputation threshold (Google Business Profile sensitivity)",
+        "Shift from replacement to repair-heavy demand"
+    ],
+    "sectors": [
+        "HVAC",
+        "Plumbing",
+        "Electrical",
+        "Roofing"
+    ],
+    "target_persona": "Small service shop owners (1-10 employees) struggling with dispatching and lead capture."
+}

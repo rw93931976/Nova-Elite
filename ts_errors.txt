@@ -1,0 +1,3 @@
+src/core/agents/ReasoningEngine.ts(316,28): error TS6133: 'input' is declared but its value is never read.
+src/core/agents/ReasoningEngine.ts(317,25): error TS6133: 'input' is declared but its value is never read.
+src/core/agents/ReasoningEngine.ts(318,30): error TS6133: 'input' is declared but its value is never read.

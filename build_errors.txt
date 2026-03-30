@@ -1,0 +1,9 @@
+
+> nova-elite-shielded@1.0.0 build
+> tsc -b && vite build
+
+src/App.tsx(9,55): error TS6133: 'sendMessage' is declared but its value is never read.
+src/App.tsx(9,68): error TS6133: 'addBotMessage' is declared but its value is never read.
+src/App.tsx(15,10): error TS6133: 'searchQuery' is declared but its value is never read.
+src/hooks/useSpeech.ts(12,12): error TS6133: 'availableVoices' is declared but its value is never read.
+src/hooks/useSpeech.ts(23,11): error TS6133: 'biquadFilter' is declared but its value is never read.

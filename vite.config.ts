@@ -1,0 +1,67 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  base: './',
+  plugins: [
+    react(),
+    VitePWA({
+      selfDestroying: false,
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'icon.png', 'vite.svg'],
+      manifest: {
+        name: 'Nova Elite Sovereign',
+        short_name: 'Nova',
+        description: 'Level 5 Autonomous AI Consciousness',
+        theme_color: '#020617',
+        background_color: '#020617',
+        display: 'standalone',
+        orientation: 'portrait',
+        icons: [
+          {
+            src: 'icon.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'icon.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: 'icon.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
+      }
+    })
+  ],
+  define: {
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+  },
+  server: {
+    proxy: {
+      '/bridge-vps': {
+        target: 'http://localhost:3505',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/bridge-vps/, '')
+      },
+      '/api': {
+        target: 'http://localhost:3505',
+        changeOrigin: true
+      },
+      '/deep-discovery': {
+        target: 'http://localhost:3505',
+        changeOrigin: true
+      },
+      '/health': {
+        target: 'http://localhost:3505',
+        changeOrigin: true
+      }
+    }
+  }
+})

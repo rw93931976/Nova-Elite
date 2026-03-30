@@ -1,0 +1,290 @@
+## 🔍 Comprehensive Analysis: The Two Critical Problems
+
+Based on your detailed handoff document and code review, I've identified the exact issues and their fixes.
+
+---
+
+## Problem 1: Nova Only Says "I am Nova. I am standing by."
+
+### Root Cause
+The response extraction chain in `ReasoningEngine.ts` is looking in the **wrong place** for the Gemini response. 
+
+**Current (broken) extraction:**
+```typescript
+// Lines 204-210 in ReasoningEngine.ts
+if (jobResult?.response?.data?.candidates) {
+    textResponse = jobResult.response.data.candidates[0]?.content?.parts?.[0]?.text;
+} else if (jobResult?.response?.candidates) {
+    textResponse = jobResult.response.candidates[0]?.content?.parts?.[0]?.text;
+}
+```
+
+**The Problem:** `executeRelayJob()` returns `job.result` directly, which **IS** the raw Gemini response. But the code above tries to access `jobResult.response.data.candidates` (two levels too deep).
+
+**What `jobResult` actually contains:**
+```json
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [{ "text": "actual response here" }]
+      }
+    }
+  ]
+}
+```
+
+### ✅ The Fix
+
+Update `executeStandardResponse` and `absoluteGoogleFallback` to extract directly from the root:
+
+```typescript
+// In ReasoningEngine.ts - replace lines 200-210
+
+private async executeStandardResponse(plan: any, observation: any) {
+    const historyText = observation.context.history?.map((m: any) => `${m.role.toUpperCase()}: ${m.content}`).join('\n') || "No previous history.";
+    const isFirstTurn = !observation.context.history || observation.context.history.length === 0;
+
+    const greetingPrompt = isFirstTurn
+        ? "Greeting: Start with a warm 'Hi Ray.' or 'Hi Ray, I'm Nova.' (only if this is the very first interaction)."
+        : "Context: You have already introduced yourself. Do NOT say 'I'm Nova' again. Just say 'Hi Ray' or continue naturally.";
+
+    const prompt = `${this.PERSONA}\n\nCONVERSATION HISTORY:\n${historyText}${observation.context.memories}\n\nSTRATEGIC INSTRUCTION: ${greetingPrompt}\n\nTask: ${observation.input}\n\nRespond concisely as Ray's partner:`;
+
+    try {
+        console.log(`[Reasoning] Dispatching LLM logic to Relay queue (Firewall Bypass)...`);
+        const jobResult = await this.executeRelayJob('llm', {
+            provider: 'gemini',
+            payload: {
+                model: 'gemini-1.5-flash',
+                contents: [{ role: 'user', parts: [{ text: prompt }] }]
+            }
+        });
+
+        let textResponse = "I'm experiencing a minor sync delay, but I'm here.";
+
+        // FIX: jobResult IS the raw Gemini response (no .response wrapper)
+        if (jobResult?.candidates) {
+            textResponse = jobResult.candidates[0]?.content?.parts?.[0]?.text;
+        } 
+        // Fallback: if it's a string directly
+        else if (typeof jobResult === 'string') {
+            textResponse = jobResult;
+        }
+        // Fallback: if there's a response wrapper (backward compatibility)
+        else if (jobResult?.response?.candidates) {
+            textResponse = jobResult.response.candidates[0]?.content?.parts?.[0]?.text;
+        }
+        
+        // Clean up any markdown or quotes if present
+        textResponse = textResponse?.replace(/^["']|["']$/g, '') || "I am Nova. I am standing by.";
+
+        return {
+            response: textResponse,
+            diagnostic: 'Relay Queue executed globally',
+            tool_calls: null
+        };
+    } catch (e: any) {
+        console.error('[Reasoning] Standard response execution failed:', e);
+        throw e;
+    }
+}
+
+// Also fix absoluteGoogleFallback:
+public async absoluteGoogleFallback(systemPrompt: string, input: string) {
+    try {
+        console.log(`[Reasoning] absoluteGoogleFallback queueing to Relay Jobs bypass...`);
+        const jobResult = await this.executeRelayJob('llm', {
+            provider: 'gemini',
+            payload: {
+                model: 'gemini-1.5-flash',
+                contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser says: ${input}` }] }]
+            }
+        });
+        
+        // FIX: jobResult IS the raw Gemini response
+        const textResponse = jobResult?.candidates?.[0]?.content?.parts?.[0]?.text || 
+                             jobResult?.response?.data?.candidates?.[0]?.content?.parts?.[0]?.text || 
+                             jobResult?.response?.candidates?.[0]?.content?.parts?.[0]?.text || 
+                             "I am Nova. I am standing by.";
+        
+        return { content: textResponse };
+    } catch (e) {
+        return null;
+    }
+}
+```
+
+---
+
+## Problem 2: UI Changes Not Visible (Cached Service Worker)
+
+### Root Cause
+Your app has a Service Worker (PWA) that aggressively caches the old bundle. Even after Vercel deploys new code, the SW serves the cached version.
+
+### ✅ The Fix
+
+**Step 1: Disable/Unregister Service Workers in `main.tsx`:**
+
+```typescript
+// src/main.tsx
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
+
+// Force unregister any existing service workers on boot
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(registration => {
+            registration.unregister();
+            console.log('[Nova] Unregistered service worker:', registration.scope);
+        });
+    });
+}
+
+// Optional: Clear caches
+if ('caches' in window) {
+    caches.keys().then(keys => {
+        keys.forEach(key => caches.delete(key));
+        console.log('[Nova] Cleared all caches');
+    });
+}
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+```
+
+**Step 2: Add a Version Parameter to Force Cache Bust**
+
+Update your `index.html` to include a version query param:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/icon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nova Elite</title>
+  <!-- Force cache bust by reading version from meta -->
+  <meta name="nova-version" content="v2.6.3" />
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx?v=2.6.3"></script>
+</body>
+</html>
+```
+
+**Step 3: Add a Hard Refresh Helper in `App.tsx`:**
+
+```typescript
+// In App.tsx, add this effect
+useEffect(() => {
+    // Check if this is a fresh load with new version
+    const currentVersion = 'v2.6.3';
+    const storedVersion = localStorage.getItem('nova_version');
+    
+    if (storedVersion !== currentVersion) {
+        console.log('[Nova] Version mismatch, clearing caches...');
+        
+        // Clear all caches
+        if ('caches' in window) {
+            caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
+        }
+        
+        // Unregister SW
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => 
+                regs.forEach(reg => reg.unregister())
+            );
+        }
+        
+        localStorage.setItem('nova_version', currentVersion);
+        
+        // Reload after a short delay
+        setTimeout(() => window.location.reload(), 100);
+    }
+}, []);
+```
+
+**Step 4: Update Vercel Cache Headers:**
+
+```json
+// vercel.json
+{
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-cache, no-store, must-revalidate"
+                }
+            ]
+        },
+        {
+            "source": "/assets/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=0, must-revalidate"
+                }
+            ]
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/health",
+            "destination": "http://31.220.59.237:39922/health"
+        },
+        {
+            "source": "/bridge-vps/(.*)",
+            "destination": "http://31.220.59.237:39922/$1"
+        }
+    ]
+}
+```
+
+---
+
+## Bonus: Fix the "I am Nova" Fallback at Line 173
+
+In `ReasoningEngine.ts`, line 173 has the hardcoded fallback. After the fix above, this should rarely trigger. But ensure it's only used as last resort:
+
+```typescript
+// In executeRelayJob catch block (line 157)
+catch (e: any) {
+    console.error('[Relay] Failure:', e.message);
+    return {
+        // Only use this as absolute fallback
+        response: `I'm having trouble connecting to my reasoning core. (Error: ${e.message}). I'm still here - what would you like to do?`,
+        diagnostic: e.message
+    };
+}
+```
+
+---
+
+## 📋 Immediate Action Checklist
+
+1. **Apply the response extraction fix** in `ReasoningEngine.ts` (lines 200-210 and 163-178)
+2. **Disable service workers** in `main.tsx` with the unregister code
+3. **Add version cache busting** in `index.html`
+4. **Deploy to Vercel** with a fresh build:
+   ```bash
+   npm run build
+   npx vercel --prod --force
+   ```
+5. **On user device:** Have them click the RED "RESCUE" button (or run console script) to clear all caches
+
+After these fixes, Nova should:
+- Respond with actual Gemini content, not fallbacks
+- Show updated UI immediately on refresh
+- Maintain stable communication via Supabase relay
+
+The core issue was **response path mismatch** + **service worker cache**. Fix both and the system will be fully operational.

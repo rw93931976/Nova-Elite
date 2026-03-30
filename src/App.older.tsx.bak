@@ -1,0 +1,94 @@
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useNova } from './hooks/useNova';
+import { useSpeech } from './hooks/useSpeech';
+
+// NUCLEAR SIMPLICITY v1.0 - Zero dependencies beyond core hooks
+function App() {
+  const nova = useNova();
+  const [textInput, setTextInput] = useState('');
+  const [isThinking, setIsThinking] = useState(false);
+  const [volume, setVolume] = useState(30);
+
+  const speakRef = useRef<((text: string, vol?: number, pitch?: number, rate?: number) => void) | null>(null);
+
+  const onProcessText = useCallback(async (text: string) => {
+    if (!text.trim()) return;
+    setIsThinking(true);
+    try {
+      nova.sendMessage('swarm' as any, text);
+      const thought = await nova.processWithNova(text, (receipt) => {
+        nova.addBotMessage('nova_core', receipt);
+        if (speakRef.current) {
+          const scaledVolume = Math.min(1.0, volume / 100);
+          setTimeout(() => speakRef.current?.(receipt, scaledVolume), 300);
+        }
+      });
+
+      if (thought?.response) {
+        const scaledVolume = Math.min(1.0, volume / 100);
+        if (speakRef.current) speakRef.current(thought.response, scaledVolume);
+        nova.addBotMessage('nova_core', thought.response);
+      }
+    } catch (err) {
+      console.error('Nova Error:', err);
+    } finally {
+      setIsThinking(false);
+    }
+  }, [nova, volume]);
+
+  const { isListening, toggleListening, speak } = useSpeech(onProcessText);
+
+  useEffect(() => {
+    speakRef.current = speak;
+    console.info('🚀 Nova Interface Stable (Nuclear Simplicity).');
+  }, [speak]);
+
+  return (
+    <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: 'white', padding: '2rem', fontFamily: 'sans-serif' }}>
+      <h1 style={{ fontSize: '3rem', fontWeight: '900', color: '#22d3ee' }}>NOVA ELITE (RESCUE MODE)</h1>
+      <p style={{ color: 'rgba(255,255,255,0.6)' }}>Nuclear Simplicity v1.0 - All icons stripped to resolve ReferenceError.</p>
+
+      <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <p>Nova is active. Type below to speak with her brain.</p>
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+            <input
+              type="text"
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && onProcessText(textInput)}
+              placeholder="Talk to Nova..."
+              style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', background: 'black', border: '1px solid #334155', color: 'white' }}
+            />
+            <button
+              onClick={() => onProcessText(textInput)}
+              style={{ padding: '0.75rem 1.5rem', background: '#22d3ee', color: 'black', fontWeight: 'bold', borderRadius: '0.5rem', border: 'none' }}
+            >
+              Send
+            </button>
+          </div>
+        </div>
+
+        <button
+          onClick={toggleListening}
+          style={{ width: '100%', padding: '1rem', background: isListening ? '#ef4444' : '#6366f1', color: 'white', borderRadius: '1rem' }}
+        >
+          {isListening ? '🛑 Stop Listening' : '🎙️ Start Microphone'}
+        </button>
+
+        <div style={{ marginTop: '2rem' }}>
+          <h2 style={{ fontSize: '1rem', color: '#a855f7' }}>Brain Feed</h2>
+          <div style={{ maxHeight: '200px', overflowY: 'auto', marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '1rem' }}>
+            {nova.messages.map((m, i) => (
+              <div key={i} style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                <strong style={{ color: m.from === 'user' ? '#22d3ee' : '#a855f7' }}>{m.from.toUpperCase()}:</strong> {m.content}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
