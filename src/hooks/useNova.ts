@@ -29,11 +29,15 @@ const stripPreamble = (text: string) => {
         /Confirm bridge stabilization status.*/i,
         /According to my (architect|system|instructions).*/i,
         /Your inquiry about the (farm|firm|bridge) stabilization status.*/i,
-        /v7\.3-SOVEREIGN-BRIDGE-PULSE/i,
+        /v7\.[0-9]-SOVEREIGN/i,
         /\[ID: [a-z0-9]+\]/i,
         /\[Uptime: \d+s\]/i,
+        /^_{3,}.*/, // Catch underscore-heavy lines (thoughts)
+        /.*_{3,}$/, // Catch trailing underscores
         /burst limit/i,
-        /heartbeat/i
+        /heartbeat/i,
+        /trace/i,
+        /thought/i
     ];
 
     let lines = text.split('\n');
