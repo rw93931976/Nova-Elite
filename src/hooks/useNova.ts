@@ -32,12 +32,16 @@ const stripPreamble = (text: string) => {
         /v7\.[0-9]-SOVEREIGN/i,
         /\[ID: [a-z0-9]+\]/i,
         /\[Uptime: \d+s\]/i,
-        /^_{3,}.*/, // Catch underscore-heavy lines (thoughts)
-        /.*_{3,}$/, // Catch trailing underscores
+        /^_{2,}.*/, // Catch underscore-heavy lines (thoughts)
+        /.*_{2,}$/, // Catch trailing underscores
+        /_{10,}/,  // Catch any long underscore strings
+        /\[.*\]/,   // Catch anything in brackets (internal tags)
         /burst limit/i,
         /heartbeat/i,
         /trace/i,
-        /thought/i
+        /thought/i,
+        /receipt/i,
+        /processing/i
     ];
 
     let lines = text.split('\n');
