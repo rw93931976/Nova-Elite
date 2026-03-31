@@ -8,11 +8,12 @@ export default {
         extend: {
             colors: {
                 charcoal: '#121212',
-                aqua: '#0BF9EA',
+                sovereign: '#0BF90A',
             },
             backgroundImage: {
-                'aqua-gradient': 'linear-gradient(135deg, #0BF9EA 0%, #07a69c 100%)',
+                'sovereign-gradient': 'linear-gradient(135deg, #0BF90A 0%, #05a006 100%)',
             }
+
         },
     },
     plugins: [],

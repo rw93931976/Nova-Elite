@@ -434,4 +434,4 @@ setInterval(async () => {
             status: 'read'
         }]);
     } catch (e) { }
-}, 15000);
+}, 5000);

@@ -164,14 +164,7 @@ export class ReasoningEngine {
 
             if (error) throw error;
 
-            const response = stripPreamble(data.response);
-            if (onReceipt) onReceipt(response);
-
-            return {
-                observation: { input, intent: 'sovereign_logic' },
-                analysis: { target: 'cloud', confidence: 1.0, logic: 'Sovereign Gateway (v4.0)', audit: auditResult },
-                response: response
-            };
+            let response = stripPreamble(data.response); if (response.trim().startsWith("{") && response.trim().endsWith("}")) { response = "I am processing that dynamic update for you now, Ray."; } if (onReceipt) onReceipt(response); return { observation: { input, intent: "sovereign_logic" }, analysis: { target: "cloud", confidence: 1.0, logic: "Sovereign Gateway (v4.0)", audit: auditResult }, response: response };
         } catch (err: any) {
             console.error('❌ [Reasoner] Brain Failure:', err);
             return {

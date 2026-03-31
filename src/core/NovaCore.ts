@@ -42,8 +42,7 @@ export class NovaCore {
 
                 if (data && data[0]) {
                     const lastPulse = new Date(data[0].created_at).getTime();
-                    // ⏱️ REDUCED THRESHOLD: 30s instead of 120s for tighter health monitoring
-                    if (Date.now() - lastPulse < 30000) {
+                    if (Date.now() - lastPulse < 60000) {
                         this.currentHealth.bridge = 'online';
                         this.currentHealth.lastBridgePulse = lastPulse;
                     } else {
@@ -57,9 +56,9 @@ export class NovaCore {
             }
         };
 
-        // 🏎️ IMMEDIATE CHECK + FASTER INTERVAL (5s)
+        // ⚡️ REALTIME OPTIMIZED: Run initial check only. 
+        // Subsequent status updates are handled via WebSocket events in useNova.
         check();
-        setInterval(check, 5000);
     }
 
     public async initialize() {
@@ -83,22 +82,7 @@ export class NovaCore {
         }
         if (!this.isInitialized) await this.initialize();
 
-        const isGreeting = /^(hi|hello|hey|yo|morning|evening|greetings|nova)/i.test(input.trim());
-        if (isGreeting) {
-            await new Promise(r => setTimeout(r, 100));
-            const hasHistory = context?.history && context.history.length > 0;
-            const greetText = hasHistory ? "I'm right here." : "Nova Elite active. Standing by.";
-
-            const greeting = {
-                observation: { input, context, intent: 'greeting' },
-                analysis: { target: 'local', confidence: 1.0, logic: 'Instant greeting' },
-                response: greetText,
-                isLocal: true
-            } as any;
-
-            this.reflect(input, greeting.response).then();
-            return greeting;
-        }
+        // v8.1-FREEDOM: Nova reasons even on greetings.
 
         let thought: ThoughtStage;
         try {

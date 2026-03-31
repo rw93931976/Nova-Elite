@@ -246,12 +246,7 @@ export const useSpeech = (onResult: (text: string) => void) => {
 
         const loadVoices = () => {
             let voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v =>
-                (v.name.includes('Natural') || v.name.includes('Neural')) ||
-                (v.name.includes('Google US English') && v.name.includes('Female')) ||
-                v.name.includes('Microsoft Zira') ||
-                v.name.includes('Samantha')
-            );
+            const preferredVoice = voices.find(v => v.name.includes("Google US English")) || voices.find(v => v.name.includes("Natural") || v.name.includes("Neural")) || voices.find(v => v.name.includes("Female"));
             if (preferredVoice) utterance.voice = preferredVoice;
         };
 

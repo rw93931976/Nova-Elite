@@ -2,8 +2,8 @@
 
 :root {
   --charcoal: #121212;
-  --sovereign-neon: #0BF9EA;
-  --neon-glow: rgba(11, 249, 234, 0.4);
+  --sovereign-neon: #0BF90A;
+  --neon-glow: rgba(11, 249, 10, 0.4);
   --charcoal-glow: rgba(18, 18, 18, 0.8);
   /* 3D Glass Tokens */
   --glass-top: rgba(255, 255, 255, 0.15);
@@ -48,7 +48,6 @@ body {
   border-radius: 1.25rem;
   padding: 1.5rem;
   margin-bottom: 1.25rem;
-  /* Mandatory 1.25rem spacing */
   position: relative;
   box-shadow:
     0 10px 30px var(--neon-glow),
@@ -57,20 +56,21 @@ body {
     inset 0 -2px 2px var(--glass-bot);
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   gap: 0.75rem;
+  min-height: 100px;
 }
 
 .sovereign-card:active {
   transform: translateY(2px) scale(0.98);
-  box-shadow: 0 5px 15px var(--aqua-glow);
+  box-shadow: 0 5px 15px var(--neon-glow);
 }
 
 .sovereign-card.locked {
-  background: rgba(11, 249, 234, 0.05);
-  color: rgba(11, 249, 234, 0.2);
-  border-color: rgba(11, 249, 234, 0.1);
+  background: rgba(11, 249, 10, 0.05);
+  color: rgba(11, 249, 10, 0.2);
+  border-color: rgba(11, 249, 10, 0.1);
   box-shadow: none;
 }
 
@@ -214,9 +214,9 @@ body {
 }
 
 .nav-item.active {
-  background: var(--aqua);
+  background: var(--sovereign-neon);
   color: var(--charcoal);
-  box-shadow: 0 0 20px var(--aqua-glow);
+  box-shadow: 0 0 20px var(--neon-glow);
   transform: translateY(-4px);
 }
 
