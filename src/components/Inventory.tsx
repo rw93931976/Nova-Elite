@@ -20,16 +20,16 @@ const CAPABILITIES = [
 export const Inventory = () => {
     return (
         <div className="pb-20">
-            <h2 className="text-4xl font-black italic tracking-tighter text-aqua text-glow text-center mb-8">
-                SYSTEM INVENTORY
+            <h2 className="text-4xl font-black italic tracking-tighter text-[#0BF90A] text-glow text-center mb-8">
+                SOVEREIGN MANIFEST
             </h2>
 
             <div className="space-y-6">
                 {[1, 2, 3, 4, 5].map(level => (
                     <div key={level} className="space-y-4">
                         <div className="flex items-center justify-between px-2">
-                            <span className="text-[11px] font-black uppercase tracking-[0.3em] opacity-40">Level {level}</span>
-                            <span className="text-[11px] font-bold uppercase text-aqua/60">
+                            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#0BF90A]">Level {level}</span>
+                            <span className="text-[11px] font-bold uppercase text-[#0BF90A]/60">
                                 {level === 1 ? 'Foundational Sync' : level === 2 ? 'Environmental Awareness' : level === 3 ? 'Operational Agency' : level === 4 ? 'Emotional Resonance' : 'Sovereign Study'}
                             </span>
                         </div>

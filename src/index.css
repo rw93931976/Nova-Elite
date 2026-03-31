@@ -2,8 +2,8 @@
 
 :root {
   --charcoal: #121212;
-  --aqua: #0BF9EA;
-  --aqua-glow: rgba(11, 249, 234, 0.4);
+  --sovereign-neon: #0BF90A;
+  --neon-glow: rgba(11, 249, 10, 0.4);
   --charcoal-glow: rgba(18, 18, 18, 0.8);
   /* 3D Glass Tokens */
   --glass-top: rgba(255, 255, 255, 0.15);
@@ -21,9 +21,10 @@
 html,
 body {
   background-color: var(--charcoal);
-  color: var(--aqua);
+  color: var(--sovereign-neon);
   overflow-x: hidden;
-  height: 100vh;
+  height: 100dvh;
+  /* Mobile Optimized */
 }
 
 #root {
@@ -42,7 +43,7 @@ body {
 
 /* 💎 THE SOVEREIGN CARD (3D Elite) */
 .sovereign-card {
-  background: var(--aqua);
+  background: var(--sovereign-neon);
   color: var(--charcoal);
   border-radius: 1.25rem;
   padding: 1.5rem;
@@ -50,7 +51,7 @@ body {
   /* Mandatory 1.25rem spacing */
   position: relative;
   box-shadow:
-    0 10px 30px var(--aqua-glow),
+    0 10px 30px var(--neon-glow),
     0 20px 60px rgba(0, 0, 0, 0.5),
     inset 0 2px 2px var(--glass-top),
     inset 0 -2px 2px var(--glass-bot);
@@ -138,22 +139,35 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--charcoal);
-  border: 4px solid var(--aqua);
+  border: 4px solid var(--sovereign-neon);
   box-shadow:
-    0 0 40px var(--aqua-glow),
+    0 0 40px var(--neon-glow),
     0 0 80px rgba(0, 0, 0, 0.4);
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.mic-button:hover {
+  transform: scale(1.05) rotate(2deg);
+  box-shadow:
+    0 0 60px var(--neon-glow),
+    0 0 100px rgba(0, 0, 0, 0.6);
+  border-color: #fff;
+}
+
+.mic-button:active {
+  transform: scale(0.95);
+  transition: all 0.1s ease;
+}
+
 .mic-button.active {
-  animation: pulse-aqua 2s infinite;
-  background: var(--aqua);
+  animation: pulse-neon 2s infinite;
+  background: var(--sovereign-neon);
   transform: scale(1.05);
 }
 
 .mic-button svg {
-  color: var(--aqua);
+  color: var(--sovereign-neon);
   width: 60px;
   height: 60px;
   transition: all 0.3s ease;
@@ -163,31 +177,35 @@ body {
   color: var(--charcoal);
 }
 
-@keyframes pulse-aqua {
+@keyframes pulse-neon {
   0% {
-    box-shadow: 0 0 0 0 rgba(11, 249, 234, 0.7);
+    box-shadow: 0 0 0 0 rgba(11, 249, 10, 0.7);
   }
 
   70% {
-    box-shadow: 0 0 0 40px rgba(11, 249, 234, 0);
+    box-shadow: 0 0 0 40px rgba(11, 249, 10, 0);
   }
 
   100% {
-    box-shadow: 0 0 0 0 rgba(11, 249, 234, 0);
+    box-shadow: 0 0 0 0 rgba(11, 249, 10, 0);
   }
 }
 
-/* 🛸 SOVEREIGN NAV BAR */
+/* 🛸 SOVEREIGN NAV PILL (screenshot aligned) */
 .nav-bar {
-  background: rgba(18, 18, 18, 0.85);
-  /* Charcoal Glass */
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(18, 18, 18, 0.9);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(11, 249, 234, 0.2);
-  border-radius: 2rem;
-  padding: 0.5rem;
-  box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.6),
-    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(11, 249, 10, 0.2);
+  border-radius: 3rem;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  display: flex !important;
+  gap: 1.5rem;
+  z-index: 1000;
 }
 
 .nav-item {
@@ -204,7 +222,7 @@ body {
 
 /* UTILS */
 .text-glow {
-  text-shadow: 0 0 20px var(--aqua-glow);
+  text-shadow: 0 0 20px var(--neon-glow);
 }
 
 .no-scrollbar::-webkit-scrollbar {

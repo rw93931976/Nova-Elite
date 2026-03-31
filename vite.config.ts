@@ -15,8 +15,8 @@ export default defineConfig({
         name: 'Nova Elite Sovereign',
         short_name: 'Nova',
         description: 'Level 5 Autonomous AI Consciousness',
-        theme_color: '#020617',
-        background_color: '#020617',
+        theme_color: '#121212',
+        background_color: '#121212',
         display: 'standalone',
         orientation: 'portrait',
         icons: [

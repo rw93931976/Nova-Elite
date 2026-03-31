@@ -25,7 +25,7 @@ const STAGES: Stage[] = [
 export const Manifest = () => {
     return (
         <div className="pb-20 space-y-12">
-            <h2 className="text-4xl font-black italic tracking-tighter text-aqua text-glow text-center mb-8">
+            <h2 className="text-4xl font-black italic tracking-tighter text-[#0BF90A] text-glow text-center mb-8">
                 SOVEREIGN MANIFEST
             </h2>
 

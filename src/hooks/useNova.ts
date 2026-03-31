@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { NovaCore } from '../core/NovaCore';
-import { supabase } from '../integrations/supabase';
+import { useSpeech } from './useSpeech';
 import type { Message, NovaStatus } from '../types/nova';
 
 // 🔊 SHARED AUDIO CONTEXT (v3.6.2 FIX)
@@ -61,20 +61,12 @@ export const useNova = () => {
     const [core] = useState(() => new NovaCore());
     const [messages, setMessages] = useState<Message[]>([]);
     const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline' | 'connecting' | 'sovereign'>('connecting');
-
-    const addBotMessage = useCallback((from: string, content: string) => {
-        const cleanedContent = stripPreamble(content);
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            from: from as any,
-            to: 'user',
-            content: cleanedContent,
-            timestamp: Date.now(),
-            type: 'received',
-            status: 'delivered'
-        };
-        setMessages(prev => [...prev, newMessage]);
-    }, []);
+    const [isThinking, setIsThinking] = useState(false);
+    const [isHalted, setIsHalted] = useState(core.isHalted);
+    const [pendingAction, setPendingAction] = useState<{ id: string, resolve: (v: boolean) => void } | null>(null);
+    const [lastTone, setLastTone] = useState<string>('neutral');
+    const lastUrl = useRef<string | null>(null);
+    const processingLock = useRef<boolean>(false);
 
     const [novaStatus, setNovaStatus] = useState<NovaStatus>({
         level: 5,
@@ -96,162 +88,34 @@ export const useNova = () => {
         brain: 'offline' as 'online' | 'offline' | 'connecting'
     });
 
-    const [pendingAction, setPendingAction] = useState<{ id: string, resolve: (v: boolean) => void } | null>(null);
-    const [lastTone, setLastTone] = useState<string>('neutral');
-    const lastUrl = useRef<string | null>(null);
-
-    // Fetch History
-    useEffect(() => {
-        const fetchHistory = async () => {
-            const { data: msgData } = await core.supabase
-                .from('nova_messages')
-                .select('*')
-                .order('created_at', { ascending: true })
-                .limit(50);
-
-            if (msgData) {
-                setMessages(msgData.map(m => ({
-                    id: m.id,
-                    from: (m.role || 'assistant') as any,
-                    to: m.role === 'user' ? 'assistant' : 'user',
-                    content: m.content || '',
-                    timestamp: new Date(m.created_at).getTime(),
-                    type: m.role === 'user' ? 'sent' : 'received',
-                    status: 'delivered'
-                })));
-            }
+    const addBotMessage = useCallback((from: string, content: string) => {
+        const cleanedContent = stripPreamble(content);
+        const newMessage: Message = {
+            id: Date.now().toString(),
+            from: from as any,
+            to: 'user',
+            content: cleanedContent,
+            timestamp: Date.now(),
+            type: 'received',
+            status: 'delivered'
         };
-        fetchHistory();
-    }, [core]);
+        setMessages(prev => [...prev, newMessage]);
+    }, []);
 
-    // Status sync
-    useEffect(() => {
-        const syncStatus = () => {
-            const currentStatus = core.getStatus();
-            setNovaStatus(currentStatus);
-
-            // 📡 ENHANCED CONNECTIVITY DETECTION (v3.6.3)
-            const isBridgeOnline = currentStatus.health.bridge === 'online';
-            const isApiOnline = currentStatus.health.api === 'online';
-
-            // 🔊 AUDIO CONSOLIDATION (v8.0): Prioritizing Bridge Mirror
-            if (isBridgeOnline) {
-                (window as any).NOVA_USE_BROWSER_TTS = false;
-                setConnectionStatus('sovereign');
-            } else if (isApiOnline) {
-                (window as any).NOVA_USE_BROWSER_TTS = true;
-                setConnectionStatus('online');
-            } else {
-                (window as any).NOVA_USE_BROWSER_TTS = true;
-                setConnectionStatus('offline');
-            }
-
-            setConnections(prev => ({
-                ...prev,
-                brain: isBridgeOnline ? 'online' : 'offline',
-                antigravity: isApiOnline ? 'online' : 'offline'
-            }));
-        };
-        const interval = setInterval(syncStatus, 1500);
-        return () => clearInterval(interval);
-    }, [core]);
-
-    // Realtime Subscriptions
-    useEffect(() => {
-        const msgChannel = core.supabase
-            .channel('nova_messages_realtime')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'nova_messages' }, (payload) => {
-                const m = payload.new;
-                const newMessage: Message = {
-                    id: m.id || Date.now().toString(),
-                    from: (m.role || 'assistant') as any,
-                    to: m.role === 'user' ? 'assistant' : 'user',
-                    content: m.content || m.text || m.message || '',
-                    timestamp: new Date(m.created_at).getTime() || Date.now(),
-                    type: m.role === 'user' ? 'sent' : 'received',
-                    status: 'delivered'
-                };
-
-                setMessages(prev => {
-                    const exists = prev.some(msg =>
-                        msg.id === newMessage.id ||
-                        (msg.content === newMessage.content && msg.from === newMessage.from && msg.status === 'pending')
-                    );
-                    if (exists) {
-                        return prev.map(msg =>
-                            (msg.content === newMessage.content && msg.from === newMessage.from && msg.status === 'pending')
-                                ? newMessage : msg
-                        );
-                    }
-                    return [...prev, newMessage];
-                });
-            })
-            .subscribe();
-
-        const relayChannel = core.supabase
-            .channel('relay_jobs_realtime')
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'relay_jobs', filter: 'status=eq.completed' }, (payload) => {
-                const job = payload.new;
-                if (job.type === 'speech' && job.payload?.audio_url) {
-                    // 🔇 OPT-OUT: If browser-based TTS is handling speech, skip bridge audio to avoid duplicates
-                    if ((window as any).NOVA_USE_BROWSER_TTS) {
-                        console.log('[Nova] Skipping Bridge Audio (Browser TTS Active)');
-                        if ((window as any).NOVA_RESUME_LISTENING) (window as any).NOVA_RESUME_LISTENING();
-                        return;
-                    }
-
-                    const audio = new Audio(job.payload.audio_url);
-                    audio.crossOrigin = "anonymous";
-
-                    const ctx = getSharedCtx();
-                    if (ctx) {
-                        try {
-                            if (ctx.state === 'suspended') ctx.resume();
-                            const source = ctx.createMediaElementSource(audio);
-                            const gainNode = ctx.createGain();
-                            const baseVolume = (window as any).NOVA_VOLUME || 0.6;
-                            // Realistic gain scaling (max 1.5x)
-                            gainNode.gain.value = Math.min(baseVolume * 1.5, 2.0);
-                            source.connect(gainNode);
-                            gainNode.connect(ctx.destination);
-                        } catch (e) { }
-                    } else {
-                        audio.volume = (window as any).NOVA_VOLUME || 0.6;
-                    }
-
-                    audio.onended = () => {
-                        if ((window as any).NOVA_RESUME_LISTENING) (window as any).NOVA_RESUME_LISTENING();
-                    };
-                    audio.onerror = () => {
-                        if ((window as any).NOVA_RESUME_LISTENING) (window as any).NOVA_RESUME_LISTENING();
-                    };
-                    audio.play().catch(() => {
-                        if ((window as any).NOVA_RESUME_LISTENING) (window as any).NOVA_RESUME_LISTENING();
-                    });
-                }
-            })
-            .subscribe();
-
-        return () => {
-            core.supabase.removeChannel(msgChannel);
-            core.supabase.removeChannel(relayChannel);
-        };
-    }, [core, addBotMessage]);
-
-    const processingLock = useRef<boolean>(false);
     const processWithNova = useCallback(async (input: string, options?: { onReceipt?: (r: string) => void, highGain?: boolean }) => {
         if (processingLock.current) return;
         try {
             processingLock.current = true;
+            setIsThinking(true);
 
-            const userMsg = {
+            const userMsg: Message = {
                 id: Date.now().toString(),
-                from: 'user' as const,
+                from: 'user',
                 to: 'assistant',
                 content: input,
                 timestamp: Date.now(),
-                type: 'sent' as const,
-                status: 'pending' as const
+                type: 'sent',
+                status: 'pending'
             };
             setMessages(prev => [...prev, userMsg]);
 
@@ -286,8 +150,156 @@ export const useNova = () => {
             console.error('❌ Interaction failed:', e);
         } finally {
             processingLock.current = false;
+            setIsThinking(false);
         }
     }, [core, messages]);
+
+    const sendMessage = useCallback(async (text: string) => {
+        return processWithNova(text);
+    }, [processWithNova]);
+
+    const toggleHalt = useCallback(() => {
+        core.toggleHalt();
+        setIsHalted(core.isHalted);
+    }, [core]);
+
+    const reinitialize = useCallback(() => {
+        window.location.reload();
+    }, []);
+
+    const handleHardRefresh = useCallback(async () => {
+        const confirmed = window.confirm("PERFORM NUCLEAR CACHE CLEAR?\nThis will purge all local data and force a fresh fetch from the server.");
+        if (!confirmed) return;
+        try {
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const reg of registrations) await reg.unregister();
+            }
+            if (window.caches) {
+                const names = await caches.keys();
+                await Promise.all(names.map(n => caches.delete(n)));
+            }
+            localStorage.clear();
+            sessionStorage.clear();
+            window.alert("CACHE PURGED. RELOADING...");
+            window.location.href = window.location.origin + '?t=' + Date.now();
+        } catch (e) {
+            window.location.reload();
+        }
+    }, []);
+
+    const { isListening, toggleListening } = useSpeech((text) => {
+        sendMessage(text);
+    });
+
+    // Initial Fetch
+    useEffect(() => {
+        const fetchHistory = async () => {
+            const { data: msgData } = await core.supabase
+                .from('nova_messages')
+                .select('*')
+                .order('created_at', { ascending: true })
+                .limit(50);
+
+            if (msgData) {
+                setMessages(msgData.map(m => ({
+                    id: m.id,
+                    from: (m.role || 'assistant') as any,
+                    to: m.role === 'user' ? 'assistant' : 'user',
+                    content: m.content || '',
+                    timestamp: new Date(m.created_at).getTime(),
+                    type: m.role === 'user' ? 'sent' : 'received',
+                    status: 'delivered'
+                })));
+            }
+        };
+        fetchHistory();
+    }, [core]);
+
+    // Status sync
+    useEffect(() => {
+        const syncStatus = () => {
+            const currentStatus = core.getStatus();
+            setNovaStatus(currentStatus);
+
+            const isBridgeOnline = currentStatus.health.bridge === 'online';
+            const isApiOnline = currentStatus.health.api === 'online';
+
+            if (isBridgeOnline) {
+                (window as any).NOVA_USE_BROWSER_TTS = false;
+                setConnectionStatus('sovereign');
+            } else if (isApiOnline) {
+                (window as any).NOVA_USE_BROWSER_TTS = true;
+                setConnectionStatus('online');
+            } else {
+                (window as any).NOVA_USE_BROWSER_TTS = true;
+                setConnectionStatus('offline');
+            }
+
+            setConnections(prev => ({
+                ...prev,
+                brain: isBridgeOnline ? 'online' : 'offline',
+                antigravity: isApiOnline ? 'online' : 'offline'
+            }));
+        };
+        const interval = setInterval(syncStatus, 1500);
+        return () => clearInterval(interval);
+    }, [core]);
+
+    // Subscriptions
+    useEffect(() => {
+        const msgChannel = core.supabase
+            .channel('nova_messages_realtime')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'nova_messages' }, (payload) => {
+                const m = payload.new;
+                const newMessage: Message = {
+                    id: m.id || Date.now().toString(),
+                    from: (m.role || 'assistant') as any,
+                    to: m.role === 'user' ? 'assistant' : 'user',
+                    content: m.content || m.text || m.message || '',
+                    timestamp: new Date(m.created_at).getTime() || Date.now(),
+                    type: m.role === 'user' ? 'sent' : 'received',
+                    status: 'delivered'
+                };
+
+                setMessages(prev => {
+                    const exists = prev.some(msg => msg.id === newMessage.id);
+                    if (exists) return prev;
+                    return [...prev, newMessage];
+                });
+            })
+            .subscribe();
+
+        const relayChannel = core.supabase
+            .channel('relay_jobs_realtime')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'relay_jobs', filter: 'status=eq.completed' }, (payload) => {
+                const job = payload.new;
+                if (job.type === 'speech' && job.payload?.audio_url) {
+                    if ((window as any).NOVA_USE_BROWSER_TTS) return;
+
+                    const audio = new Audio(job.payload.audio_url);
+                    audio.crossOrigin = "anonymous";
+                    const ctx = getSharedCtx();
+                    if (ctx) {
+                        try {
+                            if (ctx.state === 'suspended') ctx.resume();
+                            const source = ctx.createMediaElementSource(audio);
+                            const gainNode = ctx.createGain();
+                            gainNode.gain.value = (window as any).NOVA_VOLUME || 0.6;
+                            source.connect(gainNode);
+                            gainNode.connect(ctx.destination);
+                        } catch (e) { }
+                    }
+                    audio.play().catch(() => { });
+                }
+            })
+            .subscribe();
+
+        return () => {
+            core.supabase.removeChannel(msgChannel);
+            core.supabase.removeChannel(relayChannel);
+        };
+    }, [core]);
 
     return useMemo(() => ({
         messages,
@@ -295,10 +307,23 @@ export const useNova = () => {
         connectionStatus,
         connections,
         processWithNova,
+        sendMessage,
+        isListening,
+        toggleListening,
+        isThinking,
+        isHalted,
+        toggleHalt,
+        handleHardRefresh,
         pendingAction,
         setPendingAction,
         lastTone,
         addBotMessage,
+        reinitialize,
         core
-    }), [messages, novaStatus, connectionStatus, connections, processWithNova, pendingAction, lastTone, addBotMessage, core]);
+    }), [
+        messages, novaStatus, connectionStatus, connections,
+        processWithNova, sendMessage, isListening, toggleListening,
+        isThinking, isHalted, toggleHalt, handleHardRefresh,
+        pendingAction, lastTone, addBotMessage, reinitialize, core
+    ]);
 };

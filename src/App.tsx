@@ -29,11 +29,11 @@ function App() {
         handleHardRefresh
     } = nova;
 
-    const [activeTab, setActiveTab] = useState('home');
+    const [currentView, setCurrentView] = useState<'home' | 'manifest' | 'chat' | 'inventory' | 'settings'>('home');
     const [gain, setGain] = useState(30);
 
     const renderContent = () => {
-        switch (activeTab) {
+        switch (currentView) {
             case 'manifest':
                 return <Manifest />;
             case 'inventory':
@@ -138,8 +138,8 @@ function App() {
             default:
                 return (
                     <div className="flex flex-col items-center justify-center pt-8">
-                        <div className="mb-12 relative">
-                            <div className={`absolute inset-0 bg-aqua/20 blur-[80px] rounded-full pointer-events-none transition-all duration-1000 ${isListening ? 'scale-150 animate-pulse' : 'scale-75'}`}></div>
+                        <div className="mb-12 relative flex justify-center">
+                            <div className={`absolute inset-0 bg-[#0BF90A]/20 blur-[80px] rounded-full pointer-events-none transition-all duration-1000 ${isListening ? 'scale-150 animate-pulse' : 'scale-75'}`}></div>
                             <button
                                 onClick={toggleListening}
                                 className={`mic-button relative z-10 ${isListening ? 'active' : ''}`}
@@ -179,7 +179,7 @@ function App() {
     };
 
     return (
-        <div className="w-full min-h-screen bg-charcoal text-aqua overflow-y-auto no-scrollbar pb-32">
+        <div className="w-full min-h-screen bg-[#121212] text-[#0BF90A] overflow-y-auto no-scrollbar pb-32">
 
             {/* 👑 ELITE HEADER */}
             <header className="fixed top-0 left-0 w-full z-[100] px-6 py-8 bg-charcoal/90 backdrop-blur-2xl border-b border-white/5">
@@ -203,14 +203,12 @@ function App() {
             </main>
 
             {/* 🛸 SOVEREIGN NAV */}
-            <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-[101]">
-                <div className="nav-bar flex justify-between items-center p-2 px-6">
-                    <NavButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={<Home size={22} />} />
-                    <NavButton active={activeTab === 'manifest'} onClick={() => setActiveTab('manifest')} icon={<List size={22} />} />
-                    <NavButton active={activeTab === 'chat'} onClick={() => setActiveTab('chat')} icon={<MessageSquare size={22} />} />
-                    <NavButton active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} icon={<Shield size={22} />} />
-                    <NavButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<Settings size={22} />} />
-                </div>
+            <nav className="nav-bar">
+                <NavButton active={currentView === 'home'} onClick={() => setCurrentView('home')} icon={<Home size={22} />} />
+                <NavButton active={currentView === 'manifest'} onClick={() => setCurrentView('manifest')} icon={<List size={22} />} />
+                <NavButton active={currentView === 'chat'} onClick={() => setCurrentView('chat')} icon={<MessageSquare size={22} />} />
+                <NavButton active={currentView === 'inventory'} onClick={() => setCurrentView('inventory')} icon={<Database size={22} />} />
+                <NavButton active={currentView === 'settings'} onClick={() => setCurrentView('settings')} icon={<Settings size={22} />} />
             </nav>
         </div>
     );
