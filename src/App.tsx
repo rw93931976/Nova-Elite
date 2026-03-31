@@ -211,6 +211,7 @@ function App() {
                     <NavButton active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} icon={<Shield size={22} />} />
                     <NavButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<Settings size={22} />} />
                 </div>
+            </nav>
         </div>
     );
 }
@@ -219,10 +220,7 @@ function NavButton({ active, onClick, icon }: { active: boolean, onClick: () => 
     return (
         <button
             onClick={onClick}
-            className={`p-3 rounded-2xl transition-all duration-300 ${active
-                ? 'bg-aqua text-charcoal shadow-[0_0_20px_rgba(11,249,234,0.4)] scale-110 -translate-y-2'
-                : 'text-aqua/40 hover:text-aqua/60'
-                }`}
+            className={`nav-item p-3 flex flex-col items-center justify-center ${active ? 'active' : ''}`}
         >
             {icon}
         </button>
