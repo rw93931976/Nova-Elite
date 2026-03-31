@@ -80,14 +80,14 @@ export const useNova = () => {
         swarm: 'offline' as 'online' | 'offline' | 'connecting',
         antigravity: 'offline' as 'online' | 'offline' | 'connecting',
         windsurf: 'offline' as 'online' | 'offline' | 'connecting',
-        brain: 'offline' as 'online' | 'offline' | 'connecting' // v7.2-HYBRID: Verified Pulse Tracking
+        brain: 'offline' as 'online' | 'offline' | 'connecting'
     });
 
     const [pendingAction, setPendingAction] = useState<{ id: string, resolve: (v: boolean) => void } | null>(null);
     const [lastTone, setLastTone] = useState<string>('neutral');
     const lastUrl = useRef<string | null>(null);
 
-    // --- Nova Phase 2: Message History ---
+    // Fetch History
     useEffect(() => {
         const fetchHistory = async () => {
             const { data: msgData } = await core.supabase
@@ -111,11 +111,12 @@ export const useNova = () => {
         fetchHistory();
     }, [core]);
 
-    // 🌊 SOVEREIGN SYNC (v7.2): Synchronize core engine status to UI
+    // Status sync
     useEffect(() => {
         const syncStatus = () => {
             const currentStatus = core.getStatus();
             setNovaStatus(currentStatus);
+            setConnectionStatus(currentStatus.health.bridge === 'online' ? 'sovereign' : 'online');
             setConnections(prev => ({
                 ...prev,
                 brain: currentStatus.health.bridge === 'online' ? 'online' : 'offline'
@@ -125,7 +126,7 @@ export const useNova = () => {
         return () => clearInterval(interval);
     }, [core]);
 
-    // 🌊 SOVEREIGN SYNC (v7.2): Realtime Subscriptions
+    // Realtime Subscriptions
     useEffect(() => {
         const msgChannel = core.supabase
             .channel('nova_messages_realtime')
@@ -157,13 +158,11 @@ export const useNova = () => {
             })
             .subscribe();
 
-        // 🔊 VOCAL MIRROR (v3.2): Listen for completed relay jobs and play the audio locally
         const relayChannel = core.supabase
             .channel('relay_jobs_realtime')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'relay_jobs', filter: 'status=eq.completed' }, (payload) => {
                 const job = payload.new;
                 if (job.type === 'speech' && job.payload?.audio_url) {
-                    console.log("🔊 [MIRROR]: Playing audio from bridge:", job.payload.audio_url);
                     const audio = new Audio(job.payload.audio_url);
                     audio.crossOrigin = "anonymous";
                     audio.volume = 1.0;
@@ -206,7 +205,6 @@ export const useNova = () => {
         try {
             processingLock.current = true;
 
-            // 🧠 OPTIMISTIC UI: Show message immediately
             const userMsg = {
                 id: Date.now().toString(),
                 from: 'user' as const,
@@ -232,7 +230,6 @@ export const useNova = () => {
             if (thought?.analysis?.tone) setLastTone(thought.analysis.tone);
 
             if (thought?.response) {
-                // 💾 SOVEREIGN PERSISTENCE: Save assistant response to chat history
                 await core.supabase.from('nova_messages').insert([{
                     role: 'assistant',
                     content: thought.response
@@ -248,7 +245,6 @@ export const useNova = () => {
             return thought;
         } catch (e: any) {
             console.error('❌ Interaction failed:', e);
-            processingLock.current = false;
         } finally {
             processingLock.current = false;
         }
