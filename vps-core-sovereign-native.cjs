@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const INSTANCE_ID = Math.random().toString(36).substring(2, 10);
+const START_TIME = Date.now();
 const http = require('http');
 const https = require('https');
 const { exec } = require('child_process');
@@ -62,7 +64,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 // --- BRIDGE CONFIGURATION ---
 const SPEECH_FILE = path.join(__dirname, 'temp_speech.mp3');
-const BRIDGE_PORT = 39923;
+const BRIDGE_PORT = process.env.PORT || 3505; // Historical successful port (4-digit)
 
 // Find Local IP
 function getLocalIP() {
@@ -96,7 +98,16 @@ app.get('/speech', (req, res) => {
     }
 });
 
-app.listen(BRIDGE_PORT, () => {
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'online',
+        version: 'v7.4-FINAL',
+        uptime: Math.round((Date.now() - START_TIME) / 1000),
+        instance: INSTANCE_ID
+    });
+});
+
+app.listen(BRIDGE_PORT, '0.0.0.0', () => {
     console.log(`[VocalMirror] Server active on port ${BRIDGE_PORT}`);
 });
 
@@ -300,6 +311,8 @@ async function poll() {
                     for (const job of jobs) {
                         await executeJob(job);
                     }
+                } else {
+                    log(`[Polling] Unexpected status code: ${res.statusCode}`);
                 }
                 setTimeout(poll, 500); // 🏎️ FASTER POLLING: Reduced from 10s to 0.5s for 'Snap' responsiveness
             });
@@ -503,12 +516,12 @@ log('🚀 [Sovereign-Bridge] Starting Mesh Engine...');
 subscribeToComms();
 poll();
 
-// 💓 HEARTBEAT (v7.2-HYBRID): Keep the Architect & Ray informed of bridge health
+// 💓 HEARTBEAT (v7.3-FINAL): Keep the Architect & Ray informed of bridge health
 setInterval(async () => {
     try {
         await supabase.from('agent_architect_comms').insert([{
             sender: 'vps_heartbeat',
-            message: `v7.2-SOVEREIGN-BRIDGE-PULSE [Uptime: ${Math.round(process.uptime())}s]`,
+            message: `v7.3-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`,
             status: 'read'
         }]);
     } catch (e) {

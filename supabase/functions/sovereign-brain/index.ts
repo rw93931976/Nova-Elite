@@ -134,7 +134,7 @@ serve(async (req) => {
         const isResearchRequest = input.toLowerCase().includes("notebook") || input.toLowerCase().includes("research") || input.toLowerCase().includes("read");
 
         // 🧠 LONG-TERM MEMORY (RAG): Retrieve relevant context from nova_memories
-        let longTermMemory = "";
+        let longTermMemory = ""; // Explicitly initialized here to avoid TDZ errors in the payload construction
         try {
             const { data: embeddingRes } = await fetch("https://api.openai.com/v1/embeddings", {
                 method: "POST",

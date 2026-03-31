@@ -230,6 +230,12 @@ const processWithNova = useCallback(async (input: string, options?: { onReceipt?
         if (thought?.analysis?.tone) setLastTone(thought.analysis.tone);
 
         if (thought?.response) {
+            // 💾 SOVEREIGN PERSISTENCE: Save assistant response to chat history
+            await core.supabase.from('nova_messages').insert([{
+                role: 'assistant',
+                content: thought.response
+            }]);
+
             await core.supabase.from('relay_jobs').insert([{
                 type: 'speech',
                 status: 'pending',

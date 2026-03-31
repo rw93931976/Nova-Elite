@@ -14,6 +14,8 @@ module.exports = {
       name: "nova-frontend",
       script: "npm",
       args: "run dev",
+      cwd: "./",
+      interpreter: "none",
       watch: false,
       autorestart: true,
       restart_delay: 10000,

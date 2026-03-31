@@ -179,8 +179,8 @@ function App() {
 
           // 🔊 AUDIO LOGIC (v7.2-HYBRID):
           // If the Bridge is alive, we use the high-fidelity Mirror (Bridge)
-          // ONLY use Browser TTS if we are in High Gain mode or if the Bridge is offline
-          const useBrowserTTS = (!relayAlive || highGain);
+          // ONLY use Browser TTS if the Bridge is offline
+          const useBrowserTTS = !relayAlive;
 
           if (speakRef.current && useBrowserTTS) {
             const browserVolume = highGain ? Math.min(1.0, (volume / 100) * 1.5) : (volume / 100);

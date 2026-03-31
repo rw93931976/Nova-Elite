@@ -82,12 +82,12 @@ export class ReasoningEngine {
         console.log(`🧠 [Reasoner] Evaluating: "${input.substring(0, 50)}..."`);
 
         try {
-            // 0. CIRCUIT BREAKER: Job Burst Limit
+            // 0. CIRCUIT BREAKER: Job Burst Limit (v7.3: Relaxed to 20/min)
             this.jobBurstCount++;
-            if (this.jobBurstCount > 10) {
+            if (this.jobBurstCount > 20) {
                 console.warn("⚠️ [Circuit Breaker] Job burst limit reached. Cooling down...");
-                setTimeout(() => { this.jobBurstCount = 0; }, 60000); // 1-minute cooldown
-                return { response: "I've hit my autonomous burst limit (10/min). Let me catch my breath before we proceed.", confidence: 1.0 };
+                setTimeout(() => { this.jobBurstCount = 0; }, 45000); // Shorter cooldown
+                return { response: "I've hit my autonomous burst limit (20/min). Let me catch my breath for a few seconds.", confidence: 1.0 };
             }
 
             // 1. DYNAMIC BEAST MODE AGENTS

@@ -31,9 +31,8 @@ export class NovaCore {
     }
 
     private async startHealthPulse() {
-        setInterval(async () => {
+        const check = async () => {
             try {
-                // v7.2-HYBRID: Check architect comms for real-time heartbeat
                 const { data } = await supabase
                     .from('agent_architect_comms')
                     .select('created_at')
@@ -43,7 +42,8 @@ export class NovaCore {
 
                 if (data && data[0]) {
                     const lastPulse = new Date(data[0].created_at).getTime();
-                    if (Date.now() - lastPulse < 120000) { // 2 minute threshold
+                    // ⏱️ REDUCED THRESHOLD: 30s instead of 120s for tighter health monitoring
+                    if (Date.now() - lastPulse < 30000) {
                         this.currentHealth.bridge = 'online';
                         this.currentHealth.lastBridgePulse = lastPulse;
                     } else {
@@ -55,7 +55,11 @@ export class NovaCore {
                 this.currentHealth.bridge = 'offline';
                 this.currentHealth.status = 'offline';
             }
-        }, 10000);
+        };
+
+        // 🏎️ IMMEDIATE CHECK + FASTER INTERVAL (5s)
+        check();
+        setInterval(check, 5000);
     }
 
     public async initialize() {
