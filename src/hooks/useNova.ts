@@ -115,7 +115,7 @@ export const useNova = () => {
     useEffect(() => {
         const syncStatus = () => {
             const currentStatus = core.getStatus();
-            setStatus(currentStatus);
+            setNovaStatus(currentStatus);
             setConnections(prev => ({
                 ...prev,
                 brain: currentStatus.health.bridge === 'online' ? 'online' : 'offline'
@@ -125,143 +125,145 @@ export const useNova = () => {
         return () => clearInterval(interval);
     }, [core]);
 
-    const msgChannel = core.supabase
-        .channel('nova_messages_realtime')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'nova_messages' }, (payload) => {
-            const m = payload.new;
-            const newMessage: Message = {
-                id: m.id || Date.now().toString(),
-                from: (m.role || 'assistant') as any,
-                to: m.role === 'user' ? 'assistant' : 'user',
-                content: m.content || m.text || m.message || '',
-                timestamp: new Date(m.created_at).getTime() || Date.now(),
-                type: m.role === 'user' ? 'sent' : 'received',
-                status: 'delivered'
-            };
+    // 🌊 SOVEREIGN SYNC (v7.2): Realtime Subscriptions
+    useEffect(() => {
+        const msgChannel = core.supabase
+            .channel('nova_messages_realtime')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'nova_messages' }, (payload) => {
+                const m = payload.new;
+                const newMessage: Message = {
+                    id: m.id || Date.now().toString(),
+                    from: (m.role || 'assistant') as any,
+                    to: m.role === 'user' ? 'assistant' : 'user',
+                    content: m.content || m.text || m.message || '',
+                    timestamp: new Date(m.created_at).getTime() || Date.now(),
+                    type: m.role === 'user' ? 'sent' : 'received',
+                    status: 'delivered'
+                };
 
-            setMessages(prev => {
-                const exists = prev.some(msg =>
-                    msg.id === newMessage.id ||
-                    (msg.content === newMessage.content && msg.from === newMessage.from && msg.status === 'pending')
-                );
-                if (exists) {
-                    return prev.map(msg =>
+                setMessages(prev => {
+                    const exists = prev.some(msg =>
+                        msg.id === newMessage.id ||
                         (msg.content === newMessage.content && msg.from === newMessage.from && msg.status === 'pending')
-                            ? newMessage : msg
                     );
-                }
-                return [...prev, newMessage];
-            });
-        })
-        .subscribe();
-
-    // 🔊 VOCAL MIRROR (v3.2): Listen for completed relay jobs and play the audio locally
-    const relayChannel = core.supabase
-        .channel('relay_jobs_realtime')
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'relay_jobs', filter: 'status=eq.completed' }, (payload) => {
-            const job = payload.new;
-            if (job.type === 'speech' && job.payload?.audio_url) {
-                console.log("🔊 [MIRROR]: Playing audio from bridge:", job.payload.audio_url);
-                const audio = new Audio(job.payload.audio_url);
-                audio.crossOrigin = "anonymous";
-                audio.volume = 1.0;
-
-                const ctx = getSharedCtx();
-                if (ctx) {
-                    try {
-                        if (ctx.state === 'suspended') ctx.resume();
-                        const source = ctx.createMediaElementSource(audio);
-                        const gainNode = ctx.createGain();
-                        const baseVolume = (window as any).NOVA_VOLUME || 0.3;
-                        gainNode.gain.value = baseVolume * 15.0;
-                        source.connect(gainNode);
-                        gainNode.connect(ctx.destination);
-                    } catch (e) { }
-                }
-
-                audio.onended = () => {
-                    if ((window as any).NOVA_RESUME_LISTENING) (window as any).NOVA_RESUME_LISTENING();
-                };
-                audio.onerror = () => {
-                    if ((window as any).NOVA_RESUME_LISTENING) (window as any).NOVA_RESUME_LISTENING();
-                };
-                audio.play().catch(() => {
-                    if ((window as any).NOVA_RESUME_LISTENING) (window as any).NOVA_RESUME_LISTENING();
+                    if (exists) {
+                        return prev.map(msg =>
+                            (msg.content === newMessage.content && msg.from === newMessage.from && msg.status === 'pending')
+                                ? newMessage : msg
+                        );
+                    }
+                    return [...prev, newMessage];
                 });
-            }
-        })
-        .subscribe();
+            })
+            .subscribe();
 
-    return () => {
-        core.supabase.removeChannel(msgChannel);
-        core.supabase.removeChannel(relayChannel);
-    };
-}, [core, addBotMessage]);
+        // 🔊 VOCAL MIRROR (v3.2): Listen for completed relay jobs and play the audio locally
+        const relayChannel = core.supabase
+            .channel('relay_jobs_realtime')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'relay_jobs', filter: 'status=eq.completed' }, (payload) => {
+                const job = payload.new;
+                if (job.type === 'speech' && job.payload?.audio_url) {
+                    console.log("🔊 [MIRROR]: Playing audio from bridge:", job.payload.audio_url);
+                    const audio = new Audio(job.payload.audio_url);
+                    audio.crossOrigin = "anonymous";
+                    audio.volume = 1.0;
 
-const processingLock = useRef<boolean>(false);
-const processWithNova = useCallback(async (input: string, options?: { onReceipt?: (r: string) => void, highGain?: boolean }) => {
-    if (processingLock.current) return;
-    try {
-        processingLock.current = true;
+                    const ctx = getSharedCtx();
+                    if (ctx) {
+                        try {
+                            if (ctx.state === 'suspended') ctx.resume();
+                            const source = ctx.createMediaElementSource(audio);
+                            const gainNode = ctx.createGain();
+                            const baseVolume = (window as any).NOVA_VOLUME || 0.3;
+                            gainNode.gain.value = baseVolume * 15.0;
+                            source.connect(gainNode);
+                            gainNode.connect(ctx.destination);
+                        } catch (e) { }
+                    }
 
-        // 🧠 OPTIMISTIC UI: Show message immediately
-        const userMsg = {
-            id: Date.now().toString(),
-            from: 'user' as const,
-            to: 'assistant',
-            content: input,
-            timestamp: Date.now(),
-            type: 'sent' as const,
-            status: 'pending' as const
+                    audio.onended = () => {
+                        if ((window as any).NOVA_RESUME_LISTENING) (window as any).NOVA_RESUME_LISTENING();
+                    };
+                    audio.onerror = () => {
+                        if ((window as any).NOVA_RESUME_LISTENING) (window as any).NOVA_RESUME_LISTENING();
+                    };
+                    audio.play().catch(() => {
+                        if ((window as any).NOVA_RESUME_LISTENING) (window as any).NOVA_RESUME_LISTENING();
+                    });
+                }
+            })
+            .subscribe();
+
+        return () => {
+            core.supabase.removeChannel(msgChannel);
+            core.supabase.removeChannel(relayChannel);
         };
-        setMessages(prev => [...prev, userMsg]);
+    }, [core, addBotMessage]);
 
-        await core.supabase.from('nova_messages').insert([{ role: 'user', content: input }]);
+    const processingLock = useRef<boolean>(false);
+    const processWithNova = useCallback(async (input: string, options?: { onReceipt?: (r: string) => void, highGain?: boolean }) => {
+        if (processingLock.current) return;
+        try {
+            processingLock.current = true;
 
-        const history = messages.slice(-25).map(m => ({
-            role: m.from === 'user' ? 'user' : 'assistant',
-            content: m.content
-        }));
+            // 🧠 OPTIMISTIC UI: Show message immediately
+            const userMsg = {
+                id: Date.now().toString(),
+                from: 'user' as const,
+                to: 'assistant',
+                content: input,
+                timestamp: Date.now(),
+                type: 'sent' as const,
+                status: 'pending' as const
+            };
+            setMessages(prev => [...prev, userMsg]);
 
-        const urlMatch = input.match(/(https?:\/\/[^\s]+)/g);
-        if (urlMatch) lastUrl.current = urlMatch[0];
+            await core.supabase.from('nova_messages').insert([{ role: 'user', content: input }]);
 
-        const thought = await core.processElite(input, { history, lastUrl: lastUrl.current }, options?.onReceipt);
-        if (thought?.analysis?.tone) setLastTone(thought.analysis.tone);
+            const history = messages.slice(-25).map(m => ({
+                role: m.from === 'user' ? 'user' : 'assistant',
+                content: m.content
+            }));
 
-        if (thought?.response) {
-            // 💾 SOVEREIGN PERSISTENCE: Save assistant response to chat history
-            await core.supabase.from('nova_messages').insert([{
-                role: 'assistant',
-                content: thought.response
-            }]);
+            const urlMatch = input.match(/(https?:\/\/[^\s]+)/g);
+            if (urlMatch) lastUrl.current = urlMatch[0];
 
-            await core.supabase.from('relay_jobs').insert([{
-                type: 'speech',
-                status: 'pending',
-                payload: { text: thought.response }
-            }]);
+            const thought = await core.processElite(input, { history, lastUrl: lastUrl.current }, options?.onReceipt);
+            if (thought?.analysis?.tone) setLastTone(thought.analysis.tone);
+
+            if (thought?.response) {
+                // 💾 SOVEREIGN PERSISTENCE: Save assistant response to chat history
+                await core.supabase.from('nova_messages').insert([{
+                    role: 'assistant',
+                    content: thought.response
+                }]);
+
+                await core.supabase.from('relay_jobs').insert([{
+                    type: 'speech',
+                    status: 'pending',
+                    payload: { text: thought.response }
+                }]);
+            }
+
+            return thought;
+        } catch (e: any) {
+            console.error('❌ Interaction failed:', e);
+            processingLock.current = false;
+        } finally {
+            processingLock.current = false;
         }
+    }, [core, messages]);
 
-        return thought;
-    } catch (e: any) {
-        console.error('❌ Interaction failed:', e);
-        processingLock.current = false;
-    } finally {
-        processingLock.current = false;
-    }
-}, [core, messages]);
-
-return useMemo(() => ({
-    messages,
-    status: novaStatus,
-    connectionStatus,
-    connections,
-    processWithNova,
-    pendingAction,
-    setPendingAction,
-    lastTone,
-    addBotMessage,
-    core
-}), [messages, novaStatus, connectionStatus, connections, processWithNova, pendingAction, lastTone, addBotMessage, core]);
+    return useMemo(() => ({
+        messages,
+        status: novaStatus,
+        connectionStatus,
+        connections,
+        processWithNova,
+        pendingAction,
+        setPendingAction,
+        lastTone,
+        addBotMessage,
+        core
+    }), [messages, novaStatus, connectionStatus, connections, processWithNova, pendingAction, lastTone, addBotMessage, core]);
 };
