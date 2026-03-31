@@ -7,6 +7,7 @@ const stripPreamble = (text: string) => {
     const targets = [
         /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
         /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
+        /^(Yes,?\s+)?I\s+(can|will|should)\s+(be|assist|help).*/i,
         /^Hey\s*(Nova|Ray).*/i,
         /I haven't yet processed specific real-time data.*/i,
         /I am equipped to recognize and respond.*/i,
@@ -15,7 +16,16 @@ const stripPreamble = (text: string) => {
         /I can certainly assist you with.*/i,
         /Confirm bridge stabilization status.*/i,
         /According to my (architect|system|instructions).*/i,
-        /Your inquiry about the (farm|firm|bridge) stabilization status.*/i
+        /Your inquiry about the (farm|firm|bridge) stabilization status.*/i,
+        /v7\.[0-9]-SOVEREIGN/i,
+        /\[ID: [a-z0-9]+\]/i,
+        /\[Uptime: \d+s\]/i,
+        /^_{2,}.*/, // Catch underscore-heavy lines (thoughts)
+        /.*_{2,}$/, // Catch trailing underscores
+        /_{10,}/,  // Catch any long underscore strings
+        /\[.*\]/,   // Catch anything in brackets (internal tags)
+        /burst limit/i,
+        /heartbeat/i
     ];
 
     let lines = text.split('\n');
