@@ -139,12 +139,12 @@ function App() {
                 return (
                     <div className="flex flex-col items-center justify-center pt-8">
                         <div className="mb-12 relative">
-                            <div className={`absolute inset-0 bg-aqua/20 blur-[80px] rounded-full transition-all duration-1000 ${isListening ? 'scale-150 animate-pulse' : 'scale-75'}`}></div>
+                            <div className={`absolute inset-0 bg-aqua/20 blur-[80px] rounded-full pointer-events-none transition-all duration-1000 ${isListening ? 'scale-150 animate-pulse' : 'scale-75'}`}></div>
                             <button
                                 onClick={toggleListening}
-                                className={`mic-button ${isListening ? 'active' : ''}`}
+                                className={`mic-button relative z-10 ${isListening ? 'active' : ''}`}
                             >
-                                <Mic />
+                                <Mic size={48} />
                             </button>
                         </div>
 
