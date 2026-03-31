@@ -9,7 +9,9 @@ import {
     List,
     Trash2,
     Volume2,
-    CheckCircle2
+    CheckCircle2,
+    Database,
+    Globe
 } from 'lucide-react';
 import { useNova } from './hooks/useNova';
 import { StatusBadge } from './components/StatusBadge';
@@ -185,7 +187,7 @@ function App() {
             <header className="fixed top-0 left-0 w-full z-[100] px-6 py-8 bg-charcoal/90 backdrop-blur-2xl border-b border-white/5">
                 <div className="flex justify-between items-center max-w-lg mx-auto">
                     <div className="flex flex-col">
-                        <h1 className="text-4xl font-black italic tracking-tighter drop-shadow-[0_0_20px_rgba(11,249,234,0.3)] leading-none">
+                        <h1 className="text-4xl font-black italic tracking-tighter drop-shadow-[0_0_20px_rgba(11,249,234,0.3)] leading-none text-[#0BF9EA]">
                             NOVA ELITE
                         </h1>
                         <div className="flex items-center gap-2 mt-2">
