@@ -43,6 +43,7 @@ function stripPreamble(text) {
     const targets = [
         /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
         /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
+        /^(Yes,?\s+)?I\s+(can|will|should)\s+(be|assist|help).*/i,
         /^Hey\s*(Nova|Ray).*/i,
         /I haven't yet processed specific real-time data.*/i,
         /I am equipped to recognize and respond.*/i,
@@ -53,12 +54,13 @@ function stripPreamble(text) {
         /According to my (architect|system|instructions).*/i,
         /Yes, I have received the update.*/i,
         /Your inquiry about the (farm|firm|bridge) stabilization status.*/i,
-        /^(Yes,?\s+)?(I\s+)?(have\s+)?(just\s+)?received\s+the\s+update.*/i,
-        /^(Yes,?\s+)?I\s+can\s+certainly\s+assist.*/i,
-        /^(Yes,?\s+)?I\'ve\s+processed\s+your\s+request.*/i,
-        /v7\.5-SOVEREIGN-BRIDGE-PULSE/i,
+        /v7\.[0-9]-SOVEREIGN/i,
         /\[ID: [a-z0-9]+\]/i,
         /\[Uptime: \d+s\]/i,
+        /^_{2,}.*/, // Catch underscore-heavy lines (thoughts)
+        /.*_{2,}$/, // Catch trailing underscores
+        /_{10,}/,  // Catch any long underscore strings
+        /\[.*\]/,   // Catch anything in brackets (internal tags)
         /burst limit/i,
         /heartbeat/i
     ];
@@ -299,13 +301,24 @@ async function poll() {
             .eq('status', 'pending')
             .order('created_at', { ascending: true });
 
-        if (!error && jobs) {
+        if (error) {
+            log(`⚠️ [Bridge] Supabase Error: ${error.message} (${error.code})`);
+            // MANDATORY RETRY DELAY: Prevent tight-looping on auth/network errors
+            setTimeout(poll, 5000);
+            return;
+        }
+
+        if (jobs && jobs.length > 0) {
+            log(`📦 [Bridge] Found ${jobs.length} pending jobs.`);
             for (const job of jobs) {
                 await executeJob(job);
             }
         }
-        setTimeout(poll, 1000); // 1s polling
+
+        // Dynamic polling: 800ms for responsiveness
+        setTimeout(poll, 800);
     } catch (err) {
+        log(`❌ [Bridge] Fatal Loop Exception: ${err.message}`);
         setTimeout(poll, 10000);
     }
 }

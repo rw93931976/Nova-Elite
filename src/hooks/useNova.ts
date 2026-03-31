@@ -134,11 +134,15 @@ export const useNova = () => {
             const isBridgeOnline = currentStatus.health.bridge === 'online';
             const isApiOnline = currentStatus.health.api === 'online';
 
-            if (isBridgeOnline && isApiOnline) {
+            // 🔊 AUDIO CONSOLIDATION (v8.0): Prioritizing Bridge Mirror
+            if (isBridgeOnline) {
+                (window as any).NOVA_USE_BROWSER_TTS = false;
                 setConnectionStatus('sovereign');
             } else if (isApiOnline) {
+                (window as any).NOVA_USE_BROWSER_TTS = true;
                 setConnectionStatus('online');
             } else {
+                (window as any).NOVA_USE_BROWSER_TTS = true;
                 setConnectionStatus('offline');
             }
 
