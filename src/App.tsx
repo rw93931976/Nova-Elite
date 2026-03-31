@@ -181,13 +181,12 @@ function App() {
           // If the Bridge is alive, we use the high-fidelity Mirror (Bridge)
           // ONLY use Browser TTS if the Bridge is offline
           const useBrowserTTS = !relayAlive;
+          const msgText = typeof receipt === 'string' ? receipt : (receipt?.message || JSON.stringify(receipt));
+          const cleanText = msgText.replace(/I'm standing by\.|My cloud-link is a bit hazy\.|standing by\./gi, '').trim();
+          setLastResponse(cleanText);
 
           if (speakRef.current && useBrowserTTS) {
             const browserVolume = highGain ? Math.min(1.0, (volume / 100) * 1.5) : (volume / 100);
-            const msgText = typeof receipt === 'string' ? receipt : (receipt?.message || JSON.stringify(receipt));
-            const cleanText = msgText.replace(/I'm standing by\.|My cloud-link is a bit hazy\.|standing by\./gi, '').trim();
-            setLastResponse(cleanText);
-
             if (cleanText.length > 0) {
               speakRef.current!(cleanText, browserVolume);
             }
