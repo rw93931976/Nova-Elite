@@ -24,27 +24,27 @@ export const Inventory = () => {
                 SYSTEM INVENTORY
             </h2>
 
-            <div className="space-y-8">
+            <div className="space-y-6">
                 {[1, 2, 3, 4, 5].map(level => (
-                    <div key={level} className="space-y-3">
+                    <div key={level} className="space-y-4">
                         <div className="flex items-center justify-between px-2">
                             <span className="text-[11px] font-black uppercase tracking-[0.3em] opacity-40">Level {level}</span>
-                            <span className="text-[11px] font-bold uppercase text-aqua/60">{level === 1 ? 'Foundational Sync' : level === 2 ? 'Environmental Awareness' : level === 3 ? 'Operational Agency' : level === 4 ? 'Emotional Resonance' : 'Sovereign Study'}</span>
+                            <span className="text-[11px] font-bold uppercase text-aqua/60">
+                                {level === 1 ? 'Foundational Sync' : level === 2 ? 'Environmental Awareness' : level === 3 ? 'Operational Agency' : level === 4 ? 'Emotional Resonance' : 'Sovereign Study'}
+                            </span>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-2">
+                        <div className="grid grid-cols-1 gap-3">
                             {CAPABILITIES.filter(c => c.level === level).map((cap, idx) => (
                                 <div
                                     key={idx}
-                                    className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${cap.active
-                                            ? 'bg-aqua border-aqua shadow-[0_0_15px_rgba(11,249,234,0.3)]'
-                                            : 'bg-black/20 border-white/5 opacity-30 grayscale'
+                                    className={`sovereign-card !p-4 !mb-0 flex-row items-center justify-between ${!cap.active ? 'locked opacity-30' : ''
                                         }`}
                                 >
-                                    <span className={`text-sm font-black uppercase ${cap.active ? 'text-charcoal' : 'text-aqua/40'}`}>
+                                    <span className="text-sm font-black uppercase">
                                         {cap.name}
                                     </span>
-                                    {cap.active && <CheckCircle2 className="text-charcoal" size={18} />}
+                                    {cap.active && <CheckCircle2 size={18} />}
                                 </div>
                             ))}
                         </div>

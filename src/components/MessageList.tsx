@@ -19,21 +19,23 @@ export const MessageList: React.FC<MessageListProps> = ({ messages }) => {
                 {messages.map((msg) => (
                     <motion.div
                         key={msg.id}
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        initial={{ opacity: 0, y: 15, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}
+                        className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'} mb-6`}
                     >
                         <div
-                            className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-[14px] leading-relaxed ${msg.from === 'user'
-                                ? 'bg-indigo-600 text-white rounded-tr-none'
-                                : 'bg-white/10 text-white/90 backdrop-blur-md border border-white/10 rounded-tl-none'
+                            className={`max-w-[85%] px-5 py-4 rounded-2xl shadow-2xl transition-all ${msg.from === 'user'
+                                ? 'bg-aqua text-charcoal rounded-tr-none border-t-2 border-white/20'
+                                : 'bg-charcoal border border-aqua/30 text-aqua rounded-tl-none shadow-[0_0_30px_rgba(11,249,234,0.1)]'
                                 }`}
                         >
-                            <div className="text-[10px] font-bold opacity-50 mb-0.5 uppercase tracking-tighter">
-                                {msg.from}
+                            <div className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40 mb-1.5">
+                                {msg.from === 'user' ? 'Ray' : 'Nova'}
                             </div>
-                            {msg.content}
+                            <div className="text-[14px] font-bold leading-relaxed tracking-tight font-inter">
+                                {msg.content}
+                            </div>
                         </div>
                     </motion.div>
                 ))}

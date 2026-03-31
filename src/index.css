@@ -3,10 +3,11 @@
 :root {
   --charcoal: #121212;
   --aqua: #0BF9EA;
-  --cyan-glow: rgba(11, 249, 234, 0.4);
+  --aqua-glow: rgba(11, 249, 234, 0.4);
+  --charcoal-glow: rgba(18, 18, 18, 0.8);
   /* 3D Glass Tokens */
-  --glass-top: rgba(255, 255, 255, 0.5);
-  --glass-bot: rgba(255, 255, 255, 0.1);
+  --glass-top: rgba(255, 255, 255, 0.15);
+  --glass-bot: rgba(0, 0, 0, 0.2);
 }
 
 * {
@@ -27,54 +28,42 @@ body {
 
 #root {
   height: 100%;
+  background-color: var(--charcoal);
 }
 
 /* 📱 MOBILE OPTIMIZED LAYOUT */
 .main-content {
+  padding: 1.25rem;
   padding-bottom: 140px;
-  /* Space for bottom nav */
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
 }
 
-.text-glow {
-  text-shadow: 0 0 20px rgba(6, 182, 212, 0.6), 0 0 40px rgba(6, 182, 212, 0.2);
-}
-
-#root {
-  height: 100%;
-  background: radial-gradient(circle at top right, #1e293b 0%, #0b0f1a 100%);
-}
-
-/* 💎 THE SOVEREIGN CARD (3D Glass) */
+/* 💎 THE SOVEREIGN CARD (3D Elite) */
 .sovereign-card {
   background: var(--aqua);
   color: var(--charcoal);
-  border-radius: 1.5rem;
+  border-radius: 1.25rem;
   padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  /* Mandatory 1.25rem spacing */
   position: relative;
-  overflow: hidden;
   box-shadow:
-    0 10px 30px rgba(11, 249, 234, 0.2),
-    inset 0 1px 0 var(--glass-top),
-    inset 0 -1px 0 var(--glass-bot);
-  border: 1.5px solid transparent;
-  background-clip: padding-box;
+    0 10px 30px var(--aqua-glow),
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    inset 0 2px 2px var(--glass-top),
+    inset 0 -2px 2px var(--glass-bot);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.sovereign-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-  margin: -1.5px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, var(--glass-top), var(--glass-bot));
+.sovereign-card:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 0 5px 15px var(--aqua-glow);
 }
 
 .sovereign-card.locked {
@@ -140,17 +129,19 @@ body {
   line-height: 1.3;
 }
 
-/* 🎙️ THE MIC BUTTON - RESTORED */
+/* 🎙️ THE MIC BUTTON - ELITE */
 .mic-button {
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
   border-radius: 50% !important;
   display: flex !important;
   align-items: center;
   justify-content: center;
   background: var(--charcoal);
   border: 4px solid var(--aqua);
-  box-shadow: 0 0 40px var(--cyan-glow);
+  box-shadow:
+    0 0 40px var(--aqua-glow),
+    0 0 80px rgba(0, 0, 0, 0.4);
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -158,14 +149,14 @@ body {
 .mic-button.active {
   animation: pulse-aqua 2s infinite;
   background: var(--aqua);
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .mic-button svg {
   color: var(--aqua);
-  width: 64px;
-  height: 64px;
-  transition: color 0.3s ease;
+  width: 60px;
+  height: 60px;
+  transition: all 0.3s ease;
 }
 
 .mic-button.active svg {
@@ -178,7 +169,7 @@ body {
   }
 
   70% {
-    box-shadow: 0 0 0 30px rgba(11, 249, 234, 0);
+    box-shadow: 0 0 0 40px rgba(11, 249, 234, 0);
   }
 
   100% {
@@ -186,55 +177,34 @@ body {
   }
 }
 
-/* FLOATING NAV */
+/* 🛸 SOVEREIGN NAV BAR */
 .nav-bar {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border: 4px solid var(--cyan);
+  background: rgba(18, 18, 18, 0.85);
+  /* Charcoal Glass */
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(11, 249, 234, 0.2);
   border-radius: 2rem;
-  padding: 0.4rem;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: space-around !important;
-  align-items: center !important;
-  width: 100%;
-  gap: 4px;
+  padding: 0.5rem;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
 .nav-item {
-  color: #64748b;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 0px;
-  flex: 1;
-  text-decoration: none;
-  background: none;
-  border: none;
-  padding: 8px 0;
-  transition: all 0.2s ease;
-  border-radius: 1.25rem;
-}
-
-.nav-item span {
-  font-size: 10px;
-  font-weight: 900;
-  text-transform: uppercase;
-  margin-top: 2px;
+  border-radius: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-item.active {
-  color: #000;
-  background: var(--cyan);
+  background: var(--aqua);
+  color: var(--charcoal);
+  box-shadow: 0 0 20px var(--aqua-glow);
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px var(--cyan-glow);
 }
 
 /* UTILS */
 .text-glow {
-  text-shadow: 0 0 15px var(--cyan-glow);
+  text-shadow: 0 0 20px var(--aqua-glow);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -256,27 +226,6 @@ body {
   }
 }
 
-@keyframes pulse-cyan {
-  0% {
-    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7);
-  }
-
-  70% {
-    box-shadow: 0 0 0 20px rgba(6, 182, 212, 0);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0);
-  }
-}
-
 .animate-spin-slow {
-  animation: rotate-slow 3s linear infinite;
-}
-
-.mic-button.active {
-  animation: pulse-cyan 2s infinite;
-  background: var(--cyan);
-  border-color: white;
-  transform: scale(1.1);
+  animation: rotate-slow 6s linear infinite;
 }
