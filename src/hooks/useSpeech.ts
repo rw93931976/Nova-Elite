@@ -238,14 +238,22 @@ export const useSpeech = (onResult: (text: string) => void) => {
             isSpeakingRef.current = true;
         };
 
-        let voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find(v =>
-            (v.name.includes('Natural') || v.name.includes('Neural')) ||
-            (v.name.includes('Google US English') && v.name.includes('Female')) ||
-            v.name.includes('Microsoft Zira') ||
-            v.name.includes('Samantha')
-        );
-        if (preferredVoice) utterance.voice = preferredVoice;
+        const loadVoices = () => {
+            let voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v =>
+                (v.name.includes('Natural') || v.name.includes('Neural')) ||
+                (v.name.includes('Google US English') && v.name.includes('Female')) ||
+                v.name.includes('Microsoft Zira') ||
+                v.name.includes('Samantha')
+            );
+            if (preferredVoice) utterance.voice = preferredVoice;
+        };
+
+        if (window.speechSynthesis.getVoices().length === 0) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        } else {
+            loadVoices();
+        }
 
         utterance.onend = () => {
             setTimeout(() => {

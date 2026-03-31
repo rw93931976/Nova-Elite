@@ -187,6 +187,31 @@ Always be sharp, high-density, and sovereign.
         let completion = await sovereignCompletion({ messages, tools }, isResearchRequest);
         let message = completion.choices?.[0]?.message;
 
+        // 🛡️ JSON AUTO-PARSER (v7.5): Detect and execute tool calls hidden in text content
+        const parseJsonToolCall = (content: string) => {
+            try {
+                if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+                    const parsed = JSON.parse(content.trim());
+                    if (parsed.TYPE === "FUNCTION" || parsed.NAME || parsed.function) {
+                        return [{
+                            id: `call_${Date.now()}`,
+                            type: 'function',
+                            function: {
+                                name: parsed.NAME || parsed.function || parsed.name,
+                                arguments: JSON.stringify(parsed.ARGUMENTS || parsed.arguments || parsed.args || {})
+                            }
+                        }];
+                    }
+                }
+            } catch (e) { }
+            return null;
+        };
+
+        if (!message.tool_calls && message.content) {
+            const detectedTools = parseJsonToolCall(message.content);
+            if (detectedTools) message.tool_calls = detectedTools;
+        }
+
         if (message.tool_calls) {
             messages.push(message);
             for (const toolCall of message.tool_calls) {

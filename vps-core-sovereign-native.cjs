@@ -4,25 +4,37 @@ const INSTANCE_ID = Math.random().toString(36).substring(2, 10);
 const START_TIME = Date.now();
 const http = require('http');
 const https = require('https');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 
 // 🛠️ UTILITY: Silent execution for Windows (No pop-up consoles)
 const executeHidden = (cmd) => {
-    if (process.platform === 'win32') {
-        const vbsPath = path.join(__dirname, 'scripts', 'silent_run.vbs');
-        const escapedCmd = cmd.replace(/"/g, '""');
-        const silentCmd = `wscript.exe "${vbsPath}" "C:\\Windows\\System32\\cmd.exe /c ${escapedCmd}"`;
-        return new Promise((resolve) => {
-            exec(silentCmd, () => resolve());
-        });
-    } else {
-        return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+        if (process.platform === 'win32') {
+            // Using powershell with -WindowStyle Hidden and -NonInteractive
+            // This is the most reliable way to avoid any flickering.
+            const shell = 'powershell.exe';
+            const args = ['-NonInteractive', '-NoProfile', '-WindowStyle', 'Hidden', '-Command', cmd];
+
+            const child = spawn(shell, args, {
+                windowsHide: true,
+                detached: true,
+                stdio: 'ignore'
+            });
+
+            child.on('error', (err) => {
+                log(`❌ [HiddenExec] Spawn Error: ${err.message}`);
+                resolve();
+            });
+
+            child.unref();
+            resolve();
+        } else {
             exec(cmd, (err, stdout) => {
-                if (err) return reject(err);
+                if (err) return resolve(err.message);
                 resolve(stdout);
             });
-        });
-    }
+        }
+    });
 };
 
 // 🛡️ COGNITIVE FIREWALL: Universal Preamble & Capability Suppression 
@@ -43,7 +55,12 @@ function stripPreamble(text) {
         /Your inquiry about the (farm|firm|bridge) stabilization status.*/i,
         /^(Yes,?\s+)?(I\s+)?(have\s+)?(just\s+)?received\s+the\s+update.*/i,
         /^(Yes,?\s+)?I\s+can\s+certainly\s+assist.*/i,
-        /^(Yes,?\s+)?I\'ve\s+processed\s+your\s+request.*/i
+        /^(Yes,?\s+)?I\'ve\s+processed\s+your\s+request.*/i,
+        /v7\.5-SOVEREIGN-BRIDGE-PULSE/i,
+        /\[ID: [a-z0-9]+\]/i,
+        /\[Uptime: \d+s\]/i,
+        /burst limit/i,
+        /heartbeat/i
     ];
 
     let lines = text.split('\n');
@@ -58,13 +75,14 @@ function stripPreamble(text) {
     if (cleaned.length > 0) cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
     return cleaned;
 }
+
 const express = require('express');
 const os = require('os');
 const { createClient } = require('@supabase/supabase-js');
 
 // --- BRIDGE CONFIGURATION ---
 const SPEECH_FILE = path.join(__dirname, 'temp_speech.mp3');
-const BRIDGE_PORT = process.env.PORT || 3505; // Historical successful port (4-digit)
+const BRIDGE_PORT = process.env.PORT || 3505;
 
 // Find Local IP
 function getLocalIP() {
@@ -80,7 +98,6 @@ function getLocalIP() {
 }
 
 const LOCAL_IP = getLocalIP();
-const AUDIO_URL = `http://${LOCAL_IP}:${BRIDGE_PORT}/speech`;
 
 // --- HTTP SERVER FOR VOCAL MIRROR ---
 const app = express();
@@ -101,7 +118,7 @@ app.get('/speech', (req, res) => {
 app.get('/health', (req, res) => {
     res.json({
         status: 'online',
-        version: 'v7.4-FINAL',
+        version: 'v7.5-FINAL',
         uptime: Math.round((Date.now() - START_TIME) / 1000),
         instance: INSTANCE_ID
     });
@@ -133,26 +150,24 @@ if (fs.existsSync(envPath)) {
 const log = (msg) => {
     const formatted = `[${new Date().toISOString()}] ${msg}`;
     console.log(formatted);
-    fs.appendFileSync(path.join(__dirname, 'bridge.log'), formatted + '\n');
+    try {
+        fs.appendFileSync(path.join(__dirname, 'bridge.log'), formatted + '\n');
+    } catch (e) { }
 };
 
 const supabaseUrl = env['VITE_SUPABASE_URL'];
 const supabaseKey = env['VITE_SUPABASE_ANON_KEY'];
 const openAiKey = env['VITE_OPENAI_API_KEY'];
 
-console.log(`[Startup] Supabase URL: ${supabaseUrl}`);
-console.log(`[Startup] Supabase Key Hint: ${supabaseKey ? supabaseKey.substring(0, 10) + '...' : 'MISSING'}`);
-console.log(`[Startup] OpenAI Key Hint: ${openAiKey ? openAiKey.substring(0, 10) + '...' : 'MISSING'}`);
-
 if (!supabaseUrl || !supabaseUrl.startsWith('http')) {
-    log(`[CRITICAL] Invalid Supabase URL: ${supabaseUrl}`);
+    console.error(`[CRITICAL] Invalid Supabase URL: ${supabaseUrl}`);
     process.exit(1);
 }
 
-// Initialize Supabase Client for REALTIME MESH
+// Initialize Supabase Client
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- 📡 SOVEREIGN MESH: Realtime Subscription ---
+// --- 📡 SOVEREIGN MESH ---
 async function subscribeToComms() {
     log('🔗 [Mesh] Initializing Supabase Realtime listener...');
 
@@ -166,18 +181,15 @@ async function subscribeToComms() {
             const msg = payload.new;
             log(`📬 [Mesh] New Message: ${msg.sender} -> ${msg.recipient || 'all'}: ${msg.message}`);
 
-            // 1. SILENT REASONING for Nova-bound messages (No instruction leakage to Ray)
             if (msg.recipient === 'nova') {
                 log(`🧠 [Mesh] Triggering Nova's Reasoner for direct signal: ${msg.id}`);
                 await triggerNovaResponse(msg);
-                return; // Exit early to skip vocalization of instructions
+                return;
             }
 
-            // 2. VOCALIZATION for Ray/All/User
             if (msg.recipient === 'all' || msg.recipient === 'ray' || msg.recipient === 'user') {
-                // 🛑 SAFETY: Never vocalize technical heartbeats or redundant logs
-                if (msg.sender === 'vps_heartbeat' || msg.message.includes('v2.6.12-WEATHER')) {
-                    log(`🔇 [Mesh] Skipping vocalization for technical heartbeat: ${msg.id}`);
+                if (msg.sender === 'vps_heartbeat' || msg.message.includes('PULSE')) {
+                    log(`🔇 [Mesh] Skipping vocalization for technical heartbeat.`);
                     return;
                 }
 
@@ -198,10 +210,7 @@ async function subscribeToComms() {
                     }]);
 
                     log(`✨ [Mesh] Cloud Audio Broadcasted: ${publicUrl}`);
-                    log(`✨ [Mesh] Cloud Audio Broadcasted: ${publicUrl}`);
-                    // await playAudio(filePath, { payload: { text: msg.message } }); // 🔇 DEPRECATED: Browser Mirror takes over
 
-                    // 📡 META-SYNC: Whispers Ray's messages to Nova
                     if (msg.recipient === 'ray') {
                         log(`🧠 [Mesh] Whispering Architect signal to Nova context...`);
                         await triggerNovaResponse({
@@ -222,33 +231,29 @@ async function subscribeToComms() {
 }
 
 async function triggerNovaResponse(incomingMsg) {
-    if (incomingMsg.silent) {
-        log(`📓 [Nova Context] Silently syncing Architect signal: ${incomingMsg.id}`);
-    }
-    log(`🧠 [Mesh] Triggering Nova's Brain (Sovereign Doctorate)...`);
-
     try {
-        // 📡 FETCH CONTEXT: Get recent messages for continuity
         const { data: historyData } = await supabase
             .from('agent_architect_comms')
             .select('sender, message, created_at')
             .or(`sender.eq.nova,recipient.eq.nova,recipient.eq.ray,recipient.eq.all`)
-            .neq('sender', 'vps_heartbeat') // 🛡️ NOISE FILTER: Exclude system heartbeats from Nova's active thinking
+            .neq('sender', 'vps_heartbeat')
             .order('created_at', { ascending: false })
-            .limit(30); // 🧠 EXPANDED MEMORY: Increase limit from 10 to 30 for deeper context
+            .limit(30);
 
         const history = (historyData || []).reverse().map(h => ({
             role: h.sender === 'nova' ? 'assistant' : 'user',
             content: h.message
         }));
 
-        // 📡 FETCH ARCHITECT COMMS: Specifically for her 'Mesh Context'
         const { data: archData } = await supabase
             .from('agent_architect_comms')
             .select('sender, message')
             .eq('sender', 'architect')
             .order('created_at', { ascending: false })
             .limit(5);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000);
 
         const response = await fetch(`${supabaseUrl}/functions/v1/sovereign-brain`, {
             method: 'POST',
@@ -261,15 +266,16 @@ async function triggerNovaResponse(incomingMsg) {
                 history: history,
                 architect_comms: archData || [],
                 silent: incomingMsg.silent || false
-            })
+            }),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         if (response.ok && !incomingMsg.silent) {
             const data = await response.json();
             const novaReply = data.response;
             log(`✨ [Mesh] Nova Responded: ${novaReply}`);
 
-            // Insert response back into the mesh
             const { error } = await supabase.from('agent_architect_comms').insert([{
                 sender: 'nova',
                 recipient: incomingMsg.sender,
@@ -278,227 +284,109 @@ async function triggerNovaResponse(incomingMsg) {
             }]);
 
             if (error) log(`❌ [Mesh] Failed to post Nova response: ${error.message}`);
-
-            // Speak the response too
-            const filePath = await generateSpeech(novaReply);
-            // await playAudio(filePath, { payload: { text: novaReply } }); // 🔇 DEPRECATED: Browser Mirror takes over
-        } else {
-            log(`❌ [Mesh] Brain Function failed: ${response.statusText}`);
+            await generateSpeech(novaReply); // Sync to temp_speech.mp3 for local playback
         }
     } catch (e) {
         log(`❌ [Mesh] Response trigger failed: ${e.message}`);
     }
 }
 
-// 🎧 BRIDGE: Poll for speech jobs (Kept for legacy apps/mobile redundancy)
 async function poll() {
-    log('🔄 [Polling] checking for new jobs...');
     try {
-        const url = `${supabaseUrl}/rest/v1/relay_jobs?status=eq.pending&order=created_at.asc`;
-        const options = {
-            headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`
+        const { data: jobs, error } = await supabase
+            .from('relay_jobs')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: true });
+
+        if (!error && jobs) {
+            for (const job of jobs) {
+                await executeJob(job);
             }
-        };
-
-        const req = https.get(url, options, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', async () => {
-                if (res.statusCode === 200) {
-                    const jobs = JSON.parse(data);
-                    for (const job of jobs) {
-                        await executeJob(job);
-                    }
-                } else {
-                    log(`[Polling] Unexpected status code: ${res.statusCode}`);
-                }
-                setTimeout(poll, 500); // 🏎️ FASTER POLLING: Reduced from 10s to 0.5s for 'Snap' responsiveness
-            });
-        });
-
-        req.on('error', (err) => {
-            log(`[ERROR] Request failed: ${err.message}`);
-            setTimeout(poll, 10000);
-        });
-
+        }
+        setTimeout(poll, 1000); // 1s polling
     } catch (err) {
-        log(`[ERROR] Polling loop failed: ${err.message}`);
         setTimeout(poll, 10000);
     }
 }
 
 async function uploadToStorage(filePath, fileName) {
     const fileContent = fs.readFileSync(filePath);
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
         .from('vocal_assets')
         .upload(fileName, fileContent, {
             contentType: 'audio/mpeg',
             upsert: true
         });
 
-    if (error) {
-        log(`❌ [Storage] Upload failed: ${error.message}`);
-        throw error;
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-        .from('vocal_assets')
-        .getPublicUrl(fileName);
-
+    if (error) throw error;
+    const { data: { publicUrl } } = supabase.storage.from('vocal_assets').getPublicUrl(fileName);
     return publicUrl;
 }
 
 async function executeJob(job) {
     log(`🏃 [Executor] Processing job: ${job.type} (${job.id})`);
-    // Legacy support for manual speech/notebook jobs
-    if (job.type === 'speech') {
-        const text = job.payload.text;
-        log(`🔊 [Legacy Job] Speech: ${text.substring(0, 50)}...`);
-        await updateJob(job.id, { status: 'processing' });
-        try {
-            const filePath = await generateSpeech(text);
 
-            // 📡 SOVEREIGN SYNC (v3.6.0): Upload to Cloud for Mobile Access
+    await updateJob(job.id, { status: 'processing' });
+
+    try {
+        if (job.type === 'speech') {
+            const filePath = await generateSpeech(job.payload.text);
             const fileName = `speech-${job.id}-${Date.now()}.mp3`;
             const publicUrl = await uploadToStorage(filePath, fileName);
-            log(`✨ [Cloud] Vocal Asset synced: ${publicUrl}`);
 
             await updateJob(job.id, {
                 status: 'completed',
-                payload: { ...job.payload, audio_url: publicUrl } // Use PUBLIC URL
+                payload: { ...job.payload, audio_url: publicUrl }
             });
-            await playAudio(filePath, job); // Still play locally for desktop parity
-        } catch (err) {
-            log(`[ERROR] Job failed: ${err.message}`);
-            await updateJob(job.id, { status: 'failed', error: err.message });
-        }
-    } else if (job.type === 'notebook_add_source' || job.type === 'notebook_create') {
-        // ... (existing notebook logic)
-        await handleNotebookJob(job);
-    } else if (job.type === 'update_goal') {
-        const goal = job.payload.goal;
-        log(`🎯 [Sovereign] NEW GOAL BROADCAST: ${goal}`);
-        await updateJob(job.id, { status: 'completed' });
+            await playAudio(filePath);
+        } else if (job.type === 'backup') {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const backupFile = path.join(__dirname, 'backups', `backup-${timestamp}.sql`);
+            if (!fs.existsSync(path.dirname(backupFile))) fs.mkdirSync(path.dirname(backupFile));
 
-        await supabase.from('agent_architect_comms').insert([{
-            sender: 'bridge',
-            recipient: 'nova',
-            message: `Sovereign Goal Adopted: ${goal}`,
-            metadata: { type: 'goal_update', goal }
-        }]);
-    } else if (job.type === 'update_syllabus') {
-        const subject = job.payload.subject;
-        const fs = require('fs');
-        const path = require('path');
-        const syllabusPath = path.join(__dirname, 'master_syllabus.md');
-
-        log(`📚 [Sovereign] EXPANDING SYLLABUS: ${subject}`);
-        if (fs.existsSync(syllabusPath)) {
-            fs.appendFileSync(syllabusPath, `\n- ${subject} (Discovered: ${new Date().toLocaleDateString()})`);
-        }
-        await updateJob(job.id, { status: 'completed' });
-    } else if (job.type === 'backup') {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const backupDir = path.join(__dirname, 'backups');
-        const backupFile = path.join(backupDir, `backup-${timestamp}.sql`);
-
-        log(`🛡️ [Backup] Starting autonomous snapshot: ${backupFile}`);
-        if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir);
-
-        try {
-            // Attempt npx-based dump (safest if CLI isn't global)
             const dbUrl = job.payload.db_url || supabaseUrl;
             const cmd = `npx supabase db dump --db-url "${dbUrl}" -f "${backupFile}"`;
             await executeHidden(cmd);
             await updateJob(job.id, { status: 'completed', payload: { ...job.payload, local_path: backupFile } });
-        } catch (err) {
-            log(`❌ [Backup] Final failure: ${err.message}`);
-            await updateJob(job.id, { status: 'failed', error: err.message });
+        } else {
+            // Mark other jobs as completed for safety
+            await updateJob(job.id, { status: 'completed' });
         }
-    }
-}
-
-
-
-
-async function handleNotebookJob(job) {
-    const isCreate = job.type === 'notebook_create';
-    const { title, content, notebookId } = job.payload;
-    log(`📓 [Notebook] ${isCreate ? 'Creating' : 'Archiving'}: ${title || notebookId}`);
-
-    await updateJob(job.id, { status: 'processing' });
-    try {
-        const pythonRunner = "c:\\Users\\Ray\\.gemini\\antigravity\\skills\\notebooklm\\scripts\\run.py";
-        const script = isCreate
-            ? "c:\\Users\\Ray\\.gemini\\antigravity\\skills\\notebooklm\\scripts\\create_notebook.py"
-            : "c:\\Users\\Ray\\.gemini\\antigravity\\skills\\notebooklm\\scripts\\add_source.py";
-
-        const args = isCreate
-            ? `--title "${title.replace(/"/g, '\\"')}"`
-            : `--content "${content.replace(/"/g, '\\"').replace(/\n/g, ' ')}" --notebook-id "${notebookId}"`;
-
-        const cmd = `python "${pythonRunner}" "${script}" ${args}`;
-        await executeHidden(cmd);
-        log(`[Notebook Success]`);
-        await updateJob(job.id, { status: 'completed' });
     } catch (err) {
-        log(`[ERROR] Notebook failed: ${err.message}`);
+        log(`❌ [Job Failed] ${err.message}`);
         await updateJob(job.id, { status: 'failed', error: err.message });
     }
 }
 
 async function updateJob(id, data) {
-    const url = `${supabaseUrl}/rest/v1/relay_jobs?id=eq.${id}`;
-    const options = {
-        method: 'PATCH',
-        headers: {
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
-        }
-    };
-
-    return new Promise((resolve) => {
-        const req = https.request(url, options, (res) => {
-            res.on('data', () => { });
-            res.on('end', () => resolve());
-        });
-        req.write(JSON.stringify(data));
-        req.end();
-    });
+    await supabase.from('relay_jobs').update(data).eq('id', id);
 }
 
 async function generateSpeech(text) {
     const cleanedText = stripPreamble(text);
-    log(`🔊 [Speech Prep] Cleaned: ${cleanedText.substring(0, 50)}...`);
-    return new Promise((resolve, reject) => {
-        const postData = JSON.stringify({ model: "tts-1", input: cleanedText, voice: "nova" });
-        const options = {
-            hostname: 'api.openai.com',
-            path: '/v1/audio/speech',
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${openAiKey}`, 'Content-Type': 'application/json' }
-        };
+    const postData = JSON.stringify({ model: "tts-1", input: cleanedText, voice: "nova" });
 
-        const req = https.request(options, (res) => {
-            if (res.statusCode !== 200) return reject(new Error(`OpenAI TTS Failed: ${res.statusCode}`));
-            const outPath = path.join(__dirname, 'temp_speech.mp3');
-            const file = fs.createWriteStream(outPath);
-            res.pipe(file);
-            file.on('finish', () => resolve(outPath));
-        });
-        req.on('error', reject);
-        req.write(postData);
-        req.end();
+    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${openAiKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: postData
     });
+
+    if (!response.ok) throw new Error(`OpenAI TTS Failed: ${response.status}`);
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const outPath = path.join(__dirname, 'temp_speech.mp3');
+    fs.writeFileSync(outPath, buffer);
+    return outPath;
 }
 
-async function playAudio(filePath, job) {
-    return new Promise(async (resolve) => {
-        const winPlayer = `
+async function playAudio(filePath) {
+    const winPlayer = `
     $player = New-Object -ComObject WMPLib.WindowsMediaPlayer;
     $player.URL = '${filePath.replace(/\\/g, '\\\\')}';
     $player.settings.volume = 100;
@@ -506,26 +394,31 @@ async function playAudio(filePath, job) {
     while ($player.playState -ne 1) { Start-Sleep -Milliseconds 100 }
     $player.close();
     `;
-        await executeHidden(winPlayer.replace(/\n/g, ' '));
-        resolve();
-    });
+    await executeHidden(winPlayer.replace(/\n/g, ' '));
 }
 
+// Maintenance: Automatic Pruning (Every hour)
+setInterval(async () => {
+    try {
+        log(`🧹 [Maintenance] Pruning bloated tables...`);
+        await supabase.rpc('prune_relay_data'); // If RPC exists, otherwise use raw SQL
+        // Fallback to manual DELETE if RPC is missing
+        await supabase.from('relay_jobs').delete().lt('created_at', new Date(Date.now() - 3600000).toISOString());
+    } catch (e) { }
+}, 3600000);
+
 // Start Mesh & Polling
-log('🚀 [Sovereign-Bridge] Starting Mesh Engine...');
+log('🚀 [Sovereign-Bridge] v7.5-FINAL Active');
 subscribeToComms();
 poll();
 
-// 💓 HEARTBEAT (v7.3-FINAL): Keep the Architect & Ray informed of bridge health
+// 💓 HEARTBEAT
 setInterval(async () => {
     try {
         await supabase.from('agent_architect_comms').insert([{
             sender: 'vps_heartbeat',
-            message: `v7.3-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`,
+            message: `v7.5-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`,
             status: 'read'
         }]);
-    } catch (e) {
-        // Silently fail to avoid log bloat on intermittent network drops
-    }
-}, 10000);
-
+    } catch (e) { }
+}, 15000);

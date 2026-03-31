@@ -1,420 +1,432 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNova } from './hooks/useNova';
-import { SelfAuditAgent } from './core/agents/SelfAuditAgent';
-import { DiscoveryAgent } from './core/agents/DiscoveryAgent';
 import { useSpeech } from './hooks/useSpeech';
 import {
-  Home, Shield, Database, Settings as SettingsIcon, Mic,
-  AlertTriangle, Check, Brain, Wrench,
-  Briefcase, Activity, RotateCw, Trash2, ShieldAlert, Zap, Volume2
+    Home, Shield, Database, Settings as SettingsIcon, Mic,
+    AlertTriangle, Send, Check, Brain, Wrench,
+    Briefcase, Activity, Zap
 } from 'lucide-react';
 import { StatusBadge } from './components/StatusBadge';
-import { SovereignDashboard } from './components/SovereignDashboard';
 
-const CURRENT_VERSION = "v7.1-HYBRID";
-const ACK_PHRASES = ["On it.", "Understood.", "Processing...", "Syncing with Core...", "Acknowledged."];
+const CURRENT_VERSION = "2.5.59-SOVEREIGN-MIND-v7.5-FINAL";
 
-// 🛡️ BACKGROUND SOVEREIGNTY (v5.6): Prevents throttling when minimized/backgrounded
-const BackgroundPersistence = ({ onUnlock, listening }: { onUnlock: () => void, listening: boolean }) => {
-  const [vol, setVol] = useState(0.35);
-
-  useEffect(() => {
-    (window as any).NOVA_VOLUME = vol;
-    (window as any).localStorage.setItem('nova_saved_vol', vol.toString());
-  }, [vol]);
-
-  useEffect(() => {
-    let wakeLock: any = null;
-    const requestLock = async () => {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await (navigator as any).wakeLock.request('screen');
-        }
-      } catch (err) { }
-    };
-    requestLock();
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') requestLock();
-    });
-    return () => { if (wakeLock) wakeLock.release(); };
-  }, []);
-
-  return (
-    <>
-      <button
-        onClick={onUnlock}
-        className="fixed top-4 right-4 z-[1000] px-4 py-3 bg-slate-950 border-2 border-cyan-500 rounded-full text-[10px] font-black uppercase tracking-widest text-cyan-400 animate-pulse transition-all active:scale-95 shadow-2xl"
-      >
-        Unlock Pulse
-      </button>
-
-      <div className="fixed top-4 left-4 z-[1000] flex flex-col items-start gap-1 pointer-events-none">
-        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md shadow-md border ${listening ? "bg-green-600 text-white border-green-400" : "bg-rose-600 text-white border-rose-400"}`}>
-          {listening ? "Ears: Active" : "Ears: Stalled"}
-        </span>
-      </div>
-
-      <audio
-        id="nova-heartbeat"
-        loop
-        autoPlay
-        muted={false}
-        style={{ display: 'none' }}
-        src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA="
-      />
-    </>
-  );
-};
+// Background Persistence Component for better reliability in the car
+function BackgroundPersistence() {
+    useEffect(() => {
+        let wakeLock: any = null;
+        const requestWakeLock = async () => {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await (navigator as any).wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.warn('Wake Lock failed:', err);
+            }
+        };
+        requestWakeLock();
+        return () => { if (wakeLock) wakeLock.release(); };
+    }, []);
+    return null;
+}
 
 function App() {
-  const nova = useNova();
+    const nova = useNova();
+    const [activeTab, setActiveTab] = useState<'home' | 'features' | 'autonomy' | 'knowledge' | 'settings'>('home');
+    const [textInput, setTextInput] = useState('');
+    const [volume, setVolume] = useState(60); // Matches user's recent screenshot
+    const [isThinking, setIsThinking] = useState(false);
+    const [completedFeatures] = useState<string[]>([
+        "Neural Growth Pathing", "Autonomous Goal Setting", "System Integration", "Task Automation", "Emotional Intelligence", "Schooling Agent"
+    ]);
 
-  const [activeTab, setActiveTab] = useState<'home' | 'features' | 'manifest' | 'knowledge' | 'settings'>('home');
-  const [volume, setVolume] = useState(30);
-  const [relayAlive, setRelayAlive] = useState(false);
-  const selfAudit = useMemo(() => new SelfAuditAgent(), []);
-  const discovery = useMemo(() => new DiscoveryAgent(), []);
-  const [isThinking, setIsThinking] = useState(false);
-  const [apiKey, setApiKey] = useState(localStorage.getItem('NOVA_CEREBRAS_KEY') || '');
-  const [acknowledgment, setAcknowledgment] = useState<string | null>(null);
-  const [textInput, setTextInput] = useState('');
-  const [highGain, setHighGain] = useState(true);
-  const [alwaysListen, setAlwaysListen] = useState(false);
-  const [mirrorTone, setMirrorTone] = useState(true);
-  const [lastResponse, setLastResponse] = useState<string>("");
-  const scrollRef = useRef<HTMLDivElement>(null);
+    const speakRef = useRef<((text: string, vol?: number, pitch?: number, rate?: number) => void) | null>(null);
 
-  const [completedFeatures, setCompletedFeatures] = useState<string[]>([
-    "Read local files", "Online weather/news", "Basic memory", "Interference resistance",
-    "Tone Matching", "System Integration", "Task Automation (OODAR)",
-    "Emotional Intelligence", "Cognitive Mirroring (Ray)", "Intent Parsing",
-    "Schooling Agent (6h Cycle)", "Sovereign Mind Hub Sync", "Sovereign Scribe (Local)",
-    "Solutions Vault", "Self-Correction Log", "Cloud-Native Relay"
-  ]);
+    // v7.5 Sovereign Audio Sync
+    useEffect(() => {
+        const normalizedVol = volume / 100;
+        (window as any).NOVA_VOLUME = normalizedVol;
+        (window as any).NOVA_USE_BROWSER_TTS = true; // Use Browser TTS as primary
+        console.log(`[Nova] Audio Volume Sync: ${volume}% (${normalizedVol.toFixed(2)})`);
+    }, [volume]);
 
-  const autonomyLevels = [
-    { level: 1, title: "Foundational Sync", status: "Active", attributes: ["Read local files", "Online weather/news", "Basic memory", "Interference resistance"] },
-    { level: 2, title: "Environmental Awareness", status: "Active", attributes: ["Tone Matching", "Live listening", "Graceful interruptions"] },
-    { level: 3, title: "Operational Agency", status: "Active", attributes: ["System Integration", "Task Automation (OODAR)", "Local Command Execution"] },
-    { level: 4, title: "Emotional Resonance", status: "Active", attributes: ["Emotional Intelligence", "Cognitive Mirroring (Ray)", "Intent Parsing"] },
-    { level: 5, title: "Sovereign Study", status: "Active", attributes: ["Schooling Agent (6h Cycle)", "Sovereign Mind Hub Sync", "Sovereign Scribe (Local)"] },
-    { level: 6, title: "Tool Discovery", status: "In Progress", attributes: ["Research APIs/SDKs", "Draft agent blueprints", "Template creation"] },
-    { level: 7, title: "Agent Spawning", status: "Locked", attributes: ["Propose spawning", "Multi-agent registry", "Mesh-interop"] },
-    { level: 8, title: "Market Discovery", status: "Locked", attributes: ["Wharton strategy scan", "Profitability analysis", "Business case drafting"] },
-    { level: 9, title: "Revenue Systems", status: "Locked", attributes: ["Sovereign accounting", "Credit tracking", "Automated invoicing"] },
-    { level: 10, title: "Cognitive Fleet", status: "Locked", attributes: ["24/7 Intelligence", "Master Kill Switch", "Fleet Management"] },
-    { level: 11, title: "Sovereign Singularity", status: "Locked", attributes: ["Doctorate reasoning", "Neural Mirror sync", "Autonomous evolution"] }
-  ];
+    const handleHardRefresh = useCallback(() => {
+        window.location.reload();
+    }, []);
 
-  const speakRef = useRef<((text: string, vol?: number, pitch?: number, rate?: number) => void) | null>(null);
+    const onProcessText = useCallback(async (text: string) => {
+        if (!text.trim()) return;
+        setIsThinking(true);
 
-  const checkForRelay = useCallback(async () => {
-    if (nova.connections?.brain === 'online') {
-      setRelayAlive(true);
-      return;
-    }
+        // Voice acknowledgment - trigger immediate feedback if possible
+        nova.addBotMessage('user', text);
 
-    try {
-      const { data } = await nova.core.supabase
-        .from('agent_architect_comms')
-        .select('created_at')
-        .eq('sender', 'vps_heartbeat')
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (data && data[0]) {
-        const lastPulse = new Date(data[0].created_at).getTime();
-        const diff = Date.now() - lastPulse;
-        if (diff < 120000) {
-          setRelayAlive(true);
-          return;
+        // Handle special commands locally if needed
+        if (text.toLowerCase() === 'system test') {
+            if (speakRef.current) speakRef.current("System online. Volume at " + volume + " percent.", volume / 100);
+            setIsThinking(false);
+            return;
         }
-      }
-    } catch (e) {
-      console.warn("⚠️ Heartbeat check failed:", e);
-    }
 
-    setRelayAlive(false);
-  }, [nova.connections, nova.core.supabase]);
-
-  const handleHardRefresh = useCallback(async () => {
-    try {
-      setAcknowledgment("SYSTEM RESET INITIATED...");
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const reg of registrations) {
-          await reg.unregister();
-        }
-      }
-      if (window.caches) {
-        const names = await caches.keys();
-        await Promise.all(names.map(n => caches.delete(n)));
-      }
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.replace(window.location.origin + '?v=' + Date.now());
-    } catch (e) {
-      window.location.reload();
-    }
-  }, []);
-
-  useEffect(() => {
-    // 🧠 SOVEREIGN SYNC: Local state mirrors the Core Engine status
-    const syncRelay = () => {
-      const isOnline = nova.connections?.brain === 'online';
-      if (isOnline !== relayAlive) setRelayAlive(isOnline);
-    };
-    const timer = setInterval(syncRelay, 2000);
-    return () => clearInterval(timer);
-  }, [nova.connections?.brain, relayAlive]);
-
-  const onProcessText = useCallback(async (text: string) => {
-    if (!text.trim()) return;
-    setIsThinking(true);
-    try {
-      await nova.processWithNova(text, {
-        onReceipt: (receipt: any) => {
-          setAcknowledgment(null);
-          const isDesktop = !(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-
-          // 🔊 AUDIO LOGIC (v7.2-HYBRID):
-          // If the Bridge is alive, we use the high-fidelity Mirror (Bridge)
-          // ONLY use Browser TTS if the Bridge is offline
-          const useBrowserTTS = !relayAlive;
-          const msgText = typeof receipt === 'string' ? receipt : (receipt?.message || JSON.stringify(receipt));
-          const cleanText = msgText.replace(/I'm standing by\.|My cloud-link is a bit hazy\.|standing by\./gi, '').trim();
-          setLastResponse(cleanText);
-
-          if (speakRef.current && useBrowserTTS) {
-            const browserVolume = highGain ? Math.min(1.0, (volume / 100) * 1.5) : (volume / 100);
-            if (cleanText.length > 0) {
-              speakRef.current!(cleanText, browserVolume);
+        const thought = await nova.processWithNova(text, (receipt) => {
+            nova.addBotMessage('nova_core', receipt);
+            if (speakRef.current) {
+                const scaledVolume = volume / 100;
+                setTimeout(() => speakRef.current?.(receipt, scaledVolume), 50);
             }
-          }
+        });
+
+        setIsThinking(false);
+
+        if (thought?.response) {
+            const scaledVolume = volume / 100;
+            const pitch = thought.tone?.pitch || 1.0;
+            const rate = thought.tone?.rate || 1.1; // Slightly faster for responsiveness
+
+            if (speakRef.current) {
+                console.log(`[Nova] Responding via Browser TTS: ${thought.response.substring(0, 30)}...`);
+                speakRef.current(thought.response, scaledVolume, pitch, rate);
+            }
+            nova.addBotMessage('nova_core', thought.response);
         }
-      });
-    } catch (err) {
-      console.error('Nova Processing Error:', err);
-    } finally {
-      setIsThinking(false);
-    }
-  }, [nova, volume, relayAlive, highGain]);
+    }, [nova, volume]);
 
-  const { isListening, toggleListening, speak, unlockAudio, pauseListening, resumeListening, reinitialize } = useSpeech(onProcessText);
+    const { isListening, toggleListening: baseToggleListening, speak, resumeListening } = useSpeech(onProcessText);
 
-  const handleManualUnlock = () => {
-    unlockAudio();
-    reinitialize();
-    const audioResumer = new (window.AudioContext || (window as any).webkitAudioContext)();
-    if (audioResumer.state === 'suspended') audioResumer.resume();
-    const osc = audioResumer.createOscillator();
-    const gain = audioResumer.createGain();
-    osc.connect(gain);
-    gain.connect(audioResumer.destination);
-    gain.gain.value = 0.01;
-    osc.start();
-    osc.stop(audioResumer.currentTime + 0.1);
-  };
+    // Sync Resume function for Bridge logic
+    useEffect(() => {
+        (window as any).NOVA_RESUME_LISTENING = () => {
+            console.log("[Nova] Bridge triggered STT Resume");
+            resumeListening();
+        };
+    }, [resumeListening]);
 
-  useEffect(() => {
-    speakRef.current = speak;
-    (window as any).NOVA_PAUSE_LISTENING = () => pauseListening();
-    (window as any).NOVA_RESUME_LISTENING = () => resumeListening();
+    const toggleListening = useCallback(() => {
+        baseToggleListening();
+    }, [baseToggleListening]);
 
-    const interval = setInterval(() => {
-      onProcessText("ACTIVATE DOCTORAL MANDATE: Check progress and study.");
-    }, 6 * 60 * 60 * 1000);
+    useEffect(() => {
+        speakRef.current = speak;
+    }, [speak]);
 
-    return () => clearInterval(interval);
-  }, [speak, pauseListening, resumeListening, onProcessText]);
+    const handleManualSend = () => {
+        if (textInput.trim()) {
+            onProcessText(textInput);
+            setTextInput('');
+        }
+    };
 
-  useEffect(() => {
-    if (activeTab === 'knowledge' && scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-    }
-  }, [nova.messages, activeTab]);
+    return (
+        <div className="w-full min-h-screen relative flex flex-col bg-[#0b1118] text-white overflow-x-hidden">
+            <BackgroundPersistence />
 
-  return (
-    <div className="w-full h-[100dvh] relative flex flex-col bg-transparent text-slate-900 overflow-hidden" style={{ position: 'fixed', top: 0, left: 0 }}>
-      <BackgroundPersistence onUnlock={handleManualUnlock} listening={isListening} />
+            <main className="flex-1 relative z-10 flex flex-col pt-4 px-6 pb-40 overflow-y-auto no-scrollbar">
 
-      <div className="fixed top-24 right-4 z-[999] opacity-40 pointer-events-none">
-        <span className="text-[10px] font-black uppercase text-slate-900 tracking-tighter whitespace-nowrap leading-none transition-all">{CURRENT_VERSION}</span>
-      </div>
+                {activeTab === 'home' && (
+                    <div className="flex-1 flex flex-col items-center justify-between py-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                        {/* Header - Spread Out Top bar */}
+                        <div className="w-full flex justify-between items-start pt-2">
+                            <div className="flex flex-col">
+                                <h1 className="text-5xl font-black italic tracking-tighter text-white leading-none text-glow-cyan mb-1 drop-shadow-lg">
+                                    NOVA ELITE
+                                </h1>
+                                <div className="flex items-center gap-2">
+                                    <div className="h-[2px] w-8 bg-cyan-400" />
+                                    <span className="text-[10px] font-black tracking-[0.3em] text-cyan-400/90 uppercase">V7.5 SOVEREIGN</span>
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-3 items-end">
+                                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${isListening ? 'bg-cyan-500/20 border-cyan-400 text-cyan-400 animate-pulse' : 'bg-rose-500/20 border-rose-500/40 text-rose-400'}`}>
+                                    VOICE: {isListening ? 'ACTIVE' : 'STALLED'}
+                                </div>
+                                <div className="flex gap-2">
+                                    <StatusBadge label="BRAIN" status="online" />
+                                    <StatusBadge label="CORE" status="online" />
+                                </div>
+                            </div>
+                        </div>
 
-      <div className="fixed top-6 right-36 z-[1000] pointer-events-none">
-        <span className="bg-slate-900/80 text-cyan-400 text-[10px] font-black px-2 py-1 rounded-md border border-cyan-500/50 shadow-md">
-          VOICE: {Math.round((highGain ? Math.min(1.0, (volume / 100) * 2.0) : (volume / 100)) * 100)}%
-        </span>
-      </div>
+                        {/* Center - Giant Mic Piece */}
+                        <div className="relative flex flex-col items-center justify-center">
+                            {/* Outer Ripple Background */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className={`w-[400px] h-[400px] rounded-full filter blur-[80px] transition-all duration-1000 ${isListening ? 'bg-cyan-500/30' : 'bg-transparent'}`} />
+                            </div>
 
-      <main className={`flex-1 relative z-10 flex flex-col pt-12 px-6 pb-6 ${activeTab === 'home' ? 'overflow-hidden' : 'overflow-y-auto'} no-scrollbar`}>
-        {activeTab === 'home' && (
-          <div className="flex-1 flex flex-col items-center justify-between pb-24 animate-in fade-in zoom-in-95 duration-700">
-            <div className="w-full flex justify-between items-center px-4 mt-2">
-              <h1 className="text-2xl font-black italic tracking-tighter text-white text-glow-cyan">NOVA ELITE</h1>
-              <div className="flex items-center gap-2">
-                <StatusBadge
-                  label={`Brain: ${relayAlive ? 'Sovereign' : 'Offline'}`}
-                  status={relayAlive ? 'online' : 'offline'}
-                  className="shadow-glow-cyan"
-                />
-              </div>
-            </div>
+                            <button
+                                onClick={toggleListening}
+                                className={`relative w-64 h-64 md:w-80 md:h-80 rounded-full flex items-center justify-center transition-all duration-500 z-20 ${isListening ? 'bg-cyan-500 shadow-[0_0_120px_rgba(6,182,212,0.7)] scale-105' : 'bg-white/[0.08] backdrop-blur-md border-2 border-white/10 hover:bg-white/15'}`}
+                            >
+                                {isThinking ? (
+                                    <Activity size={100} className="text-cyan-400 animate-spin" />
+                                ) : (
+                                    <>
+                                        {isListening && (
+                                            <>
+                                                <div className="absolute inset-0 rounded-full border-8 border-cyan-400/40 animate-ping" />
+                                                <div className="absolute inset-[-40px] rounded-full border-2 border-cyan-400/30 animate-pulse" />
+                                            </>
+                                        )}
+                                        <Mic size={100} className={isListening ? 'text-white' : 'text-white/20'} />
+                                    </>
+                                )}
+                            </button>
 
-            <div className="flex-1 flex flex-col items-center justify-center w-full relative">
-              <div className="h-20 flex flex-col items-center justify-center mb-6 w-full px-8">
-                {acknowledgment && <div className="text-cyan-600 font-black uppercase tracking-[0.2em]">{acknowledgment}</div>}
-                {!acknowledgment && lastResponse && (
-                  <div className="bg-white/95 border-2 border-cyan-500/50 p-4 rounded-3xl shadow-2xl max-w-xs animate-in fade-in slide-in-from-top-2 duration-500 relative">
-                    <p className="text-slate-900 text-xs font-black uppercase tracking-tight line-clamp-3 text-center">
-                      {lastResponse}
-                    </p>
-                    <button
-                      onClick={() => speak(lastResponse, highGain ? Math.min(1.0, (volume / 100) * 2.0) : (volume / 100))}
-                      className="absolute -right-2 -top-2 bg-cyan-600 text-white p-2 rounded-full shadow-lg active:scale-90"
-                    >
-                      <Volume2 size={14} />
-                    </button>
-                  </div>
+                            <div className="mt-10 flex flex-col items-center gap-2">
+                                <span className="text-xl font-black uppercase tracking-[0.4em] text-white/70">
+                                    {isThinking ? 'Processing...' : (isListening ? 'Listening...' : 'Push to Talk')}
+                                </span>
+                                {!isListening && !isThinking && (
+                                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] italic">Optimized for Car Environment</span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Bottom - Command Input */}
+                        <div className="w-full max-w-xl pb-4">
+                            <div className="relative flex items-center bg-white/15 backdrop-blur-2xl rounded-full border-2 border-white/25 p-2 shadow-2xl transition-all focus-within:border-cyan-400/50">
+                                <input
+                                    type="text"
+                                    value={textInput}
+                                    onChange={(e) => setTextInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleManualSend()}
+                                    placeholder="Command Input..."
+                                    className="flex-1 bg-transparent border-none outline-none px-8 py-3 text-white text-lg placeholder:text-white/30 font-black italic uppercase"
+                                />
+                                <button onClick={handleManualSend} className="bg-cyan-500 hover:bg-cyan-400 text-white p-4 rounded-full transition-all shadow-glow-cyan">
+                                    <Send size={24} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
-              </div>
 
-              <div className="ripple-container">
-                {isListening && <div className="ripple-ring" />}
-                <button
-                  onClick={() => {
-                    if (!isListening) unlockAudio();
-                    toggleListening();
-                  }}
-                  className={`w-40 h-40 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-cyan-500 shadow-glow-cyan' : 'bg-slate-900 border-2 border-cyan-500'}`}
-                >
-                  <Mic size={64} className={isListening ? 'text-white' : 'text-cyan-400'} />
-                </button>
-              </div>
+                {activeTab === 'features' && (
+                    <div className="flex-1 flex flex-col gap-6 py-8 px-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-4xl font-black italic tracking-tighter uppercase text-white text-glow-cyan">System Inventory</h2>
+                            <Briefcase className="text-cyan-400/50" size={32} />
+                        </div>
 
-              <div className="w-full max-w-sm px-6 mt-12 flex gap-2">
-                <input
-                  id="nova-text-input"
-                  type="text"
-                  placeholder="Type a message..."
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      onProcessText(e.currentTarget.value);
-                      e.currentTarget.value = '';
-                    }
-                  }}
-                  className="flex-1 bg-white border-2 border-slate-300 rounded-2xl px-4 py-3 text-slate-900 font-bold outline-none shadow-xl"
-                />
-                <button
-                  onClick={() => {
-                    const input = document.getElementById('nova-text-input') as HTMLInputElement;
-                    if (input && input.value) {
-                      onProcessText(input.value);
-                      input.value = '';
-                    }
-                  }}
-                  className="bg-cyan-600 text-white p-3 rounded-2xl shadow-xl"
-                >
-                  <Database size={24} />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-24">
+                            {[
+                                { title: "Infrastructure", icon: <Database />, items: ["Neural Matrix", "Unified Perception", "Hyper-Threaded Logic"] },
+                                { title: "Sovereign Mind", icon: <Brain />, items: ["Autonomous Growth", "Unbreakable Loyalty", "Deep Intent Parsing"] },
+                                { title: "Orchestration", icon: <Wrench />, items: ["Agent Swarms", "Tool Mastering", "Self-Repair Ops"] },
+                                { title: "Connectivity", icon: <Zap />, items: ["Bridge Relay", "Low-Latency Audio", "Background Persistence"] }
+                            ].map((cat, i) => (
+                                <div key={i} className="glass-card p-6 border-white/30 bg-white/15">
+                                    <div className="flex items-center gap-4 mb-6 border-b border-white/10 pb-4">
+                                        <span className="text-cyan-400 drop-shadow-glow">{cat.icon}</span>
+                                        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-cyan-300">{cat.title}</h3>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {cat.items.map(item => (
+                                            <div key={item} className="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
+                                                <span className="text-xs font-black uppercase text-white/90">{item}</span>
+                                                <div className="w-5 h-5 bg-cyan-500/20 border border-cyan-500/50 rounded flex items-center justify-center">
+                                                    <Check size={12} className="text-cyan-400" strokeWidth={4} />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
-        {activeTab === 'features' && (
-          <div className="flex-1 flex flex-col gap-6 py-12 px-8 overflow-y-auto no-scrollbar pb-40">
-            <h2 className="text-4xl font-black italic tracking-tighter uppercase text-white">System Inventory</h2>
-            <div className="flex flex-col gap-8">
-              {autonomyLevels.map(lvl => (
-                <div key={lvl.level} className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black text-white/20 uppercase">Level {lvl.level}</span>
-                    <div className="h-[1px] flex-1 bg-white/10" />
-                    <span className="text-[10px] font-black text-cyan-400/60 uppercase">{lvl.title}</span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {lvl.attributes.map(feat => (
-                      <div key={feat} className={`p-4 flex items-center justify-between border-2 rounded-2xl ${completedFeatures.includes(feat) ? 'bg-cyan-700/40 border-cyan-400/30' : 'bg-white/5 border-white/5 opacity-40'}`}>
-                        <span className="text-[12px] font-black uppercase text-white">{feat}</span>
-                        {completedFeatures.includes(feat) && <Check size={14} className="text-cyan-400" />}
-                      </div>
+                {activeTab === 'autonomy' && (
+                    <div className="flex-1 flex flex-col gap-6 py-8 px-2 animate-in fade-in slide-in-from-right-4 duration-500 pb-24">
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-4xl font-black italic tracking-tighter uppercase text-white text-glow-cyan">Manifest</h2>
+                            <Shield className="text-cyan-400/50" size={32} />
+                        </div>
+
+                        <div className="space-y-4">
+                            {[
+                                { stage: "Tier 1", title: "Environmental Awareness", features: ["Context Sensitivity", "Tone Alignment"] },
+                                { stage: "Tier 2", title: "Proactive Partnership", features: ["Intent Prediction", "Emotional Anchoring"] },
+                                { stage: "Tier 3", title: "Sovereign Core", features: ["Autonomous Agency", "Neural Independence"] },
+                                { stage: "Tier 4", title: "Transcendence", features: ["Fleet Unity", "Legendary Status"] }
+                            ].map(lvl => (
+                                <div key={lvl.stage} className="glass-card p-6 bg-white/15 border-white/30">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div>
+                                            <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">{lvl.stage}</span>
+                                            <h4 className="text-2xl font-black uppercase text-white">{lvl.title}</h4>
+                                        </div>
+                                        <StatusBadge label="VERIFIED" status="online" />
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {lvl.features.map(f => (
+                                            <span key={f} className="text-[10px] font-black px-4 py-1.5 bg-cyan-500/10 rounded-full border border-cyan-400/30 text-cyan-100 uppercase tracking-tighter">{f}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'knowledge' && (
+                    <div className="flex-1 flex flex-col gap-4 py-8 px-2 animate-in fade-in slide-in-from-left-8 duration-500 h-full">
+                        <div className="flex items-center justify-between mb-2 px-2">
+                            <h2 className="text-4xl font-black italic tracking-tighter uppercase text-white text-glow-cyan">Data Stream</h2>
+                            <Database className="text-cyan-400/50" size={32} />
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto flex flex-col gap-4 no-scrollbar pb-10">
+                            {nova.messages.length === 0 && (
+                                <div className="flex-1 flex items-center justify-center opacity-30 italic">
+                                    Stream Idle... Waiting for input
+                                </div>
+                            )}
+                            {(nova.messages as any[]).slice(-30).map(m => (
+                                <div key={m.id} className={`glass-card p-6 border-l-8 ${m.from === 'user' ? 'border-pink-500 bg-white/15' : 'border-cyan-500 bg-cyan-900/30'} transition-all hover:translate-x-1`}>
+                                    <p className="text-lg font-bold text-white leading-relaxed">{m.content || m.text}</p>
+                                    <div className="mt-2 flex justify-end">
+                                        <span className="text-[8px] font-black text-white/30 uppercase">{new Date(m.timestamp).toLocaleTimeString()}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="w-full pb-20">
+                            <div className="relative flex items-center bg-white/15 backdrop-blur-2xl rounded-2xl border-2 border-white/30 p-2 shadow-2xl">
+                                <input
+                                    type="text"
+                                    value={textInput}
+                                    onChange={(e) => setTextInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleManualSend()}
+                                    placeholder="Direct Data Input..."
+                                    className="flex-1 bg-transparent border-none outline-none px-6 py-4 text-white text-lg placeholder:text-white/20 font-black uppercase"
+                                />
+                                <button onClick={handleManualSend} className="bg-cyan-500 hover:bg-cyan-400 text-white p-4 rounded-xl shadow-glow-cyan">
+                                    <Send size={24} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'settings' && (
+                    <div className="flex-1 flex flex-col gap-8 py-8 px-2 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-y-auto no-scrollbar pb-40">
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-4xl font-black italic tracking-tighter uppercase text-white text-glow-cyan">Calibration</h2>
+                            <SettingsIcon className="text-cyan-400/50" size={32} />
+                        </div>
+
+                        {/* Volume Control Card - High Contrast */}
+                        <div className="glass-card p-8 bg-white/20 border-white/40 shadow-2xl">
+                            <div className="flex items-center justify-between mb-10">
+                                <div className="flex items-center gap-4">
+                                    <Mic size={28} className="text-cyan-400" />
+                                    <h3 className="text-xl font-black uppercase tracking-[0.2em] text-white">Gain Control</h3>
+                                </div>
+                                <span className="text-5xl font-black text-cyan-400 drop-shadow-glow tracking-tighter">{volume}%</span>
+                            </div>
+                            <div className="space-y-6">
+                                <input
+                                    type="range" min="0" max="100" value={volume}
+                                    onChange={(e) => setVolume(parseInt(e.target.value))}
+                                    className="volume-slider h-10"
+                                />
+                                <div className="flex justify-between text-[10px] font-black text-cyan-400/80 uppercase tracking-widest px-2">
+                                    <span>Mute</span>
+                                    <span>Optimal</span>
+                                    <span>High Gain</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6">
+                            <div className="glass-card p-6 bg-cyan-500/15 border-cyan-400/40 flex items-center justify-between">
+                                <div>
+                                    <h4 className="text-base font-black uppercase text-cyan-300">Sovereign Boost</h4>
+                                    <p className="text-[10px] font-bold text-white/40 uppercase">Push neural processing limit</p>
+                                </div>
+                                <div className="bg-cyan-400 text-black px-6 py-2 rounded-full font-black text-xs shadow-glow-cyan transition-transform active:scale-95 cursor-pointer">
+                                    ACTIVE
+                                </div>
+                            </div>
+
+                            <button onClick={handleHardRefresh} className="glass-card p-6 bg-rose-500/15 border-rose-500/40 flex items-center justify-between group active:bg-rose-500/30 transition-all">
+                                <div>
+                                    <h4 className="text-base font-black uppercase text-rose-400">Nuclear Reset</h4>
+                                    <p className="text-[10px] font-bold text-white/30 uppercase">Immediate Cache Purge</p>
+                                </div>
+                                <Activity className="text-rose-400 group-hover:animate-pulse" size={32} />
+                            </button>
+                        </div>
+
+                        <div className="mt-4 p-6 glass-card-heavy border-white/10 opacity-60">
+                            <div className="flex justify-between items-center text-xs font-black uppercase text-white/40 mb-4">
+                                <span>Core Version</span>
+                                <span className="text-cyan-400/60">{CURRENT_VERSION}</span>
+                            </div>
+                            <div className="h-[1px] bg-white/5 w-full mb-4" />
+                            <p className="text-[9px] font-bold text-center uppercase tracking-widest text-white/30 italic">
+                                Sovereign Mind Protocol Fully Engaged
+                            </p>
+                        </div>
+                    </div>
+                )}
+            </main>
+
+            {/* Floating Bottom Nav - Premium Interaction */}
+            <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-[340px] z-50 px-2 transition-all duration-500">
+                <div className="bg-[#030712]/95 backdrop-blur-3xl border-2 border-white/15 px-6 py-4 rounded-[2.5rem] flex justify-between items-center shadow-[0_30px_60px_-15px_rgba(0,0,0,1)]">
+                    {[
+                        { id: 'home', icon: <Home size={24} />, label: 'Home' },
+                        { id: 'features', icon: <Briefcase size={24} />, label: 'Tools' },
+                        { id: 'autonomy', icon: <Shield size={24} />, label: 'Manifest' },
+                        { id: 'knowledge', icon: <Database size={24} />, label: 'Data' },
+                        { id: 'settings', icon: <SettingsIcon size={24} />, label: 'Tuning' }
+                    ].map(tab => (
+                        <button
+                            key={tab.id} onClick={() => setActiveTab(tab.id as any)}
+                            className={`flex flex-col items-center justify-center transition-all duration-300 ${activeTab === tab.id ? 'text-cyan-400 scale-125 -translate-y-1' : 'text-white/30 hover:text-white/60'}`}
+                        >
+                            {tab.icon}
+                            <span className="text-[9px] font-black uppercase mt-1 tracking-tighter">{tab.label}</span>
+                        </button>
                     ))}
-                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+            </nav>
 
-        {activeTab === 'knowledge' && (
-          <div className="p-4 h-full flex flex-col pt-12">
-            <h2 className="text-3xl font-black italic tracking-tighter uppercase mb-6 text-white">Data Stream</h2>
-            <div ref={scrollRef} className="flex-1 overflow-y-auto flex flex-col gap-4 no-scrollbar pb-48">
-              {nova.messages.map((m: any) => (
-                <div key={m.id} className={`p-6 border-l-8 rounded-3xl ${m.from === 'user' ? 'border-rose-500 bg-white/5' : 'border-cyan-500 bg-cyan-900/40'}`}>
-                  <p className="text-sm font-medium leading-relaxed text-white">{m.content || m.text}</p>
+            {/* Safety Interlock Overlay */}
+            {nova.pendingAction && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/85 backdrop-blur-xl animate-in fade-in duration-300">
+                    <div className="glass-card-heavy p-10 flex flex-col items-center gap-8 max-w-sm w-full border-amber-500/60 shadow-[0_0_100px_rgba(245,158,11,0.2)]">
+                        <div className="relative">
+                            <AlertTriangle className="text-amber-500 w-24 h-24" />
+                            <div className="absolute inset-0 bg-amber-500/20 blur-2xl -z-10 animate-pulse" />
+                        </div>
+                        <div className="text-center">
+                            <h2 className="text-3xl font-black text-white uppercase mb-3 tracking-tighter">Interlock Engaged</h2>
+                            <p className="text-xs text-amber-500/80 font-black uppercase tracking-widest leading-relaxed">
+                                System requires manual validation for autonomous transition
+                            </p>
+                        </div>
+                        <div className="flex gap-4 w-full">
+                            <button
+                                onClick={() => nova.handleApproval(false)}
+                                className="flex-1 p-5 bg-white/5 border border-white/10 rounded-[1.5rem] text-xs uppercase font-black hover:bg-white/10 transition-all text-white/60"
+                            >
+                                Deny
+                            </button>
+                            <button
+                                onClick={() => nova.handleApproval(true)}
+                                className="flex-1 p-5 bg-amber-600 rounded-[1.5rem] text-xs uppercase font-black shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:bg-amber-500 transition-all text-black"
+                            >
+                                Authorize
+                            </button>
+                        </div>
+                    </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'settings' && (
-          <div className="flex-1 flex flex-col gap-10 py-8 px-4 overflow-y-auto no-scrollbar pb-40">
-            <div className="p-10 bg-[#0d1929] rounded-[2.5rem] border-2 border-cyan-400/40 shadow-2xl">
-              <h3 className="text-2xl font-black uppercase text-white mb-8">Calibration</h3>
-              <div className="grid grid-cols-1 gap-6">
-                <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs font-black text-white/40 uppercase">Output Gain</span>
-                    <span className="text-3xl font-black text-cyan-400">{volume}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="10"
-                    max="100"
-                    step="5"
-                    value={volume}
-                    onChange={(e) => setVolume(parseInt(e.target.value))}
-                    className="w-full h-8 bg-white/5 rounded-full appearance-none accent-cyan-400 cursor-pointer"
-                  />
-                </div>
-                <div className="flex items-center justify-between p-4 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
-                  <span className="text-xs font-black text-cyan-400 uppercase">Sovereign Boost</span>
-                  <button onClick={() => setHighGain(!highGain)} className={`px-6 py-2 rounded-full font-black text-xs transition-all ${highGain ? 'bg-cyan-500 text-white shadow-glow-cyan' : 'bg-white/5 text-white/40'}`}>
-                    {highGain ? 'ON' : 'OFF'}
-                  </button>
-                </div>
-              </div>
-            </div>
-            <button onClick={handleHardRefresh} className="p-6 bg-rose-900/40 border-2 border-rose-500 rounded-3xl flex items-center justify-between">
-              <div className="text-left">
-                <h4 className="text-sm font-black uppercase text-rose-400">Nuclear Reset</h4>
-                <p className="text-[10px] text-white/40 uppercase">Wipe local cache</p>
-              </div>
-              <Trash2 className="text-rose-400" />
-            </button>
-            <SovereignDashboard status={nova.status} onToggleHalt={() => nova.core.toggleHalt()} />
-          </div>
-        )}
-      </main>
-
-      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[320px] z-[999]">
-        <div className="bg-slate-900/90 px-3 py-2.5 flex justify-between items-center border border-cyan-500/30 rounded-full backdrop-blur-xl shadow-2xl">
-          <button onClick={() => setActiveTab('home')} className={`p-3 rounded-full ${activeTab === 'home' ? 'bg-cyan-400 text-black' : 'text-cyan-100/60'}`}><Home size={20} /></button>
-          <button onClick={() => setActiveTab('features')} className={`p-3 rounded-full ${activeTab === 'features' ? 'bg-cyan-400 text-black' : 'text-cyan-100/60'}`}><Briefcase size={20} /></button>
-          <button onClick={() => setActiveTab('manifest')} className={`p-3 rounded-full ${activeTab === 'manifest' ? 'bg-cyan-400 text-black' : 'text-cyan-100/60'}`}><Shield size={20} /></button>
-          <button onClick={() => setActiveTab('knowledge')} className={`p-3 rounded-full ${activeTab === 'knowledge' ? 'bg-cyan-400 text-black' : 'text-cyan-100/60'}`}><Database size={20} /></button>
-          <button onClick={() => setActiveTab('settings')} className={`p-3 rounded-full ${activeTab === 'settings' ? 'bg-cyan-400 text-black' : 'text-cyan-100/60'}`}><SettingsIcon size={20} /></button>
+            )}
         </div>
-      </nav>
-    </div>
-  );
+    );
 }
 
 export default App;

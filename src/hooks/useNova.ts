@@ -28,7 +28,12 @@ const stripPreamble = (text: string) => {
         /I can certainly assist you with.*/i,
         /Confirm bridge stabilization status.*/i,
         /According to my (architect|system|instructions).*/i,
-        /Your inquiry about the (farm|firm|bridge) stabilization status.*/i
+        /Your inquiry about the (farm|firm|bridge) stabilization status.*/i,
+        /v7\.3-SOVEREIGN-BRIDGE-PULSE/i,
+        /\[ID: [a-z0-9]+\]/i,
+        /\[Uptime: \d+s\]/i,
+        /burst limit/i,
+        /heartbeat/i
     ];
 
     let lines = text.split('\n');
@@ -116,10 +121,23 @@ export const useNova = () => {
         const syncStatus = () => {
             const currentStatus = core.getStatus();
             setNovaStatus(currentStatus);
-            setConnectionStatus(currentStatus.health.bridge === 'online' ? 'sovereign' : 'online');
+
+            // 📡 ENHANCED CONNECTIVITY DETECTION (v3.6.3)
+            const isBridgeOnline = currentStatus.health.bridge === 'online';
+            const isApiOnline = currentStatus.health.api === 'online';
+
+            if (isBridgeOnline && isApiOnline) {
+                setConnectionStatus('sovereign');
+            } else if (isApiOnline) {
+                setConnectionStatus('online');
+            } else {
+                setConnectionStatus('offline');
+            }
+
             setConnections(prev => ({
                 ...prev,
-                brain: currentStatus.health.bridge === 'online' ? 'online' : 'offline'
+                brain: isBridgeOnline ? 'online' : 'offline',
+                antigravity: isApiOnline ? 'online' : 'offline'
             }));
         };
         const interval = setInterval(syncStatus, 1500);
@@ -163,9 +181,15 @@ export const useNova = () => {
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'relay_jobs', filter: 'status=eq.completed' }, (payload) => {
                 const job = payload.new;
                 if (job.type === 'speech' && job.payload?.audio_url) {
+                    // 🔇 OPT-OUT: If browser-based TTS is handling speech, skip bridge audio to avoid duplicates
+                    if ((window as any).NOVA_USE_BROWSER_TTS) {
+                        console.log('[Nova] Skipping Bridge Audio (Browser TTS Active)');
+                        if ((window as any).NOVA_RESUME_LISTENING) (window as any).NOVA_RESUME_LISTENING();
+                        return;
+                    }
+
                     const audio = new Audio(job.payload.audio_url);
                     audio.crossOrigin = "anonymous";
-                    audio.volume = 1.0;
 
                     const ctx = getSharedCtx();
                     if (ctx) {
@@ -173,11 +197,14 @@ export const useNova = () => {
                             if (ctx.state === 'suspended') ctx.resume();
                             const source = ctx.createMediaElementSource(audio);
                             const gainNode = ctx.createGain();
-                            const baseVolume = (window as any).NOVA_VOLUME || 0.3;
-                            gainNode.gain.value = baseVolume * 15.0;
+                            const baseVolume = (window as any).NOVA_VOLUME || 0.6;
+                            // Realistic gain scaling (max 1.5x)
+                            gainNode.gain.value = Math.min(baseVolume * 1.5, 2.0);
                             source.connect(gainNode);
                             gainNode.connect(ctx.destination);
                         } catch (e) { }
+                    } else {
+                        audio.volume = (window as any).NOVA_VOLUME || 0.6;
                     }
 
                     audio.onended = () => {
