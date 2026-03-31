@@ -139,7 +139,7 @@ function App() {
                 return (
                     <div className="flex flex-col items-center justify-center pt-8">
                         <div className="mb-12 relative flex justify-center">
-                            <div className={`absolute inset-0 bg-[#0BF90A]/20 blur-[80px] rounded-full pointer-events-none transition-all duration-1000 ${isListening ? 'scale-150 animate-pulse' : 'scale-75'}`}></div>
+                            <div className={`absolute inset-0 bg-[#0BF9EA]/20 blur-[80px] rounded-full pointer-events-none transition-all duration-1000 ${isListening ? 'scale-150 animate-pulse' : 'scale-75'}`}></div>
                             <button
                                 onClick={toggleListening}
                                 className={`mic-button relative z-10 ${isListening ? 'active' : ''}`}
@@ -179,7 +179,7 @@ function App() {
     };
 
     return (
-        <div className="w-full min-h-screen bg-[#121212] text-[#0BF90A] overflow-y-auto no-scrollbar pb-32">
+        <div className="w-full min-h-screen bg-[#121212] text-[#0BF9EA] overflow-y-auto no-scrollbar pb-32">
 
             {/* 👑 ELITE HEADER */}
             <header className="fixed top-0 left-0 w-full z-[100] px-6 py-8 bg-charcoal/90 backdrop-blur-2xl border-b border-white/5">
