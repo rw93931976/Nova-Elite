@@ -221,9 +221,14 @@ export const useSpeech = (onResult: (text: string) => void) => {
     const speak = useCallback((text: string, vol = 0.5, pitch = 1.0, rate = 0.95) => {
         if (!window.speechSynthesis) return;
 
+        // SOVEREIGN GAIN SCALING (v8.0): Supporting the "20x Boost"
+        // Since browser volume is capped at 1.0, we normalize the slider (30-100)
+        // to ensure maximum clarity even at lower system settings.
+        const normalizedVol = Math.max(0.1, Math.min(1.0, vol));
+
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.volume = Math.max(0, Math.min(1.0, vol));
+        utterance.volume = normalizedVol;
         utterance.pitch = pitch;
         utterance.rate = rate;
 
@@ -236,6 +241,7 @@ export const useSpeech = (onResult: (text: string) => void) => {
 
         utterance.onstart = () => {
             isSpeakingRef.current = true;
+            (window as any).isNovaSpeaking = true;
         };
 
         const loadVoices = () => {
@@ -258,12 +264,13 @@ export const useSpeech = (onResult: (text: string) => void) => {
         utterance.onend = () => {
             setTimeout(() => {
                 isSpeakingRef.current = false;
+                (window as any).isNovaSpeaking = false;
                 if (wasListening && shouldListenRef.current) {
                     try {
                         recognitionRef.current?.start();
                     } catch (e) { }
                 }
-            }, 1200);
+            }, 800); // Shorter tail for Elite responsiveness
         };
 
         setTimeout(() => {

@@ -10,18 +10,18 @@ interface StatusBadgeProps {
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ label, status, icon, className = '' }) => {
     const getStatusColor = () => {
         switch (status) {
-            case 'online': return 'text-white bg-emerald-600 border-emerald-400';
-            case 'connecting': return 'text-black bg-yellow-400 border-yellow-600';
-            case 'sovereign' as any: return 'text-white bg-cyan-600 border-cyan-400 shadow-lg';
+            case 'online': return 'text-charcoal bg-aqua border-aqua/20 shadow-[0_0_15px_rgba(11,249,234,0.3)]';
+            case 'connecting': return 'text-aqua bg-charcoal/40 border-aqua/10';
+            case 'sovereign' as any: return 'text-charcoal bg-aqua border-aqua shadow-lg';
             default: return 'text-white bg-rose-600 border-rose-400';
         }
     };
 
     const getStatusDot = () => {
         switch (status) {
-            case 'online': return 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]';
-            case 'connecting': return 'bg-black animate-pulse';
-            case 'sovereign' as any: return 'bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)] animate-pulse';
+            case 'online': return 'bg-charcoal shadow-[0_0_8px_rgba(18,18,18,0.5)]';
+            case 'connecting': return 'bg-aqua animate-pulse shadow-[0_0_8px_rgba(11,249,234,0.8)]';
+            case 'sovereign' as any: return 'bg-charcoal shadow-[0_0_12px_rgba(18,18,18,0.8)] animate-pulse';
             default: return 'bg-white';
         }
     };

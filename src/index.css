@@ -1,29 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
 :root {
-  --cyan: #06b6d4;
-  --cyan-glow: rgba(6, 182, 212, 0.4);
-  --bg-dark: #0b0f1a;
-  --text-primary: #ffffff;
-  --text-sec: #94a3b8;
-  --card-bright: #ffffff;
+  --charcoal: #121212;
+  --aqua: #0BF9EA;
+  --cyan-glow: rgba(11, 249, 234, 0.4);
+  /* 3D Glass Tokens */
+  --glass-top: rgba(255, 255, 255, 0.5);
+  --glass-bot: rgba(255, 255, 255, 0.1);
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
 body {
-  background-color: var(--bg-dark);
-  color: var(--text-primary);
-  height: 100%;
-  width: 100%;
+  background-color: var(--charcoal);
+  color: var(--aqua);
   overflow-x: hidden;
-  -webkit-tap-highlight-color: transparent;
+  height: 100vh;
 }
 
 #root {
@@ -32,22 +31,97 @@ body {
 
 /* 📱 MOBILE OPTIMIZED LAYOUT */
 .main-content {
-  padding-bottom: 120px;
+  padding-bottom: 140px;
   /* Space for bottom nav */
   width: 100%;
-  max-width: 600px;
+  max-width: 500px;
   margin: 0 auto;
 }
 
-/* BRIGHT MODE CARDS (Premium High Contrast) */
+.text-glow {
+  text-shadow: 0 0 20px rgba(6, 182, 212, 0.6), 0 0 40px rgba(6, 182, 212, 0.2);
+}
+
+#root {
+  height: 100%;
+  background: radial-gradient(circle at top right, #1e293b 0%, #0b0f1a 100%);
+}
+
+/* 💎 THE SOVEREIGN CARD (3D Glass) */
+.sovereign-card {
+  background: var(--aqua);
+  color: var(--charcoal);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 10px 30px rgba(11, 249, 234, 0.2),
+    inset 0 1px 0 var(--glass-top),
+    inset 0 -1px 0 var(--glass-bot);
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sovereign-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  margin: -1.5px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--glass-top), var(--glass-bot));
+}
+
+.sovereign-card.locked {
+  background: rgba(11, 249, 234, 0.05);
+  color: rgba(11, 249, 234, 0.2);
+  border-color: rgba(11, 249, 234, 0.1);
+  box-shadow: none;
+}
+
+.sovereign-card.locked::before {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sovereign-card h3 {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.sovereign-card p {
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.glass-highlight {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--glass-top);
+}
+
 .bright-card {
   background: var(--card-bright);
   color: #000;
-  border-radius: 1.25rem;
-  padding: 1rem;
+  border-radius: 1.5rem;
+  padding: 1.25rem;
   border: 4px solid var(--cyan);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  margin-bottom: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  margin-bottom: 1.25rem;
+  transition: transform 0.2s ease;
+}
+
+.bright-card:active {
+  transform: scale(0.98);
 }
 
 .bright-card h3 {
@@ -56,73 +130,106 @@ body {
   text-transform: uppercase;
   font-size: 1.1rem;
   margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
 }
 
-.bright-card text,
 .bright-card p {
   color: #1e293b;
   font-weight: 700;
   font-size: 0.95rem;
+  line-height: 1.3;
 }
 
-/* 🎙️ THE MIC BUTTON - FORCED CIRCULAR */
+/* 🎙️ THE MIC BUTTON - RESTORED */
 .mic-button {
-  width: 180px;
-  height: 180px;
+  width: 200px;
+  height: 200px;
   border-radius: 50% !important;
   display: flex !important;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 8px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--charcoal);
+  border: 4px solid var(--aqua);
+  box-shadow: 0 0 40px var(--cyan-glow);
   cursor: pointer;
-  position: relative;
-  z-index: 10;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .mic-button.active {
-  background: var(--cyan);
-  border-color: white;
-  box-shadow: 0 0 50px var(--cyan-glow);
-  transform: scale(1.05);
+  animation: pulse-aqua 2s infinite;
+  background: var(--aqua);
+  transform: scale(1.1);
 }
 
-.mic-button icon {
-  width: 60px;
-  height: 60px;
+.mic-button svg {
+  color: var(--aqua);
+  width: 64px;
+  height: 64px;
+  transition: color 0.3s ease;
+}
+
+.mic-button.active svg {
+  color: var(--charcoal);
+}
+
+@keyframes pulse-aqua {
+  0% {
+    box-shadow: 0 0 0 0 rgba(11, 249, 234, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 30px rgba(11, 249, 234, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(11, 249, 234, 0);
+  }
 }
 
 /* FLOATING NAV */
 .nav-bar {
-  background: white;
-  border: 6px solid var(--cyan);
-  border-radius: 2.5rem;
-  padding: 0.5rem 1rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 4px solid var(--cyan);
+  border-radius: 2rem;
+  padding: 0.4rem;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
   display: flex !important;
   flex-direction: row !important;
   justify-content: space-around !important;
   align-items: center !important;
   width: 100%;
+  gap: 4px;
 }
 
 .nav-item {
-  color: #94a3b8;
+  color: #64748b;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 2px;
+  gap: 0px;
   flex: 1;
   text-decoration: none;
   background: none;
   border: none;
+  padding: 8px 0;
+  transition: all 0.2s ease;
+  border-radius: 1.25rem;
+}
+
+.nav-item span {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 
 .nav-item.active {
-  color: var(--cyan);
-  transform: scale(1.1);
+  color: #000;
+  background: var(--cyan);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px var(--cyan-glow);
 }
 
 /* UTILS */
@@ -149,6 +256,27 @@ body {
   }
 }
 
+@keyframes pulse-cyan {
+  0% {
+    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 20px rgba(6, 182, 212, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0);
+  }
+}
+
 .animate-spin-slow {
   animation: rotate-slow 3s linear infinite;
+}
+
+.mic-button.active {
+  animation: pulse-cyan 2s infinite;
+  background: var(--cyan);
+  border-color: white;
+  transform: scale(1.1);
 }

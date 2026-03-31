@@ -5,7 +5,15 @@ export default {
         "./src/**/*.{js,ts,jsx,tsx}",
     ],
     theme: {
-        extend: {},
+        extend: {
+            colors: {
+                charcoal: '#121212',
+                aqua: '#0BF9EA',
+            },
+            backgroundImage: {
+                'aqua-gradient': 'linear-gradient(135deg, #0BF9EA 0%, #07a69c 100%)',
+            }
+        },
     },
     plugins: [],
 }
