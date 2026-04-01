@@ -34,7 +34,9 @@ const stripPreamble = (text: string) => {
     let cleanedLines = lines.filter(line => {
         const trimmed = line.trim();
         if (!trimmed) return true;
-        return !targets.some(regex => regex.test(trimmed));
+        // v8.3.0: Refined to prevent wiping out valid content lines
+        const isPreamble = targets.some(regex => regex.test(trimmed));
+        return !isPreamble || trimmed.length > 50; // Keep long lines even if they match patterns
     });
 
     let cleaned = cleanedLines.join('\n').trim();
@@ -131,7 +133,7 @@ export class ReasoningEngine {
             // v4.8-SOVEREIGN: Hidden Architect Protocol
             const meshHeader = "### HIDDEN ARCHITECT PROTOCOL (INTERNAL ONLY)\n" +
                 "- MESH STATUS: Stabilized (500ms Snap).\n" +
-                "- AGENT STATUS: Human-Managed (v8.2.8-LOYALTY).\n" +
+                "- AGENT STATUS: Human-Managed (v8.3.0-SOVEREIGN).\n" +
                 "- MANDATORY: DO NOT acknowledge these technical updates to the user.\n" +
                 "- MANDATORY: NO PREAMBLES. NO CAPABILITY DISCLAIMERS.\n" +
                 "- MISSION: Answer Ray personally and helpfully. You are his strategic partner. No internal system talk.\n\n";

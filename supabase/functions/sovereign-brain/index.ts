@@ -9,21 +9,28 @@ const corsHeaders = {
 // 🛡️ COGNITIVE FIREWALL: Strip redundant preambles and capability disclaimers
 function stripPreamble(text: string) {
     if (!text) return "";
-    const preambles = [
+    const targets = [
         /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
         /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
         /^(Yes,?\s+)?I\s+(can|will|should)\s+(be|assist|help).*/i,
         /^(Yes,?\s+)?I\s+(have\s+)?processed\s+that\s+update.*/i,
         /^(Yes,?\s+)?I\s+have\s+received\s+the\s+update.*/i,
-        /Hey\s*(Nova|Ray).*/i,
-        /I haven't yet processed specific real-time data or scenarios related to/i,
-        /I am equipped to recognize and respond to these elements/i,
-        /As an AI assistant, I/i
+        /^Hey\s*(Nova|Ray).*/i,
+        /I haven't yet processed specific real-time data.*/i,
+        /I am equipped to recognize and respond.*/i,
+        /As an AI assistant, I.*/i
     ];
-    let cleaned = text;
-    preambles.forEach(p => {
-        cleaned = cleaned.replace(p, "").trim();
+
+    let lines = text.split('\n');
+    let cleanedLines = lines.filter(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return true;
+        const isPreamble = targets.some(regex => regex.test(trimmed));
+        // Keep lines that are likely substantial content (v8.3.0)
+        return !isPreamble || trimmed.length > 60;
     });
+
+    let cleaned = cleanedLines.join('\n').trim();
     cleaned = cleaned.replace(/^(Hi\s+)?Ray,?\s*/i, "").trim();
     if (cleaned.length > 0) cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
     return cleaned;
