@@ -1,4 +1,4 @@
-# 🌌 SOVEREIGN AUTONOMY MANIFEST (v3 - RECONSTRUCTED)
+# 🌌 SOVEREIGN AUTONOMY MANIFEST (v8.3.0-SOVEREIGN)
 
 This manifest defines the required capabilities for the Nova Elite Sovereign Mind. All previous levels must be verified before proceeding to higher tiers.
 

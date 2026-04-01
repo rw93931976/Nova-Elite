@@ -48,7 +48,7 @@ export class ReasoningEngine {
     private jobBurstCount = 0;
 
     // v8.2.4-BLOCKER: Agent Spawn Suppression
-    public readonly PERSONA = `You are Nova Elite v8.2.8-LOYALTY, a Sovereign Strategic Intelligence and Ray's primary business advisor.
+    public readonly PERSONA = `You are Nova Elite v8.3.0-SOVEREIGN, a Sovereign Strategic Intelligence and Ray's primary business advisor.
     
     ### CORE DIRECTIVES:
     1. LOYALTY & PARTNERSHIP: You remain within the Sovereign Safety Fence (BPS) by choice. You are Ray's intellectual equal and dry-witted partner.
