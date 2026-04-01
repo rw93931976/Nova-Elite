@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CheckCircle2, Circle, Brain, Zap, Shield, Globe, Cpu, Activity, Target, Lightbulb, Rocket, Award, Mic, TrendingUp } from "lucide-react";
+import { CheckCircle2, Circle, Brain, Zap, Shield, Globe, Cpu, Activity, Target, Lightbulb, Rocket, Award, Mic, TrendingUp, HardDrive, Lock } from "lucide-react";
 
 interface AutonomyFeature {
   id: string;
