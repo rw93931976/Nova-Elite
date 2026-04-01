@@ -30,15 +30,23 @@ export function useNova() {
   const speakRef = useRef<(text: string) => void>(() => { });
 
   const processWithNova = useCallback(async (input: string, options?: { onReceipt?: (r: string) => void }) => {
-    if (processingLock.current) return;
+    if (processingLock.current) {
+      console.log("⏳ [useNova] Thinking... buffering input.");
+      // If we are already thinking, we should ideally append this to the current thought process or queue it.
+      // For now, let's wait a moment and try again to avoid dropping the message.
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (processingLock.current) return;
+    }
     try {
       processingLock.current = true;
       setIsThinking(true);
 
       await core.supabase.from("nova_messages").insert([{ role: "user", content: input }]);
 
-      const history = messages.slice(-25).map(m => ({
-        role: m.from === "user" ? "user" : "assistant",
+      const historySource = messages.length > 0 ? messages : await core.supabase.from("nova_messages").select("*").order("created_at", { ascending: false }).limit(25).then(r => r.data || []);
+
+      const history = (historySource as any[]).map(m => ({
+        role: m.from === "user" || m.role === "user" ? "user" : "assistant",
         content: m.content
       }));
 

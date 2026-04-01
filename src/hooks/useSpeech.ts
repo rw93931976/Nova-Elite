@@ -65,15 +65,23 @@ export const useSpeech = (onResult: (text: string) => void) => {
             if ((latestResult as any).isFinal) {
                 console.log('[useSpeech] Final intent detected:', text);
 
-                // ⏳ SOVEREIGN DEBOUNCE (v6.0): Only process if we have actual content and NO agent is speaking
+                // ⏳ SOVEREIGN DEBOUNCE (v6.0): Optimized for Car/Elite stability (reduce from 1200ms)
                 debounceTimerRef.current = setTimeout(() => {
                     const isGlobalSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
+                    const wordCount = text.trim().split(/\s+/).length;
+
+                    // 🚦 GATE: Don't interrupt if it's just a fragment (um, well, etc.) 
+                    // unless we're sure the user is done.
                     if (text.length > 1 && !isGlobalSpeaking) {
+                        if (wordCount < 3 && (latestResult as any).isFinal) {
+                            console.log('[useSpeech] Fragment ignored to prevent interruption:', text);
+                            return;
+                        }
                         onResultRef.current(text);
                     } else if (isGlobalSpeaking) {
                         console.log('[useSpeech] Post-echo suppressed via Global Gate');
                     }
-                }, 1200); // Increased debounce to 1.2s for Elite stability
+                }, 800);
             }
         };
 
@@ -273,7 +281,7 @@ export const useSpeech = (onResult: (text: string) => void) => {
                         recognitionRef.current?.start();
                     } catch (e) { }
                 }
-            }, 800); // Shorter tail for Elite responsiveness
+            }, 300); // Optimized for Car/Elite handover (reduced from 800ms)
         };
 
         setTimeout(() => {

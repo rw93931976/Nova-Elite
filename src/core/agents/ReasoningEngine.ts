@@ -147,7 +147,7 @@ export class ReasoningEngine {
                         prosody_mode
                     }
                 }),
-                new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Cloud Logic Timeout')), 30000))
+                new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Sovereign Link Timeout')), 60000))
             ]);
             console.log("☁️ [Reasoner] Cloud Brain responded.");
 
@@ -186,10 +186,13 @@ export class ReasoningEngine {
             };
         } catch (err: any) {
             console.error('❌ [Reasoner] Brain Failure:', err);
+            const isTimeout = err.message?.includes('Timeout');
             return {
                 observation: { input, intent: 'fallback' },
                 analysis: { target: 'emergency', confidence: 0.1, logic: 'Context Hydration Fallback' },
-                response: "I'm experiencing a brief context shift, Ray. Let me recalibrate."
+                response: isTimeout
+                    ? "My apologies, Ray. The cloud link timed out. Let me try once more."
+                    : "I'm experiencing a brief context shift, Ray. Let me recalibrate."
             };
         }
     }
