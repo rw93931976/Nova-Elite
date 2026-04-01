@@ -8,10 +8,10 @@ export default {
         extend: {
             colors: {
                 charcoal: '#121212',
-                sovereign: '#0BF90A',
+                sovereign: '#0BF9EA',
             },
             backgroundImage: {
-                'sovereign-gradient': 'linear-gradient(135deg, #0BF90A 0%, #05a006 100%)',
+                'sovereign-gradient': 'linear-gradient(135deg, #0BF9EA 0%, #05a0a3 100%)',
             }
 
         },

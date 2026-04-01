@@ -120,7 +120,7 @@ app.get('/speech', (req, res) => {
 app.get('/health', (req, res) => {
     res.json({
         status: 'online',
-        version: 'v7.5-FINAL',
+        version: 'v8.2.1-SOVEREIGN',
         uptime: Math.round((Date.now() - START_TIME) / 1000),
         instance: INSTANCE_ID
     });
@@ -399,15 +399,27 @@ async function generateSpeech(text) {
 }
 
 async function playAudio(filePath) {
-    const winPlayer = `
-    $player = New-Object -ComObject WMPLib.WindowsMediaPlayer;
-    $player.URL = '${filePath.replace(/\\/g, '\\\\')}';
-    $player.settings.volume = 100;
-    $player.controls.play();
-    while ($player.playState -ne 1) { Start-Sleep -Milliseconds 100 }
-    $player.close();
+    const escapedPath = filePath.replace(/\\/g, '\\\\');
+    const playerScript = `
+    Add-Type -AssemblyName PresentationCore;
+    $player = New-Object System.Windows.Media.MediaPlayer;
+    $player.Open('${escapedPath}');
+    $player.Volume = 1.0;
+    $player.Play();
+    $duration = 0;
+    while ($player.NaturalDuration.HasTimeSpan -eq $false -and $duration -lt 50) {
+        Start-Sleep -Milliseconds 100;
+        $duration++;
+    }
+    if ($player.NaturalDuration.HasTimeSpan) {
+        Start-Sleep -Seconds ([Math]::Ceiling($player.NaturalDuration.TimeSpan.TotalSeconds) + 1);
+    } else {
+        Start-Sleep -Seconds 5;
+    }
+    $player.Stop();
+    $player.Close();
     `;
-    await executeHidden(winPlayer.replace(/\n/g, ' '));
+    await executeHidden(playerScript.replace(/\n/g, ' '));
 }
 
 // Maintenance: Automatic Pruning (Every hour)

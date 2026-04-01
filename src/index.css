@@ -1,9 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
 :root {
   --charcoal: #121212;
-  --sovereign-neon: #0BF90A;
-  --neon-glow: rgba(11, 249, 10, 0.4);
+  --sovereign-neon: #0BF9EA;
+  --neon-glow: rgba(11, 249, 234, 0.4);
   --charcoal-glow: rgba(18, 18, 18, 0.8);
   /* 3D Glass Tokens */
   --glass-top: rgba(255, 255, 255, 0.15);
