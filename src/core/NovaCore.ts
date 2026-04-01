@@ -58,9 +58,10 @@ export class NovaCore {
             }
         };
 
-        // ⚡️ REALTIME OPTIMIZED: Run initial check only. 
-        // Subsequent status updates are handled via WebSocket events in useNova.
+        // ⚡️ REALTIME OPTIMIZED: Run initial check.
         check();
+        // The heartbeat is a continuous pulse from the VPS. 
+        // We ensure the UI reflects this via direct state updates.
     }
 
     public async initialize() {

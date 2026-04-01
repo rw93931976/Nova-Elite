@@ -144,7 +144,8 @@ export class ReasoningEngine {
                         history: context.history || [],
                         architect_comms: comms || [],
                         persona: meshHeader + this.PERSONA + whartonContext + auditContext + resourceContext,
-                        prosody_mode
+                        prosody_mode,
+                        time_context: context.timeContext
                     }
                 }),
                 new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Sovereign Link Timeout')), 60000))

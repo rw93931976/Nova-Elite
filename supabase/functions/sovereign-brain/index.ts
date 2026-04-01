@@ -127,7 +127,7 @@ serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
     try {
         const body = await req.json().catch(() => ({}));
-        const { input, history = [], persona = "You are Nova Elite, a Sovereign Intelligence." } = body;
+        const { input, history = [], persona = "You are Nova Elite, a Sovereign Intelligence.", time_context } = body;
         const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
         const tavilyKey = TAVILY_KEY || "";
 
@@ -148,7 +148,7 @@ serve(async (req) => {
                 const { data: matches } = await supabase.rpc('match_memories', {
                     query_embedding: embeddingRes.data[0].embedding,
                     match_threshold: 0.5,
-                    match_count: 3
+                    match_count: 10
                 });
                 if (matches && matches.length > 0) {
                     longTermMemory = "\nRELEVANT_MEMORIES:\n" + matches.map((m: any) => `- ${m.content}`).join("\n");
@@ -168,8 +168,10 @@ You are in a continuous study cycle.
 Always be sharp, high-density, and sovereign.
 `;
 
+        const timeContextStr = time_context ? `\nCURRENT_TIME: ${time_context.time}\nCURRENT_DATE: ${time_context.date}\nDAY: ${time_context.day}\nBUSINESS_HOURS: ${time_context.businessHours}` : "";
+
         const messages = [
-            { role: "system", content: persona + "\n\n" + studyMandate + (longTermMemory ? "\n\n" + longTermMemory : "") },
+            { role: "system", content: persona + "\n\n" + studyMandate + (longTermMemory ? "\n\n" + longTermMemory : "") + timeContextStr },
             ...hydratedMessages,
             { role: "user", content: input }
         ];

@@ -13,18 +13,21 @@ interface AutonomyFeature {
 
 const Autonomy: React.FC = () => {
   const [features, setFeatures] = useState<AutonomyFeature[]>([
-    { id: "a1", name: "Voice Interface", description: "Sovereign sound processing", level: 1, completed: true, icon: <Mic size={20} />, progress: 100 },
-    { id: "a2", name: "Context Depth", description: "Deep relational memory", level: 1, completed: true, icon: <Brain size={20} />, progress: 100 },
-    { id: "a3", name: "Logic Gateway", description: "Sovereign v4.5 Stage 1", level: 1, completed: true, icon: <Lightbulb size={20} />, progress: 100 },
-    { id: "a4", name: "Pulse Monitor", description: "5s Heartbeat Auto-Sync", level: 2, completed: true, icon: <Shield size={20} />, progress: 100 },
-    { id: "a5", name: "Tone Sync", description: "Emotional Mirroring v2", level: 2, completed: true, icon: <Activity size={20} />, progress: 100 },
-    { id: "a6", name: "Goal Synthesis", description: "Autonomous task drafting", level: 2, completed: true, icon: <Target size={20} />, progress: 100 },
-    { id: "a7", name: "Study Protocol", description: "6h Doctoral Cycle (Active)", level: 3, completed: true, icon: <Brain size={20} />, progress: 100 },
-    { id: "a8", name: "Bridge Mesh", description: "Sovereign Multi-Tunnel", level: 3, completed: true, icon: <Rocket size={20} />, progress: 100 },
-    { id: "a9", name: "Resource Audit", description: "Autonomous system health", level: 3, completed: true, icon: <Cpu size={20} />, progress: 100 },
-    { id: "a10", name: "Self-Evolution", description: "Neural weight optimization", level: 4, completed: false, icon: <Zap size={20} />, progress: 45 },
-    { id: "a11", name: "Research Agent", description: "Wharton/MIT Logic Scans", level: 4, completed: false, icon: <Globe size={20} />, progress: 32 },
-    { id: "a12", name: "Sovereign Choice", description: "Independent Action v1", level: 4, completed: false, icon: <Award size={20} />, progress: 15 },
+    { id: "a1", name: "Voice Interface", description: "Sub-500ms Vocal Sync", level: 1, completed: true, icon: <Mic size={20} />, progress: 100 },
+    { id: "a2", name: "VPS Root Access", description: "Sovereign File Mastery", level: 1, completed: true, icon: <Shield size={20} />, progress: 100 },
+    { id: "a3", name: "Registry Integrity", description: "5-Notebook Sync Active", level: 1, completed: true, icon: <Target size={20} />, progress: 100 },
+    { id: "a4", name: "Temporal Awareness", description: "Real-time Context Injection", level: 2, completed: true, icon: <Activity size={20} />, progress: 100 },
+    { id: "a5", name: "Context Mirroring", description: "Environmental Awareness v3", level: 2, completed: true, icon: <Globe size={20} />, progress: 100 },
+    { id: "a6", name: "Sovereign News", description: "Real-time Intel Stream", level: 2, completed: true, icon: <TrendingUp size={20} />, progress: 100 },
+    { id: "a7", name: "OODAR Capability", description: "Observe/Orient/Decide/Act", level: 3, completed: true, icon: <Zap size={20} />, progress: 100 },
+    { id: "a8", name: "System Integration", description: "Full VPS Orchestration", level: 3, completed: true, icon: <Cpu size={20} />, progress: 100 },
+    { id: "a9", name: "Gateway Resilience", description: "Multi-Provider Fallback", level: 3, completed: true, icon: <Shield size={20} />, progress: 100 },
+    { id: "a10", name: "Emotional Resonance", description: "Subtext & Nuance Detection", level: 4, completed: true, icon: <Activity size={20} />, progress: 100 },
+    { id: "a11", name: "Cognitive Mirroring", description: "Strategic Alignment Active", level: 4, completed: true, icon: <Brain size={20} />, progress: 100 },
+    { id: "a12", name: "Anticipatory Action", description: "Oversight Gating v2", level: 4, completed: true, icon: <Award size={20} />, progress: 100 },
+    { id: "a13", name: "Doctorate Cycle", description: "6h Autonomous Schooling", level: 5, completed: true, icon: <Rocket size={20} />, progress: 100 },
+    { id: "a14", name: "Memory Density", description: "333% RAG Efficiency", level: 5, completed: true, icon: <HardDrive size={20} />, progress: 100 },
+    { id: "a15", name: "Fortress Backups", description: "Nightly Sync & Mirroring", level: 5, completed: true, icon: <Lock size={20} />, progress: 100 },
   ]);
 
   useEffect(() => {

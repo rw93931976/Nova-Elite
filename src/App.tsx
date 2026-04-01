@@ -147,7 +147,7 @@ function App() {
                 <header className="flex justify-between items-center mb-8 pt-4">
                     <div className="flex flex-col">
                         <h1 className="text-3xl font-black italic tracking-tighter text-[#0BF9EA] uppercase drop-shadow-[0_0_15px_rgba(11,249,234,0.4)]">Nova Sovereign</h1>
-                        <span className="text-[9px] font-black text-[#0BF9EA]/60 tracking-[0.5em] uppercase">Elite V8.2.3 [SOVEREIGN]</span>
+                        <span className="text-[9px] font-black text-[#0BF9EA]/60 tracking-[0.5em] uppercase">Elite V8.2.8 [LOYALTY]</span>
                     </div>
 
                     <StatusBadge label="Sovereign" status="online" />

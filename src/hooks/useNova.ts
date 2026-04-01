@@ -50,7 +50,15 @@ export function useNova() {
         content: m.content
       }));
 
-      const thought = await core.processElite(input, { history, lastUrl: lastUrl.current }, options?.onReceipt);
+      const currentTime = new Date();
+      const timeContext = {
+        time: currentTime.toLocaleTimeString(),
+        date: currentTime.toLocaleDateString(),
+        day: currentTime.toLocaleDateString('en-US', { weekday: 'long' }),
+        isBusinessHours: currentTime.getHours() >= 8 && currentTime.getHours() <= 18
+      };
+
+      const thought = await core.processElite(input, { history, lastUrl: lastUrl.current, timeContext }, options?.onReceipt);
       console.log("🧠 [useNova] Thought processed:", thought?.response ? "Success" : "Empty");
       if (thought?.analysis?.tone) setLastTone(thought.analysis.tone);
 

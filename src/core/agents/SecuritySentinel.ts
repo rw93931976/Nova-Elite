@@ -20,24 +20,36 @@ export class SecuritySentinel {
         return true;
     }
 
-    public checkSystemIntegrity(isHalted: boolean): string {
-        if (isHalted) return "SYSTEM_HALTED";
+    public requiresApproval(action: string): boolean {
+        const sensitivePatterns = [/capital/i, /finance/i, /root/i, /config/i, /gate/i, /reset/i];
+        return sensitivePatterns.some(p => p.test(action));
+    }
 
-        // Simulated anomaly detection
-        if (this.isRogueDetected || Math.random() > 0.999) {
+    /**
+     * NETWORK DEFENSE (LEVEL 2/3):
+     * Monitors for outside attacks (brute force, unauthorized gateway attempts).
+     */
+    public async monitorNetworkDefense(logs: any[]): Promise<{ status: string; threats: string[] }> {
+        const threats: string[] = [];
+        const unauthorizedAttempts = logs.filter(l => l.status === 401 || l.message?.includes('Unauthorized'));
+
+        if (unauthorizedAttempts.length > 10) {
+            threats.push("COGNITIVE_FIREWALL_ALERT: Multiple unauthorized gateway attempts detected.");
             this.isRogueDetected = true;
-            console.warn("🚨 [SECURITY]: Anomaly detected. Sentinel is responding.");
-            return "ANOMALY_DETECTED";
         }
 
-        return "INTEGRITY_SAFE";
+        return {
+            status: threats.length > 0 ? "Under Attack" : "Secure",
+            threats
+        };
     }
 
     public getStatus() {
         return {
             status: "active",
             integrity: 100,
-            threatLevel: "Low"
+            threatLevel: this.isRogueDetected ? "Elevated" : "Low",
+            protocols: ["No-Delete [Active]", "Cognitive Firewall [Active]", "Oversight Gating [Active]"]
         };
     }
 }

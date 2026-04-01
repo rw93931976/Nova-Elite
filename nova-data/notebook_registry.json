@@ -1,22 +1,59 @@
 {
-    "notebooks":  [
-                      {
-                          "subjects":  [
-                                           "SEO",
-                                           "AEO",
-                                           "JSON-LD"
-                                       ],
-                          "title":  "Top 1% Marketing Strategy",
-                          "id":  "marketing-v1"
-                      },
-                      {
-                          "subjects":  [
-                                           "Contract Law",
-                                           "Finance",
-                                           "SMB Strategy"
-                                       ],
-                          "title":  "SaaS Operations \u0026 Business Law",
-                          "id":  "saas-v1"
-                      }
-                  ]
+    "notebooks": [
+        {
+            "id": "marketing-v1",
+            "name": "Top 1% Marketing Strategy",
+            "category": "marketing",
+            "url": "file:///nova-data/notebooks/marketing-v1.md",
+            "subjects": [
+                "SEO",
+                "AEO",
+                "JSON-LD"
+            ]
+        },
+        {
+            "id": "saas-v1",
+            "name": "SaaS Operations & Business Law",
+            "category": "business",
+            "url": "file:///nova-data/notebooks/saas-v1.md",
+            "subjects": [
+                "Contract Law",
+                "Finance",
+                "SMB Strategy"
+            ]
+        },
+        {
+            "id": "nova_study",
+            "name": "Sovereign Study (Nova)",
+            "category": "technical",
+            "url": "file:///nova-data/notebooks/nova_study.md",
+            "subjects": [
+                "System Architecture",
+                "OODAR",
+                "Cognitive Mesh"
+            ]
+        },
+        {
+            "id": "ray_briefing",
+            "name": "Strategic Briefing (Ray)",
+            "category": "business",
+            "url": "file:///nova-data/notebooks/ray_briefing.md",
+            "subjects": [
+                "Partner Calibration",
+                "Mission",
+                "WOW Strategy"
+            ]
+        },
+        {
+            "id": "expert_skills",
+            "name": "Expert Skills Handbook",
+            "category": "mastery",
+            "url": "file:///nova-data/notebooks/expert_skills.md",
+            "subjects": [
+                "Handyman",
+                "Electrical",
+                "Carpentry"
+            ]
+        }
+    ]
 }
