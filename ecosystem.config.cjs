@@ -22,7 +22,17 @@ module.exports = {
       env: {
         NODE_ENV: "development",
       }
+    },
+    {
+      name: "nova-schooling",
+      script: "./scripts/autonomous_schooling.cjs",
+      watch: false,
+      autorestart: true,
+      restart_delay: 21600000, // 6 Hours
+      env: {
+        NODE_ENV: "production",
+      }
     }
-    // Note: Bridge, Sentinel, and Schooling are now handled by the VPS to save local memory.
+    // Note: Sentinel is now handled by the VPS to save local memory.
   ]
 };

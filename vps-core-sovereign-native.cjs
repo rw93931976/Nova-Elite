@@ -253,6 +253,18 @@ async function subscribeToComms() {
         .subscribe();
 }
 
+function loadIdentity() {
+    try {
+        return JSON.parse(fs.readFileSync(path.join(__dirname, 'sovereign_identity.json'), 'utf8'));
+    } catch (e) { return {}; }
+}
+
+function loadNotebooks() {
+    try {
+        return JSON.parse(fs.readFileSync(path.join(__dirname, 'notebook_registry.json'), 'utf8'));
+    } catch (e) { return []; }
+}
+
 async function triggerNovaResponse(incomingMsg) {
     try {
         const { data: historyData } = await supabase
@@ -288,6 +300,8 @@ async function triggerNovaResponse(incomingMsg) {
                 input: incomingMsg.message,
                 history: history,
                 architect_comms: archData || [],
+                persona: JSON.stringify(loadIdentity()),
+                notebooks: JSON.stringify(loadNotebooks()),
                 silent: incomingMsg.silent || false
             }),
             signal: controller.signal
@@ -384,6 +398,16 @@ async function executeJob(job) {
             const cmd = `npx supabase db dump --db-url "${dbUrl}" -f "${backupFile}"`;
             await executeHidden(cmd);
             await updateJob(job.id, { status: 'completed', payload: { ...job.payload, local_path: backupFile } });
+        } else if (job.type === 'update_identity') {
+            const identityPath = path.join(__dirname, 'sovereign_identity.json');
+            fs.writeFileSync(identityPath, JSON.stringify(job.payload.identity, null, 2));
+            await updateJob(job.id, { status: 'completed' });
+            log(`✨ [Identity] Nova updated her own core identity via conversation.`);
+        } else if (job.type === 'update_notebook_registry') {
+            const regPath = path.join(__dirname, 'notebook_registry.json');
+            fs.writeFileSync(regPath, JSON.stringify(job.payload.registry, null, 2));
+            await updateJob(job.id, { status: 'completed' });
+            log(`✨ [Registry] Nova updated her notebook registry.`);
         } else {
             // Mark other jobs as completed for safety
             await updateJob(job.id, { status: 'completed' });

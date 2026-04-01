@@ -73,19 +73,31 @@ async function runSchooling() {
             console.log("💎 [Vault] Observation logged to Solutions Vault.");
         }
 
-        // 4. Relay Jobs (Persistence)
-        const goalMatch = plan.match(/GOAL_PROPOSAL:\s*(.*)/);
-        if (goalMatch) {
-            const newGoal = goalMatch[1];
-            await axios.post(`${supabaseUrl}/rest/v1/relay_jobs`, {
-                type: 'update_goal',
-                payload: { goal: newGoal },
-                status: 'pending'
-            }, {
-                headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' }
-            });
-            console.log(`🎯 [Sovereign] New Goal Identified: ${newGoal}`);
+        // 4. Relay Jobs & Permanent Memory (Persistence)
+        console.log("🧠 [Memory] Embedding research for long-term recall...");
+        if (plan.includes("RESEARCH_REPORT:")) {
+            const report = plan.split("RESEARCH_REPORT:")[1].split("GOAL_PROPOSAL:")[0].trim();
+
+            // Get Embedding via OpenAI
+            const embRes = await axios.post("https://api.openai.com/v1/embeddings", {
+                model: "text-embedding-3-small",
+                input: report
+            }, { headers: { 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` } });
+
+            if (embRes.data.data[0].embedding) {
+                await axios.post(`${supabaseUrl}/rest/v1/nova_memories`, {
+                    content: report,
+                    embedding: embRes.data.data[0].embedding,
+                    category: 'doctoral_research',
+                    metadata: { type: 'schooling_cycle', timestamp: new Date().toISOString() }
+                }, {
+                    headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' }
+                });
+                console.log("✅ [Memory] Research successfully embedded in Supabase.");
+            }
         }
+
+        const goalMatch = plan.match(/GOAL_PROPOSAL:\s*(.*)/);
 
         console.log("🏁 [Sovereign Schooling] Cycle Complete. Standby for 6h interval.");
 
