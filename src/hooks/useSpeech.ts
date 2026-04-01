@@ -73,7 +73,7 @@ export const useSpeech = (onResult: (text: string) => void) => {
                     // 🚦 GATE: Don't interrupt if it's just a fragment (um, well, etc.) 
                     // unless we're sure the user is done.
                     if (text.length > 1 && !isGlobalSpeaking) {
-                        if (wordCount < 3 && (latestResult as any).isFinal) {
+                        if (wordCount < 2 && (latestResult as any).isFinal) {
                             console.log('[useSpeech] Fragment ignored to prevent interruption:', text);
                             return;
                         }
