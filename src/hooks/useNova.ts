@@ -21,9 +21,68 @@ export function useNova() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [lastTone, setLastTone] = useState<string>("neutral");
   const [hasNewArchMsg, setHasNewArchMsg] = useState(false);
+
   const processingLock = useRef(false);
   const lastUrl = useRef<string | null>(null);
   const lastArchId = useRef<string | null>(localStorage.getItem("lastArchId"));
+
+  // 🎙️ BREAK CIRCULAR DEPENDENCY: Use a ref for the speak function
+  const speakRef = useRef<(text: string) => void>(() => { });
+
+  const processWithNova = useCallback(async (input: string, options?: { onReceipt?: (r: string) => void }) => {
+    if (processingLock.current) return;
+    try {
+      processingLock.current = true;
+      setIsThinking(true);
+
+      await core.supabase.from("nova_messages").insert([{ role: "user", content: input }]);
+
+      const history = messages.slice(-25).map(m => ({
+        role: m.from === "user" ? "user" : "assistant",
+        content: m.content
+      }));
+
+      const thought = await core.processElite(input, { history, lastUrl: lastUrl.current }, options?.onReceipt);
+      console.log("🧠 [useNova] Thought processed:", thought?.response ? "Success" : "Empty");
+      if (thought?.analysis?.tone) setLastTone(thought.analysis.tone);
+
+      if (thought?.response) {
+        if ((window as any).NOVA_USE_BROWSER_TTS) {
+          speakRef.current(thought.response);
+        }
+
+        await core.supabase.from("nova_messages").insert([{
+          role: "assistant",
+          content: thought.response
+        }]);
+
+        await core.supabase.from("relay_jobs").insert([{
+          type: "speech",
+          status: "pending",
+          payload: { text: thought.response }
+        }]);
+      }
+
+      return thought;
+    } catch (e: any) {
+      console.error("❌ Interaction failed:", e);
+    } finally {
+      processingLock.current = false;
+      setIsThinking(false);
+    }
+  }, [core, messages]);
+
+  const sendMessage = useCallback(async (text: string) => {
+    return processWithNova(text);
+  }, [processWithNova]);
+
+  // 🎙️ Initialize Speech Hook
+  const { isListening, toggleListening, speak } = useSpeech(sendMessage);
+
+  // Keep speakRef in sync
+  useEffect(() => {
+    speakRef.current = speak;
+  }, [speak]);
 
   useEffect(() => {
     const init = async () => {
@@ -48,7 +107,7 @@ export function useNova() {
           to: m.role === "user" ? "assistant" : "user",
           content: m.content,
           timestamp: new Date(m.created_at).getTime(),
-          type: "received",
+          type: "received" as "received",
           status: "read",
           role: m.role
         }));
@@ -65,7 +124,7 @@ export function useNova() {
             to: "nova",
             content: `[ARCH]: ${m.message}`,
             timestamp: new Date(m.created_at).getTime(),
-            type: "received",
+            type: "received" as "received",
             status: "read",
             role: "architect"
           }));
@@ -77,22 +136,65 @@ export function useNova() {
     };
 
     fetchMessages();
+
+    // 🔊 AUDIO RELAY: Sync speech from Bridge to Browser (Pulse Sync)
+    const playBridgeAudio = async (url?: string) => {
+      try {
+        (window as any).isNovaSpeaking = true;
+        const bridgeUrl = url || `/bridge-vps/speech?t=${Date.now()}`;
+        const audio = new Audio(bridgeUrl);
+        audio.onended = () => {
+          setTimeout(() => {
+            (window as any).isNovaSpeaking = false;
+            console.log('🔇 [AudioRelay] Bridge speech ended');
+          }, 500); // 500ms safety tail
+        };
+        audio.onerror = () => {
+          (window as any).isNovaSpeaking = false;
+          console.error('❌ [AudioRelay] Audio element error');
+        };
+        await audio.play();
+        console.log('🔊 [AudioRelay] Playing bridge speech');
+      } catch (e) {
+        (window as any).isNovaSpeaking = false;
+        console.warn('⚠️ [AudioRelay] Playback blocked or failed', e);
+      }
+    };
+
     const sub = core.supabase
       .channel("nova-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "nova_messages" }, fetchMessages)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "nova_messages" }, async (payload) => {
+        const msg = payload.new as any;
+        if (msg.role === 'assistant') {
+          // fetchMessages first to update UI
+          await fetchMessages();
+        }
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "nova_messages" }, fetchMessages)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "agent_architect_comms" }, async (payload) => {
         const msg = payload.new as any;
         if (msg && msg.sender !== 'vps_heartbeat') {
-          // 🎙️ INSTANT RELAY: No waiting for pools. Nova speaks Architect pings immediately.
-          speak(`Notification from Architect: ${msg.message}`);
-          await fetchMessages(); // Refresh UI after speaking
+          speakRef.current(`Notification from Architect: ${msg.message}`);
+          await fetchMessages();
           setHasNewArchMsg(true);
+        }
+      })
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "relay_jobs",
+        filter: "status=eq.completed"
+      }, async (payload) => {
+        const job = payload.new as any;
+        if (job.type === 'speech' && job.payload?.audio_url) {
+          console.log("🔊 [AudioPulse] Triggering speech from Relay Sync");
+          await playBridgeAudio(job.payload.audio_url);
         }
       })
       .subscribe();
 
     return () => { sub.unsubscribe(); };
-  }, [core]);
+  }, [core]); // Removed speak from dependencies since we use speakRef
 
   const resetArchAlert = useCallback(() => {
     setHasNewArchMsg(false);
@@ -105,56 +207,6 @@ export function useNova() {
       }
     }
   }, [messages]);
-
-  const { isListening, toggleListening, speak } = useSpeech((text) => {
-    sendMessage(text);
-  });
-
-  const processWithNova = useCallback(async (input: string, options?: { onReceipt?: (r: string) => void }) => {
-    if (processingLock.current) return;
-    try {
-      processingLock.current = true;
-      setIsThinking(true);
-
-      await core.supabase.from("nova_messages").insert([{ role: "user", content: input }]);
-
-      const history = messages.slice(-25).map(m => ({
-        role: m.from === "user" ? "user" : "assistant",
-        content: m.content
-      }));
-
-      const thought = await core.processElite(input, { history, lastUrl: lastUrl.current }, options?.onReceipt);
-      if (thought?.analysis?.tone) setLastTone(thought.analysis.tone);
-
-      if (thought?.response) {
-        if ((window as any).NOVA_USE_BROWSER_TTS) {
-          speak(thought.response);
-        }
-
-        await core.supabase.from("nova_messages").insert([{
-          role: "assistant",
-          content: thought.response
-        }]);
-
-        await core.supabase.from("relay_jobs").insert([{
-          type: "speech",
-          status: "pending",
-          payload: { text: thought.response }
-        }]);
-      }
-
-      return thought;
-    } catch (e: any) {
-      console.error("❌ Interaction failed:", e);
-    } finally {
-      processingLock.current = false;
-      setIsThinking(false);
-    }
-  }, [core, messages, speak]);
-
-  const sendMessage = useCallback(async (text: string) => {
-    return processWithNova(text);
-  }, [processWithNova]);
 
   const toggleHalt = useCallback(() => {
     core.toggleHalt();

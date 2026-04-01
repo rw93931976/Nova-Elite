@@ -48,44 +48,35 @@ const Features: React.FC = () => {
   return (
     <div className="space-y-12 pb-32">
       <div className="text-center">
-        <h2 className="text-4xl font-black italic tracking-tighter text-[#0BF90A] mb-2 uppercase drop-shadow-[0_0_20px_rgba(11,249,10,0.3)]">Sovereign Roadmap</h2>
-        <p className="text-[#0BF90A]/40 text-xs font-bold tracking-[0.2em] uppercase">Maturity Spectrum 1-15</p>
+        <h2 className="text-4xl font-black italic tracking-tighter text-[#0BF9EA] mb-2 uppercase drop-shadow-[0_0_20px_rgba(11,249,234,0.3)]">Sovereign Roadmap</h2>
+        <p className="text-[#0BF9EA]/40 text-xs font-bold tracking-[0.2em] uppercase">Maturity Spectrum 1-15</p>
       </div>
 
       {Object.entries(groupedFeatures).sort(([a], [b]) => parseInt(a) - parseInt(b)).map(([level, levelFeatures]) => (
         <div key={level} className="space-y-6">
           <div className="flex items-center gap-4">
-            <div className="bg-[#0BF90A]/10 border border-[#0BF90A]/30 rounded-full px-4 py-1">
-              <span className="text-[#0BF90A] font-black text-[10px] tracking-widest">LEVEL {level}</span>
+            <div className="bg-[#0BF9EA]/20 border border-[#0BF9EA]/60 rounded-full px-4 py-1">
+              <span className="text-[#0BF9EA] font-black text-[10px] tracking-widest">LEVEL {level}</span>
             </div>
-            <div className="flex-1 h-[1px] bg-[#0BF90A]/10"></div>
+            <div className="flex-1 h-[1px] bg-[#0BF9EA]/20"></div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             {levelFeatures.map(feature => (
               <div
                 key={feature.id}
-                className={`group relative overflow-hidden bg-white/[0.03] backdrop-blur-2xl border rounded-2xl p-4 transition-all duration-500 hover:scale-[1.02] ${
-                  feature.completed 
-                    ? "border-[#0BF90A]/40 shadow-[0_0_30px_rgba(11,249,10,0.1),inset_0_0_20px_rgba(11,249,10,0.05)]" 
-                    : "border-white/5 opacity-20 filter grayscale"
-                }`}
+                className={`${feature.completed ? "sovereign-card" : "bg-white/[0.03] border border-white/5 opacity-20 filter grayscale rounded-2xl p-4"} transition-all duration-500 hover:scale-[1.02]`}
               >
-                {/* Shine Effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none opacity-50" />
-                
-                <div className="relative z-10 flex flex-col gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                    feature.completed ? "bg-[#0BF90A]/10 text-[#0BF90A] shadow-[0_0_20px_rgba(11,249,10,0.2)]" : "bg-white/5 text-white/20"
-                  }`}>
+                <div className="flex flex-col gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${feature.completed ? "bg-[#121212]/10 text-[#121212]" : "bg-white/5 text-white/20"}`}>
                     {feature.icon}
                   </div>
-                  
+
                   <div>
-                    <h3 className={`font-black text-[11px] uppercase tracking-wide leading-tight ${feature.completed ? "text-[#0BF90A]" : "text-white/40"}`}>
+                    <h3 className="font-extrabold text-[12px] uppercase tracking-wide leading-tight">
                       {feature.name}
                     </h3>
-                    <p className={`text-[9px] font-bold mt-1 leading-tight ${feature.completed ? "text-white/60" : "text-white/20"}`}>
+                    <p className="text-[10px] font-black mt-1 leading-tight opacity-80">
                       {feature.description}
                     </p>
                   </div>

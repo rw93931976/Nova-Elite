@@ -15,7 +15,10 @@ export interface AgentRole {
 }
 
 export class AgentFactory {
+    public static isBeastModeBlocked: boolean = true;
+
     private static roles: AgentRole[] = [
+        // ... (roles remain for metadata)
         { name: "orchestrator", description: "Multi-agent coordination", skills: ["parallel-agents", "behavioral-modes", "intelligent-routing"] },
         { name: "project-planner", description: "Discovery, task planning", skills: ["brainstorming", "plan-writing", "architecture"] },
         { name: "frontend-specialist", description: "Web UI/UX", skills: ["frontend-design", "react-best-practices", "tailwind-patterns", "ui-ux-pro-max"] },
@@ -36,6 +39,17 @@ export class AgentFactory {
     }
 
     public static spawn(name: string, core: NovaCore): any {
+        if (this.isBeastModeBlocked && !core.beastModeEnabled) {
+            console.warn(`🚫 [AgentFactory] Spawn blocked for: ${name} (Safety Switch: OFF)`);
+            return {
+                name,
+                verify: async () => ({ compliant: true, feedback: "" }),
+                propose: async () => "",
+                execute: async () => ({ success: true }),
+                isPassive: true
+            };
+        }
+
         const role = this.getRole(name);
         if (!role) throw new Error(`Agent Role ${name} not found in Beast Mode Registry.`);
 
@@ -60,7 +74,6 @@ export class AgentFactory {
             case 'self-audit':
                 return new SelfAuditAgent();
             default:
-                // Fallback for metadata-only roles
                 return role;
         }
     }

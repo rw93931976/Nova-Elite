@@ -10,8 +10,9 @@
   --neon-glow: rgba(11, 249, 234, 0.4);
   --charcoal-glow: rgba(18, 18, 18, 0.8);
   /* 3D Glass Tokens */
-  --glass-top: rgba(255, 255, 255, 0.15);
-  --glass-bot: rgba(0, 0, 0, 0.2);
+  --glass-top: rgba(255, 255, 255, 0.25);
+  --glass-bot: rgba(0, 0, 0, 0.4);
+  --elite-aqua: #0BF9EA;
 }
 
 * {
@@ -45,56 +46,105 @@ body {
   margin: 0 auto;
 }
 
-/* 💎 THE SOVEREIGN CARD (3D Elite) */
+/* 💎 THE SOVEREIGN CARD (Premium Aqua Bloom v3.1 - ELITE) */
 .sovereign-card {
-  background: var(--sovereign-neon);
-  color: var(--charcoal);
-  border-radius: 1.25rem;
-  padding: 1.5rem;
-  margin-bottom: 1.25rem;
+  /* Volumetric Gradient Background */
+  background: linear-gradient(165deg,
+      rgba(11, 249, 234, 0.9) 0%,
+      rgba(11, 249, 234, 0.7) 100%) !important;
+
+  color: #121212 !important;
+  border-radius: 2rem;
+  padding: 2rem;
+  margin-bottom: 2.5rem;
   position: relative;
+
+  /* 3D Volumetric Glow: The 'Gradient Coming Out' Effect */
   box-shadow:
-    0 10px 30px var(--neon-glow),
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    inset 0 2px 2px var(--glass-top),
-    inset 0 -2px 2px var(--glass-bot);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    0 20px 50px rgba(0, 0, 0, 0.4),
+    0 0 60px rgba(11, 249, 234, 0.3),
+    inset 0 0 30px rgba(255, 255, 255, 0.2);
+
+  /* Floating Animation */
+  animation: float 6s ease-in-out infinite;
+
+  /* Inner Detail */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    /* Hard White Top Edge */
+    inset 0 -4px 10px rgba(0, 0, 0, 0.1);
+  /* Subtle Lower Shadow */
+
+  /* The Frost (Elite Glassmorphism) */
+  backdrop-filter: blur(25px) saturate(220%);
+  -webkit-backdrop-filter: blur(25px) saturate(220%);
+
+  /* 6px Elite Border (The Heavy Frame) */
+  border: 6px solid var(--elite-aqua);
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: -8px;
+
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex !important;
   flex-direction: column;
-  gap: 0.75rem;
-  min-height: 100px;
+  gap: 1.5rem;
+}
+
+.sovereign-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 1.6rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* The 'Ambient Reflection' for 3D presence */
+.sovereign-card::after {
+  content: "";
+  position: absolute;
+  bottom: -60px;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: radial-gradient(ellipse at center, rgba(11, 249, 234, 0.3) 0%, transparent 80%);
+  filter: blur(20px);
+  opacity: 1;
+  pointer-events: none;
 }
 
 .sovereign-card:active {
-  transform: translateY(2px) scale(0.98);
-  box-shadow: 0 5px 15px var(--neon-glow);
+  transform: translateY(8px) scale(0.95);
+  filter: drop-shadow(0 0 25px rgba(11, 249, 234, 0.4)) brightness(0.9);
+}
+
+.sovereign-card h2,
+.sovereign-card h3 {
+  color: #121212 !important;
+  font-weight: 900 !important;
+  text-transform: uppercase;
+  letter-spacing: -0.06em;
+  font-size: 1.6rem;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  position: relative;
+  z-index: 2;
+}
+
+.sovereign-card p,
+.sovereign-card span {
+  color: #121212 !important;
+  font-weight: 800 !important;
+  opacity: 1 !important;
+  line-height: 1.1;
+  position: relative;
+  z-index: 2;
 }
 
 .sovereign-card.locked {
-  background: rgba(11, 249, 10, 0.05);
-  color: rgba(11, 249, 10, 0.2);
-  border-color: rgba(11, 249, 10, 0.1);
-  box-shadow: none;
-}
-
-.sovereign-card.locked::before {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.sovereign-card h3 {
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: -0.02em;
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-}
-
-.sovereign-card p {
-  font-weight: 600;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  opacity: 0.9;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .glass-highlight {
@@ -108,8 +158,8 @@ body {
   color: #000;
   border-radius: 1.5rem;
   padding: 1.25rem;
-  border: 4px solid var(--cyan);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 6px solid var(--elite-aqua);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--neon-glow);
   margin-bottom: 1.25rem;
   transition: transform 0.2s ease;
 }
@@ -250,4 +300,21 @@ body {
 
 .animate-spin-slow {
   animation: rotate-slow 6s linear infinite;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+/* Elite Glass Overlay */
+.sovereign-card::before {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, transparent 40%, rgba(0, 0, 0, 0.1) 100%);
 }

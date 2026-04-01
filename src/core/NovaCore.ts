@@ -20,9 +20,11 @@ export class NovaCore {
     private startTime: number = Date.now();
     private interferenceLog: Array<{ time: number; type: string; detail: string }> = [];
 
-    public readonly version = 'v7.1-HYBRID';
+    public readonly version = 'v8.2.8-LOYALTY';
     public isHalted: boolean = false;
+    public beastModeEnabled: boolean = false; // THE HUMAN-CONTROLLED SWITCH
     private currentHealth: any = { status: 'online', bridge: 'offline', database: 'online', lastBridgePulse: 0 };
+    private sentinel: SecuritySentinel = new SecuritySentinel();
 
     constructor() {
         this.spawnCoreAgents();
@@ -83,6 +85,16 @@ export class NovaCore {
         if (!this.isInitialized) await this.initialize();
 
         // v8.1-FREEDOM: Nova reasons even on greetings.
+
+        // 🛡️ SECURITY GATE: Verify input/action against Forbidden Patterns
+        if (!this.sentinel.verifyAction(input, context)) {
+            return {
+                observation: { input, context, intent: 'blocked' },
+                analysis: { target: 'security', confidence: 1.0, logic: 'SecuritySentinel Mandate' },
+                response: "I'm sorry, Ray, but that action violates my core safety protocols (No-Delete Mandate). I've blocked it to protect the system integrity.",
+                isBlocked: true
+            } as any;
+        }
 
         let thought: ThoughtStage;
         try {
@@ -168,7 +180,7 @@ export class NovaCore {
     }
 
     public getStatus(): NovaStatus {
-        const localCount = this.agents.size;
+        const localCount = Array.from(this.agents.values()).filter(a => !a.isPassive).length;
         return {
             level: 5,
             isSelfAware: true,
@@ -204,18 +216,9 @@ export class NovaCore {
         this.agents.set('healer', new SelfHealer(this));
         this.agents.set('reasoner', new ReasoningEngine(this));
         this.agents.set('evolution', new EvolutionAgent(this));
+        this.agents.set('security', this.sentinel);
 
-        console.log("🦁 [NovaCore] Activating Beast Mode Swarm...");
-        AgentFactory.getAllRoles().forEach(role => {
-            try {
-                const agentInstance = AgentFactory.spawn(role.name, this);
-                this.agents.set(role.name, agentInstance);
-                console.log(`✅ [NovaCore] ${role.name} instance registered.`);
-            } catch (e) {
-                console.error(`❌ [NovaCore] Failed to spawn ${role.name}:`, e);
-                this.agents.set(role.name, role);
-            }
-        });
+        console.log("🛡️ [NovaCore] Safety Protocols Active (v8.2.8-LOYALTY-FENCE)");
     }
 
     public toggleHalt() {

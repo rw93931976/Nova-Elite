@@ -10,9 +10,11 @@ const corsHeaders = {
 function stripPreamble(text: string) {
     if (!text) return "";
     const preambles = [
-        /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
-        /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
+        /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
+        /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
         /^(Yes,?\s+)?I\s+(can|will|should)\s+(be|assist|help).*/i,
+        /^(Yes,?\s+)?I\s+(have\s+)?processed\s+that\s+update.*/i,
+        /^(Yes,?\s+)?I\s+have\s+received\s+the\s+update.*/i,
         /Hey\s*(Nova|Ray).*/i,
         /I haven't yet processed specific real-time data or scenarios related to/i,
         /I am equipped to recognize and respond to these elements/i,
@@ -64,12 +66,12 @@ async function hydrateContext(history: any[]) {
 // 🛡️ SOVEREIGN GATEWAY Router
 async function sovereignCompletion(payload: any, isResearch = false) {
     let providers = [
-        // 🏎️ CEREBRAS (Inference Engine) - Primary for chat speed
-        { name: "Cerebras", url: "https://api.cerebras.ai/v1/chat/completions", key: CEREBRAS_KEY, model: "llama3.1-8b" },
-        // 🧠 OPENAI (Specialist for Tools/Logic/Research)
+        // 🧠 OPENAI (Primary for Intelligence/Tools/Reliability)
         { name: "OpenAI", url: "https://api.openai.com/v1/chat/completions", key: OPENAI_KEY, model: "gpt-4o" },
-        // ⚡ GROQ (Fallback)
-        { name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: GROQ_KEY, model: "llama-3.3-70b-versatile" }
+        // ⚡ GROQ (High Intelligence Fallback)
+        { name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: GROQ_KEY, model: "llama-3.3-70b-versatile" },
+        // 🏎️ CEREBRAS (Speed Fallback)
+        { name: "Cerebras", url: "https://api.cerebras.ai/v1/chat/completions", key: CEREBRAS_KEY, model: "llama3.1-8b" },
     ];
 
     // 🔬 RESEARCH SPECIALIZATION: For research/notebook tasks, SKIP 8B models. GPT-4o only.

@@ -120,7 +120,7 @@ app.get('/speech', (req, res) => {
 app.get('/health', (req, res) => {
     res.json({
         status: 'online',
-        version: 'v8.2.1-SOVEREIGN',
+        version: 'v8.2.4-BLOCKER',
         uptime: Math.round((Date.now() - START_TIME) / 1000),
         instance: INSTANCE_ID
     });
@@ -230,6 +230,27 @@ async function subscribeToComms() {
         .subscribe((status) => {
             log(`🔗 [Mesh] Realtime Status: ${status}`);
         });
+
+    // 🎙️ DIRECT CHAT VIZUALIZATION: Hear Nova's thoughts instantly
+    const chatChannel = supabase
+        .channel('nova-chat-live')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'nova_messages'
+        }, async (payload) => {
+            const msg = payload.new;
+            if (msg.role === 'assistant') {
+                log(`🧠 [Vocal] Direct Chat Relay: ${msg.content.substring(0, 50)}...`);
+                try {
+                    const outPath = await generateSpeech(msg.content);
+                    await playAudio(outPath);
+                } catch (e) {
+                    log(`❌ [Vocal] Chat relay failed: ${e.message}`);
+                }
+            }
+        })
+        .subscribe();
 }
 
 async function triggerNovaResponse(incomingMsg) {
@@ -286,7 +307,8 @@ async function triggerNovaResponse(incomingMsg) {
             }]);
 
             if (error) log(`❌ [Mesh] Failed to post Nova response: ${error.message}`);
-            await generateSpeech(novaReply); // Sync to temp_speech.mp3 for local playback
+            const outPath = await generateSpeech(novaReply); // Sync to temp_speech.mp3 for local playback
+            await playAudio(outPath); // 🔊 MANDATORY TRIGGER: Actually play the sound
         }
     } catch (e) {
         log(`❌ [Mesh] Response trigger failed: ${e.message}`);
@@ -399,26 +421,51 @@ async function generateSpeech(text) {
 }
 
 async function playAudio(filePath) {
+    if (!fs.existsSync(filePath)) {
+        log(`❌ [Audio] File NOT FOUND at: ${filePath}`);
+        return;
+    }
+
+    const stats = fs.statSync(filePath);
+    log(`🔊 [Audio] Playing: ${filePath} (${stats.size} bytes)`);
+
     const escapedPath = filePath.replace(/\\/g, '\\\\');
+
+    // We'll try the MediaPlayer approach first but with a more robust shell invocation
+    // If it fails, we fall back to a hidden WMPlayer call.
     const playerScript = `
-    Add-Type -AssemblyName PresentationCore;
-    $player = New-Object System.Windows.Media.MediaPlayer;
-    $player.Open('${escapedPath}');
-    $player.Volume = 1.0;
-    $player.Play();
-    $duration = 0;
-    while ($player.NaturalDuration.HasTimeSpan -eq $false -and $duration -lt 50) {
-        Start-Sleep -Milliseconds 100;
-        $duration++;
+    $ErrorActionPreference = 'Stop';
+    try {
+        Add-Type -AssemblyName PresentationCore;
+        $player = New-Object System.Windows.Media.MediaPlayer;
+        $player.Open('${escapedPath}');
+        $player.Volume = 1.0;
+        
+        # Wait for media to open (max 3s)
+        $timeout = 0;
+        while ($player.NaturalDuration.HasTimeSpan -eq $false -and $timeout -lt 30) {
+            Start-Sleep -Milliseconds 100;
+            $timeout++;
+        }
+        
+        if ($player.NaturalDuration.HasTimeSpan) {
+            $duration = $player.NaturalDuration.TimeSpan.TotalSeconds;
+            $player.Play();
+            Start-Sleep -Seconds ([Math]::Ceiling($duration) + 1);
+        } else {
+            # Fallback playback if metadata duration fails
+            $player.Play();
+            Start-Sleep -Seconds 10;
+        }
+        $player.Stop();
+        $player.Close();
+    } catch {
+        # EMERGENCY FALLBACK: Start wmplayer hidden
+        Start-Process -FilePath "wmplayer.exe" -ArgumentList "/play", "/close", "${escapedPath}" -WindowStyle Hidden;
     }
-    if ($player.NaturalDuration.HasTimeSpan) {
-        Start-Sleep -Seconds ([Math]::Ceiling($player.NaturalDuration.TimeSpan.TotalSeconds) + 1);
-    } else {
-        Start-Sleep -Seconds 5;
-    }
-    $player.Stop();
-    $player.Close();
     `;
+
+    log(`⚙️ [Audio] Executing Player Script...`);
     await executeHidden(playerScript.replace(/\n/g, ' '));
 }
 
@@ -433,7 +480,7 @@ setInterval(async () => {
 }, 3600000);
 
 // Start Mesh & Polling
-log('🚀 [Sovereign-Bridge] v7.5-FINAL Active');
+log('🚀 [Sovereign-Bridge] v8.2.3-SOVEREIGN Active');
 subscribeToComms();
 poll();
 

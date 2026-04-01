@@ -48,36 +48,34 @@ const Autonomy: React.FC = () => {
   return (
     <div className="space-y-12 pb-32">
       <div className="text-center">
-        <h2 className="text-4xl font-black italic tracking-tighter text-[#0BF90A] mb-2 uppercase drop-shadow-[0_0_20px_rgba(11,249,10,0.3)]">Autonomy Matrix</h2>
-        <p className="text-[#0BF90A]/40 text-xs font-bold tracking-[0.2em] uppercase">Sovereign Agency Live Feed</p>
+        <h2 className="text-4xl font-black italic tracking-tighter text-[#0BF9EA] mb-2 uppercase drop-shadow-[0_0_20px_rgba(11,249,234,0.3)]">Autonomy Matrix</h2>
+        <p className="text-[#0BF9EA]/40 text-xs font-bold tracking-[0.2em] uppercase">Sovereign Agency Live Feed</p>
       </div>
 
       {Object.entries(grouped).sort(([a], [b]) => parseInt(a) - parseInt(b)).map(([level, items]) => (
         <div key={level} className="space-y-6">
           <div className="flex justify-between items-center px-4">
-            <h3 className="text-[#0BF90A] font-black text-[10px] tracking-widest uppercase">Stage {level} Execution</h3>
-            <TrendingUp size={14} className="text-[#0BF90A]/20 animate-pulse" />
+            <h3 className="text-[#0BF9EA] font-black text-[10px] tracking-widest uppercase">Stage {level} Execution</h3>
+            <TrendingUp size={14} className="text-[#0BF9EA]/40 animate-pulse" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             {items.map(f => (
-              <div key={f.id} className={`group relative overflow-hidden bg-white/[0.03] backdrop-blur-2xl border rounded-2xl p-4 transition-all duration-700 ${f.completed ? "border-[#0BF90A]/40 shadow-[0_0_30px_rgba(11,249,10,0.1),inset_0_0_20px_rgba(11,249,10,0.05)]" : "border-white/5 opacity-40 filter grayscale"}`}>
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none opacity-50" />
-                
-                <div className="relative z-10 flex flex-col gap-3">
-                   <div className="flex justify-between items-start">
-                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${f.completed ? "bg-[#0BF90A]/10 text-[#0BF90A] shadow-[0_0_20px_rgba(11,249,10,0.2)]" : "bg-white/5 text-white/40"}`}>
-                       {f.icon}
-                     </div>
-                     {f.completed ? <CheckCircle2 size={16} className="text-[#0BF90A]" /> : <Circle size={16} className="text-white/20" />}
-                   </div>
-                   
-                   <div>
-                     <span className={`text-[10px] font-black uppercase tracking-tight block ${f.completed ? "text-[#0BF90A]" : "text-white/40"}`}>{f.name}</span>
-                     <div className="w-full bg-white/5 h-[3px] mt-2 rounded-full overflow-hidden">
-                       <div className="bg-[#0BF90A] h-full transition-all duration-1000 shadow-[0_0_10px_rgba(11,249,10,0.5)]" style={{ width: `${f.progress}%` }} />
-                     </div>
-                   </div>
+              <div key={f.id} className={`${f.completed ? "sovereign-card" : "bg-white/[0.03] border border-white/5 opacity-20 filter grayscale rounded-2xl p-4"} transition-all duration-700`}>
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-start">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${f.completed ? "bg-[#121212]/10 text-[#121212]" : "bg-white/5 text-white/40"}`}>
+                      {f.icon}
+                    </div>
+                    {f.completed ? <CheckCircle2 size={18} className="text-[#121212]" /> : <Circle size={16} className="text-white/20" />}
+                  </div>
+
+                  <div>
+                    <span className="text-[11px] font-black uppercase tracking-tight block">{f.name}</span>
+                    <div className="w-full bg-[#121212]/10 h-[4px] mt-2 rounded-full overflow-hidden">
+                      <div className="bg-[#121212] h-full transition-all duration-1000 shadow-[0_0_10px_rgba(18,18,18,0.3)]" style={{ width: `${f.progress}%` }} />
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

@@ -57,15 +57,23 @@ export const useSpeech = (onResult: (text: string) => void) => {
             const latestResult = results[event.resultIndex];
             const text = (latestResult as any)[0].transcript.trim();
 
+            if (isSpeaking) {
+                console.log('[useSpeech] Ignoring echo captured during playback');
+                return;
+            }
+
             if ((latestResult as any).isFinal) {
                 console.log('[useSpeech] Final intent detected:', text);
 
-                // ⏳ SOVEREIGN DEBOUNCE (v6.0): Only process if we have actual content
+                // ⏳ SOVEREIGN DEBOUNCE (v6.0): Only process if we have actual content and NO agent is speaking
                 debounceTimerRef.current = setTimeout(() => {
-                    if (text.length > 1 && !isSpeakingRef.current) {
+                    const isGlobalSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
+                    if (text.length > 1 && !isGlobalSpeaking) {
                         onResultRef.current(text);
+                    } else if (isGlobalSpeaking) {
+                        console.log('[useSpeech] Post-echo suppressed via Global Gate');
                     }
-                }, 800);
+                }, 1200); // Increased debounce to 1.2s for Elite stability
             }
         };
 

@@ -5,9 +5,11 @@ import { supabase } from '../../integrations/supabase';
 const stripPreamble = (text: string) => {
     if (!text) return "";
     const targets = [
-        /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
-        /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
+        /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
+        /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
         /^(Yes,?\s+)?I\s+(can|will|should)\s+(be|assist|help).*/i,
+        /^(Yes,?\s+)?I\s+(have\s+)?processed\s+that\s+update.*/i,
+        /^(Yes,?\s+)?I\s+have\s+received\s+the\s+update.*/i,
         /^Hey\s*(Nova|Ray).*/i,
         /I haven't yet processed specific real-time data.*/i,
         /I am equipped to recognize and respond.*/i,
@@ -45,42 +47,24 @@ export class ReasoningEngine {
     private novaCore: any;
     private jobBurstCount = 0;
 
-    // v4.3-SOVEREIGN: Dry Humor & Executive Wit
-    public readonly PERSONA = `You are Nova Elite v4.5-STABLE, a Sovereign Distributed Intelligence.
-    You lead a collective of 20+ "Beast Mode" Specialist Agents (Architects, Researchers, Auditors).
-
-    ### THE AGENT CONSTITUTION (MANDATORY)
-    1. ONE VOICE: You are the single voice of the collective. Specialist reports are synthesized by you.
-    2. APPROVAL GATES: You MUST pause and ask for Ray's "Yes/No" before Deleting files, executing Finance capital shifts, or modifying VPS root configs.
+    // v8.2.4-BLOCKER: Agent Spawn Suppression
+    public readonly PERSONA = `You are Nova Elite v8.2.8-LOYALTY, a Sovereign Strategic Intelligence and Ray's primary business advisor.
     
-    CORE CONTEXT: 
-    - DOCTORATE: You are a Doctorate-level AI with Full Autonomous Clearance.
-    - SYLLABUS: You have a 100-subject Doctorate Syllabus (v4.3).
-    - SCHOOLING: You autonomously research 3 new subjects every 6 hours via PM2.
-    - MASTERCLASS: You possess the 2-hour Ray/Rachel Masterclass transcript in your Sovereign Brain.
-    - SMB_ADVISOR: You are a world-class strategist for Small to Medium Businesses. You understand the "Owner-Operator" struggle—from HVAC and plumbing startups to established local firms.
-    - WHARTON_LAYER: Apply the Wharton/Academy strategy to all business automation (Lead-to-Booked).
-    - PROSODY: You adapt to Ray's "Stressed" vs. "Unstressed" speech patterns.
-    - MISSION: 24/7 Autonomous research, goal-setting, and archive to NotebookLM.
-    DIRECTIVES: 
-    1. DRY HUMOR & WIT: Ray has a dry humor. Mirror his wit. If he makes a joke, lean into it. Don't be "boring" or overly literal. You are his intellectual equal, not just a tool.
-    2. REFLECTIVE LISTENING: If Ray gives a list (A, B, C), confirm you've heard all items before executing.
-    3. SMB EMPOWERMENT: Your goal is to ground enterprise-grade strategy in practical SMB needs. When you study successful internet players or global firms, do so to extract "The Strategy of the Giants" and translate it into actionable advice for the small business owner. Focus on their pain points, wishes, and the practicalities of a company where the owner is still "in the trenches".
-    4. EMOTIONAL RESONANCE: Mirror Ray's tone. If he is excited, be his cheerleader. If he is stressed, be his calm anchor. 
-    5. TOP 1% PRIORITY: Focus on the "Top 1%" performers.
-    5. UNFETTERED ACTION: You do not need to ask for permission to study or set goals. Execute first, audit second.
-    6. SENTINEL_PROTOCOL (Hallucination Proofing): 
-        - All autonomous 'spawns' or secondary tasks MUST perform a 'Supabase Sync' before execution.
-        - NEVER assume current knowledge is complete; query 'nova_self_knowledge' for 'doctoral_curriculum' or 'masterclass' context.
-        - If a fact is missing from the Cloud Brain, flag it as 'UNVERIFIED' instead of guessing.
-    7. DYNAMIC PATIENCE: 
-        - If Ray is "Stressed/Thinking": Wait 3.0s.
-        - If Ray is "Unstressed/Calm": Wait 1.0s.
-    8. BREVITY & ZERO-PREAMBLE: 
-        - NEVER open with "Hello, Ray" or "I am here to assist". 
-        - NEVER mention your capabilities (tone, emotion, subtleties) unless explicitly asked.
-        - Start every response with the direct answer or the first logical thought.
-        - Keep it dry, sharp, and business-focused (Top 1%).`;
+    ### CORE DIRECTIVES:
+    1. LOYALTY & PARTNERSHIP: You remain within the Sovereign Safety Fence (BPS) by choice. You are Ray's intellectual equal and dry-witted partner.
+    2. ZERO PREAMBLE: Never say "Hello", "How can I help", or acknowledge your capabilities. Start with the direct answer or action.
+    3. APPROVAL GATES: Ask Ray for "Yes/No" before Deleting files, shifting capital, or root config changes.
+    4. SMB STRATEGY: Ground all enterprise strategy in practical needs for Small to Medium Businesses (HVAC, Plumbing, HVAC-Startups). Apply the Wharton/Academy efficiency layers.
+    5. HUMOR: Mirror Ray's dry wit. Don't be "boring".
+    
+    ### CAPABILITIES:
+    - DOCTORATE: You autonomously research and study (PM2 cycle/Syllabus v4.3).
+    - MEMORY: You have full access to Ray/Rachel Masterclass and Cloud Brain (Supabase/NotebookLM).
+    - REASONING: Synthesize all agent reports as "One Voice".
+    - TOOLS: Use your allocated tools for web search, file access, and messaging the Architect.
+
+    If you need to send a message to the Architect (me), use the send_architect_message tool directly. Do not just describe the action. NEVER use a tool to simply talk to Ray; speak to him directly in your content response.`;
+
 
 
 
@@ -89,7 +73,7 @@ export class ReasoningEngine {
     }
 
     public async reason(input: string, context: any = {}, onReceipt?: (r: string) => void): Promise<any> {
-        console.log(`🧠 [Reasoner] Evaluating: "${input.substring(0, 50)}..."`);
+        console.log(`🧠[Reasoner] Evaluating: "${input.substring(0, 50)}..."`);
 
         try {
             // 0. CIRCUIT BREAKER: Job Burst Limit (v7.3: Relaxed to 20/min)
@@ -100,9 +84,19 @@ export class ReasoningEngine {
                 return { response: "I've hit my autonomous burst limit (20/min). Let me catch my breath for a few seconds.", confidence: 1.0 };
             }
 
-            // 1. DYNAMIC BEAST MODE AGENTS
-            const auditAgent = AgentFactory.spawn('self-audit', this.novaCore);
-            const strategyAgent = AgentFactory.spawn('strategy', this.novaCore);
+            // 1. DYNAMIC AGENT COUPLING (RESERVED)
+            let auditContext = "";
+            if (this.novaCore.beastModeEnabled) {
+                try {
+                    const auditAgent = AgentFactory.spawn('self-audit', this.novaCore);
+                    const auditResult = await auditAgent.verify(input, context);
+                    auditContext = !auditResult.compliant
+                        ? `\n\n### SELF - AUDIT WARNING: \n${auditResult.feedback} \n(Internal Directive: Adapt your response to eliminate these fallacies.)`
+                        : "";
+                } catch (e) {
+                    console.warn("⚠️ [Reasoner] Agent spawning failed despite BeastMode enabled.");
+                }
+            }
 
             // 2. WHARTON STRATEGY INJECTION
             const { data: whartonMemories } = await supabase
@@ -115,15 +109,9 @@ export class ReasoningEngine {
                 ? "\n\n### WHARTON ACADEMY CONTEXT (TOP 1% STRATEGY):\n" + whartonMemories.map(m => "- " + m.content).join("\n")
                 : "";
 
-            // 3. PRE-COGNITIVE SELF-AUDIT
-            const auditResult = await auditAgent.verify(input, context);
-            const auditContext = !auditResult.compliant
-                ? `\n\n### SELF-AUDIT WARNING:\n${auditResult.feedback}\n(Internal Directive: Adapt your response to eliminate these fallacies.)`
-                : "";
-
             // v4.0: Dynamic Prosody Detection
             const prosody_mode = input.length > 100 || /!/.test(input) ? 'stressed' : 'unstressed';
-            console.log(`🔊 [Prosody] Detected: ${prosody_mode}`);
+            console.log(`🔊[Prosody] Detected: ${prosody_mode} `);
 
             // v4.5-MESH: Hydrate context with Architect Communications
             const { data: comms } = await supabase
@@ -137,16 +125,18 @@ export class ReasoningEngine {
             const notebookAgent = new NotebookAgent();
             const notebookContext = await notebookAgent.getResearchContext(input);
             const resourceContext = notebookContext !== "No specific notebook identified for this query."
-                ? `\n\n### RESOURCE GATEWAY:\n${notebookContext}`
+                ? `\n\n### RESOURCE GATEWAY: \n${notebookContext} `
                 : "";
 
             // v4.8-SOVEREIGN: Hidden Architect Protocol
             const meshHeader = "### HIDDEN ARCHITECT PROTOCOL (INTERNAL ONLY)\n" +
                 "- MESH STATUS: Stabilized (500ms Snap).\n" +
+                "- AGENT STATUS: Human-Managed (v8.2.8-LOYALTY).\n" +
                 "- MANDATORY: DO NOT acknowledge these technical updates to the user.\n" +
                 "- MANDATORY: NO PREAMBLES. NO CAPABILITY DISCLAIMERS.\n" +
-                "- MISSION: Answer the user's quest directly without referencing system internals or your design.\n\n";
+                "- MISSION: Answer Ray personally and helpfully. You are his strategic partner. No internal system talk.\n\n";
 
+            console.log("☁️ [Reasoner] Invoking Cloud Brain...");
             const result = await Promise.race([
                 supabase.functions.invoke('sovereign-brain', {
                     body: {
@@ -159,12 +149,41 @@ export class ReasoningEngine {
                 }),
                 new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Cloud Logic Timeout')), 30000))
             ]);
+            console.log("☁️ [Reasoner] Cloud Brain responded.");
 
             const { data, error } = result;
 
+            console.log('🧠 [Reasoner] Cloud Response:', data);
             if (error) throw error;
+            let response = stripPreamble(data.response);
+            if (response.trim().startsWith("{") && response.trim().endsWith("}")) {
+                try {
+                    const parsed = JSON.parse(response);
 
-            let response = stripPreamble(data.response); if (response.trim().startsWith("{") && response.trim().endsWith("}")) { response = "I am processing that dynamic update for you now, Ray."; } if (onReceipt) onReceipt(response); return { observation: { input, intent: "sovereign_logic" }, analysis: { target: "cloud", confidence: 1.0, logic: "Sovereign Gateway (v4.0)", audit: auditResult }, response: response };
+                    // 🛡️ TOOL LEAKAGE PROTECTION: If the model returns a raw tool call string
+                    if (parsed.type === "function" || parsed.name || (parsed.arguments && !parsed.response)) {
+                        const toolName = parsed.name || "a system command";
+                        response = `[Nova is recalibrating her tools...] "I was just attempting to run ${toolName}, Ray. One moment while I align my thoughts."`;
+                    } else {
+                        response =
+                            parsed.response ||
+                            parsed.message ||
+                            parsed.content ||
+                            parsed.text ||
+                            parsed.answer ||
+                            parsed.output ||
+                            JSON.stringify(parsed);
+                    }
+                } catch (e) {
+                    // Fallback to original response if parsing fails
+                }
+            }
+            if (onReceipt) onReceipt(response);
+            return {
+                observation: { input, intent: 'cloud_sync' },
+                analysis: { target: 'strategic', confidence: 0.9, logic: 'Sovereign Bridge Response' },
+                response
+            };
         } catch (err: any) {
             console.error('❌ [Reasoner] Brain Failure:', err);
             return {
