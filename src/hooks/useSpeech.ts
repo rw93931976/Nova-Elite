@@ -48,7 +48,6 @@ export const useSpeech = (onResult: (text: string) => void) => {
 
         recognizer.onresult = (event: any) => {
             const isSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
-            if (isSpeaking) return;
 
             // Clear any pending debounce timer
             if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -57,38 +56,48 @@ export const useSpeech = (onResult: (text: string) => void) => {
             const latestResult = results[event.resultIndex];
             const text = (latestResult as any)[0].transcript.trim();
 
-            // 🛡️ ECHO GUARD (v8.3.1): Text Similarity suppression
+            // 🛡️ ECHO GUARD (v8.3.5): Enhanced Similarity suppression
             const lastResponse = (window as any).lastNovaResponse?.toLowerCase() || "";
             const normalizedText = text.toLowerCase();
+
+            // If it's a direct echo of what Nova just said, kill it.
             if (lastResponse && (normalizedText.includes(lastResponse.substring(0, 30)) || lastResponse.includes(normalizedText))) {
-                if (normalizedText.length > 5) {
-                    console.log('[useSpeech] Ignoring echo (Similarity Guard):', text);
+                if (normalizedText.length > 5 && !((latestResult as any).isFinal && normalizedText.length > 50)) {
+                    console.log('[useSpeech] Echo suppressed:', text);
                     return;
                 }
-            }
-
-            if (isSpeaking) {
-                console.log('[useSpeech] Ignoring echo captured during playback');
-                return;
             }
 
             if ((latestResult as any).isFinal) {
                 console.log('[useSpeech] Final intent detected:', text);
 
-                // ⏳ SOVEREIGN DEBOUNCE (v8.3.4): Optimized for Car/Elite stability - Extended to 1.4s
+                // ⚡ BARGE-IN TRIGGER: If Nova is talking, evaluate if we should kill her speech
+                if (isSpeaking) {
+                    const wordCount = text.split(/\s+/).length;
+                    if (wordCount >= 3) {
+                        console.log('[useSpeech] ⚡ BARGE-IN DETECTED. Killing speech for new intent:', text);
+                        window.speechSynthesis.cancel();
+                        isSpeakingRef.current = false;
+                        (window as any).isNovaSpeaking = false;
+                        onResultRef.current(text);
+                        return;
+                    } else {
+                        console.log('[useSpeech] Fragment during speech ignored:', text);
+                        return;
+                    }
+                }
+
+                // ⏳ SOVEREIGN DEBOUNCE (v8.3.4): 1.4s for non-interruption cases
                 debounceTimerRef.current = setTimeout(() => {
-                    const isGlobalSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
+                    const isStillSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
                     const wordCount = text.trim().split(/\s+/).length;
 
-                    // 🚦 GATE: Don't interrupt if it's just a short fragment (< 4 words)
-                    if (text.length > 1 && !isGlobalSpeaking) {
-                        if (wordCount < 4 && (latestResult as any).isFinal) {
-                            console.log('[useSpeech] Fragment ignored to prevent interruption (v8.3.4):', text);
+                    if (text.length > 1 && !isStillSpeaking) {
+                        if (wordCount < 4) {
+                            console.log('[useSpeech] Fragment ignored (v8.3.4):', text);
                             return;
                         }
                         onResultRef.current(text);
-                    } else if (isGlobalSpeaking) {
-                        console.log('[useSpeech] Post-echo suppressed via Global Gate');
                     }
                 }, 1400);
             }
@@ -257,11 +266,7 @@ export const useSpeech = (onResult: (text: string) => void) => {
         utterance.rate = rate;
 
         const wasListening = shouldListenRef.current;
-        if (wasListening) {
-            try {
-                recognitionRef.current?.stop();
-            } catch (e) { }
-        }
+        // v8.3.5: No longer stopping recognition for Barge-In
 
         utterance.onstart = () => {
             isSpeakingRef.current = true;
@@ -281,16 +286,11 @@ export const useSpeech = (onResult: (text: string) => void) => {
         }
 
         utterance.onend = () => {
-            // v8.3.1: Increased cooldown for audio buffer stabilization
+            // v8.3.5: Buffer cooldown, recognition stays active
             setTimeout(() => {
                 isSpeakingRef.current = false;
                 (window as any).isNovaSpeaking = false;
-                if (wasListening && shouldListenRef.current) {
-                    try {
-                        recognitionRef.current?.start();
-                    } catch (e) { }
-                }
-            }, 1200);
+            }, 800);
         };
 
         setTimeout(() => {
