@@ -121,17 +121,18 @@ export const useSpeech = (onResult: (text: string) => void) => {
             setIsListening(false);
             (window as any).isNovaListening = false;
 
-            // AUTO-RESTART HEARTBEAT (The Dallas Pulse)
+            // AUTO-RESTART HEARTBEAT (v8.3.6): Always restart if shouldListen is true
+            // Removed !isSpeaking requirement to allow Barge-In to recover if browser stops STT
             if (shouldListenRef.current) {
                 setTimeout(() => {
-                    if (shouldListenRef.current && !isSpeakingRef.current && !(window as any).isNovaSpeaking) {
+                    if (shouldListenRef.current) {
                         try {
                             recognitionRef.current?.start();
                         } catch (e) {
                             // Already active or error
                         }
                     }
-                }, 1200); // 1.2s delay for auto-restart safety
+                }, 800); // Faster restart for better responsiveness
             }
         };
 
