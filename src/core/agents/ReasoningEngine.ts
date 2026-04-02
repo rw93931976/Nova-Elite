@@ -42,6 +42,15 @@ const stripPreamble = (text: string) => {
 
     let cleaned = cleanedLines.join('\n').trim();
     cleaned = cleaned.replace(/^(Hi\s+)?Ray,?\s*/i, "").trim();
+
+    // v8.3.8-FINAL: Emergency Fallback
+    // If preamble stripping left us with nothing, but the original had content, 
+    // we should return a meaningful piece of the original rather than silence.
+    if (!cleaned && text.trim().length > 0) {
+        const lastPart = text.split(/[.!?]/).filter(t => t.trim().length > 2).pop();
+        cleaned = lastPart ? lastPart.trim() : text.trim();
+    }
+
     if (cleaned.length > 0) cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
     return cleaned;
 };

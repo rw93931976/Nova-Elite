@@ -74,6 +74,13 @@ export const useSpeech = (onResult: (text: string) => void) => {
 
                 // ⚡ BARGE-IN TRIGGER: If Nova is talking, evaluate if we should kill her speech
                 if (isSpeaking) {
+                    // v8.3.8: Final catch for echoes that leaked past the interim filter
+                    const isFinalEcho = lastResponse.includes(normalizedText) || normalizedText.includes(lastResponse.substring(0, 20));
+                    if (isFinalEcho) {
+                        console.log('[useSpeech] Final intent suppressed as echo (v8.3.8):', text);
+                        return;
+                    }
+
                     const wordCount = text.split(/\s+/).length;
                     if (wordCount >= 3) {
                         console.log('[useSpeech] ⚡ BARGE-IN DETECTED. Killing speech for new intent:', text);
@@ -94,9 +101,11 @@ export const useSpeech = (onResult: (text: string) => void) => {
                     const wordCount = text.trim().split(/\s+/).length;
 
                     if (text.length > 1 && !isStillSpeaking) {
-                        // 🚦 GATE (v8.3.7): Allow short intents like "Hey Nova" (2+ words or specific wake words)
-                        if (wordCount < 2 && !normalizedText.includes('nova')) {
-                            console.log('[useSpeech] Fragment ignored (v8.3.7):', text);
+                        // 🚦 GATE (v8.3.8): Allow short intents like "Hey Nova" (2+ words or wake-words)
+                        // Dialect support: "Pay Nova", "Hay Nova", "Hina"
+                        const isWakeWord = /^(hey|pay|hay|hi|hi\s*na)\s*nova/i.test(normalizedText);
+                        if (wordCount < 2 && !isWakeWord) {
+                            console.log('[useSpeech] Fragment ignored (v8.3.8):', text);
                             return;
                         }
                         onResultRef.current(text);
