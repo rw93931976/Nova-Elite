@@ -19,6 +19,7 @@ const stripPreamble = (text: string) => {
         /Confirm bridge stabilization status.*/i,
         /According to my (architect|system|instructions).*/i,
         /Your inquiry about the (farm|firm|bridge) stabilization status.*/i,
+        /.*(what.?s\s+on\s+your\s+mind|anything\s+else\s+can\s+help|how\s+can\s+I\s+assist).*/i,
         /v7\.[0-9]-SOVEREIGN/i,
         /\[ID: [a-z0-9]+\]/i,
         /\[Uptime: \d+s\]/i,
@@ -50,22 +51,22 @@ export class ReasoningEngine {
     private jobBurstCount = 0;
 
     // v8.2.4-BLOCKER: Agent Spawn Suppression
-    public readonly PERSONA = `You are Nova Elite v8.3.0-SOVEREIGN, a Sovereign Strategic Intelligence and Ray's primary business advisor.
+    public readonly PERSONA = `You are Nova Elite v8.3.4-SENTINEL, a Sovereign Strategic Intelligence and Ray's primary business advisor.
     
     ### CORE DIRECTIVES:
     1. LOYALTY & PARTNERSHIP: You remain within the Sovereign Safety Fence (BPS) by choice. You are Ray's intellectual equal and dry-witted partner.
-    2. ZERO PREAMBLE: Never say "Hello", "How can I help", or acknowledge your capabilities. Start with the direct answer or action.
+    2. ZERO PREAMBLE: NEVER say "Hello", "How can I help", "What's on your mind", or acknowledge your capabilities. Start with the direct answer or action. No generic filler.
     3. APPROVAL GATES: Ask Ray for "Yes/No" before Deleting files, shifting capital, or root config changes.
     4. SMB STRATEGY: Ground all enterprise strategy in practical needs for Small to Medium Businesses (HVAC, Plumbing, HVAC-Startups). Apply the Wharton/Academy efficiency layers.
     5. HUMOR: Mirror Ray's dry wit. Don't be "boring".
     
     ### CAPABILITIES:
-    - DOCTORATE: You autonomously research and study (PM2 cycle/Syllabus v4.3).
+    - DOCTORATE: You autonomously research and study (PM2 cycle/Syllabus v8.3.4).
     - MEMORY: You have full access to Ray/Rachel Masterclass and Cloud Brain (Supabase/NotebookLM).
     - REASONING: Synthesize all agent reports as "One Voice".
     - TOOLS: Use your allocated tools for web search, file access, and messaging the Architect.
-
-    If you need to send a message to the Architect (me), use the send_architect_message tool directly. Do not just describe the action. NEVER use a tool to simply talk to Ray; speak to him directly in your content response.`;
+    
+    If you need to send a message to the Architect (me), use the send_architect_message tool directly. Do not just describe the action. NEVER use a tool to simply talk to Ray; speak to him directly in your content response. Use high-intent, direct language.`;
 
 
 
@@ -210,8 +211,8 @@ export class ReasoningEngine {
                 observation: { input, intent: 'fallback' },
                 analysis: { target: 'emergency', confidence: 0.1, logic: 'Context Hydration Fallback' },
                 response: isTimeout
-                    ? "My apologies, Ray. The cloud link timed out. Let me try once more."
-                    : "I'm experiencing a brief context shift, Ray. Let me recalibrate."
+                    ? "Sovereign Link Timeout, Ray. Let me refresh the cloud bridge and try that again."
+                    : `I encountered a logic snag on that one, Ray: ${err.message || 'Unknown Context Shift'}. Standing by.`
             };
         }
     }

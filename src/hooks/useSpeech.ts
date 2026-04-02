@@ -75,22 +75,22 @@ export const useSpeech = (onResult: (text: string) => void) => {
             if ((latestResult as any).isFinal) {
                 console.log('[useSpeech] Final intent detected:', text);
 
-                // ⏳ SOVEREIGN DEBOUNCE (v6.0): Optimized for Car/Elite stability
+                // ⏳ SOVEREIGN DEBOUNCE (v8.3.4): Optimized for Car/Elite stability - Extended to 1.4s
                 debounceTimerRef.current = setTimeout(() => {
                     const isGlobalSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
                     const wordCount = text.trim().split(/\s+/).length;
 
-                    // 🚦 GATE: Don't interrupt if it's just a fragment
+                    // 🚦 GATE: Don't interrupt if it's just a short fragment (< 4 words)
                     if (text.length > 1 && !isGlobalSpeaking) {
-                        if (wordCount < 2 && (latestResult as any).isFinal) {
-                            console.log('[useSpeech] Fragment ignored to prevent interruption:', text);
+                        if (wordCount < 4 && (latestResult as any).isFinal) {
+                            console.log('[useSpeech] Fragment ignored to prevent interruption (v8.3.4):', text);
                             return;
                         }
                         onResultRef.current(text);
                     } else if (isGlobalSpeaking) {
                         console.log('[useSpeech] Post-echo suppressed via Global Gate');
                     }
-                }, 800);
+                }, 1400);
             }
         };
 
