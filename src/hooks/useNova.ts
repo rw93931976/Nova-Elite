@@ -247,6 +247,7 @@ export function useNova() {
     toggleListening,
     sendMessage,
     toggleHalt,
-    handleHardRefresh
+    handleHardRefresh,
+    version: core.version
   };
 }
