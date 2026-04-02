@@ -18,9 +18,7 @@ export const useSpeech = (onResult: (text: string) => void) => {
     useEffect(() => {
         const checkSpeaking = () => {
             const isSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
-            if (isSpeaking && isListening) {
-                console.log('[useSpeech] Muting STT (Nova Is Speaking)');
-            }
+            // Console spam removed (v8.3.7)
         };
         const interval = setInterval(checkSpeaking, 100);
         return () => clearInterval(interval);
@@ -56,15 +54,18 @@ export const useSpeech = (onResult: (text: string) => void) => {
             const latestResult = results[event.resultIndex];
             const text = (latestResult as any)[0].transcript.trim();
 
-            // 🛡️ ECHO GUARD (v8.3.5): Enhanced Similarity suppression
+            // 🛡️ ECHO GUARD (v8.3.7): Precision Suppression
             const lastResponse = (window as any).lastNovaResponse?.toLowerCase() || "";
             const normalizedText = text.toLowerCase();
 
-            // If it's a direct echo of what Nova just said, kill it.
-            if (lastResponse && (normalizedText.includes(lastResponse.substring(0, 30)) || lastResponse.includes(normalizedText))) {
-                if (normalizedText.length > 5 && !((latestResult as any).isFinal && normalizedText.length > 50)) {
-                    console.log('[useSpeech] Echo suppressed:', text);
-                    return;
+            if (lastResponse && isSpeaking) {
+                // If the mic hears Nova's own words, kill it immediately to prevent recursive Barge-In
+                const isEcho = lastResponse.includes(normalizedText) || normalizedText.includes(lastResponse.substring(0, 20));
+                if (isEcho) {
+                    if (!((latestResult as any).isFinal && normalizedText.length > 60)) {
+                        console.log('[useSpeech] Echo caught (v8.3.7):', text);
+                        return;
+                    }
                 }
             }
 
@@ -93,8 +94,9 @@ export const useSpeech = (onResult: (text: string) => void) => {
                     const wordCount = text.trim().split(/\s+/).length;
 
                     if (text.length > 1 && !isStillSpeaking) {
-                        if (wordCount < 4) {
-                            console.log('[useSpeech] Fragment ignored (v8.3.4):', text);
+                        // 🚦 GATE (v8.3.7): Allow short intents like "Hey Nova" (2+ words or specific wake words)
+                        if (wordCount < 2 && !normalizedText.includes('nova')) {
+                            console.log('[useSpeech] Fragment ignored (v8.3.7):', text);
                             return;
                         }
                         onResultRef.current(text);
