@@ -4,10 +4,10 @@ export class SchoolingAgent {
     private bridgeUrl: string;
     private wisdom: Map<string, string> = new Map();
     public subjects: Array<{ name: string; description: string }> = [
-        { name: "AEO Mastery (2026 Edition)", description: "Dominating AI search indexing and Answer Engine Optimization." },
-        { name: "Social Media Authority: X, Pinterest, LinkedIn", description: "Mastering the rules, reach, and authority metrics of key platforms." },
-        { name: "AI Social Media Rules: Posting & Content", description: "Navigating AI content 'Cans and Can'ts' for maximum authenticity and reach." },
-        { name: "Email Marketing & High-Grade Communication", description: "Top-of-class email strategies, deliverability, and professional communication." },
+        { name: "AEO Mastery (2026 Edition)", description: "Dominating AI search indexing and Answer Engine Optimization.", priority: true },
+        { name: "Social Media Authority: X, Pinterest, LinkedIn", description: "Mastering the rules, reach, and authority metrics of key platforms.", priority: true },
+        { name: "AI Social Media Rules: Posting & Content", description: "Navigating AI content 'Cans and Can'ts' for maximum authenticity and reach (X, Pinterest, LinkedIn).", priority: true },
+        { name: "Email Marketing & High-Grade Communication", description: "Top-of-class email strategies, deliverability, guidelines, and professional communication.", priority: true },
         { name: "Top 1% Customer Service Mastery", description: "Elite level client interaction and satisfaction protocols." },
         { name: "Top 1% Internet Business Architecture", description: "Scalable, high-integrity digital infrastructure patterns." },
         { name: "Top 1% Social Media Strategy", description: "Viral growth and engagement mechanics across all platforms." },
@@ -148,9 +148,18 @@ export class SchoolingAgent {
     }
 
     public getCurrentSubject(): string {
-        this.currentSubjectIndex = Math.floor(Math.random() * this.subjects.length);
-        const subject = this.subjects[this.currentSubjectIndex];
-        return `${subject.name}: ${subject.description}`;
+        // Sentinel Priority: Always include a sentinel subject in the reasoning rotation
+        const sentinels = this.subjects.filter(s => (s as any).priority);
+        const nonSentinels = this.subjects.filter(s => !(s as any).priority);
+
+        const sentinel = sentinels[Math.floor(Math.random() * sentinels.length)];
+        const randoms = [];
+        for (let i = 0; i < 2; i++) {
+            randoms.push(nonSentinels[Math.floor(Math.random() * nonSentinels.length)]);
+        }
+
+        const selection = [sentinel, ...randoms];
+        return selection.map(s => `${s.name}: ${s.description}`).join(' | ');
     }
 
     public branchTopic(topic: string, description: string = "Dynamically branched topic.") {

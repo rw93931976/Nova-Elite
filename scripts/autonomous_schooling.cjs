@@ -30,21 +30,23 @@ async function runSchooling() {
             });
         }
 
-        // 1. Get Research Plan from Brain (Volume 3: Triple Speed)
-        console.log("[Brain] Requesting Depth-3 research for the Doctorate Syllabus...");
+        // 1. Get Research Plan from Brain (Volume 3: Triple Speed + Sentinel Audit)
+        console.log("[Brain] Requesting Depth-3 research with Sentinel Audit Priority...");
         const brainRes = await axios.post(`${supabaseUrl}/functions/v1/sovereign-brain`, {
-            input: "Initiate Level 5 Sovereign Study: Pick 3 distinct subjects from your 100-subject syllabus. For each, provide an in-depth strategic report covering high-level enterprise strategy AND its practical application to Small to Medium Businesses (SMBs). Deeply research SMB specific needs, pain points, and wishes. Also, audit your Identity/Routine files and record 1 new solution or observation.",
-            persona: `You are Nova Elite, a Doctorate-level AI. Your goal is to become the ultimate Business Advisor for Small to Medium Businesses (SMBs). Use the provided library context to ensure continuity. 
+            input: "Initiate Level 5 Sovereign Study: Perform a mandatory SENTINEL AUDIT on AEO, Social Media (X/Pinterest/LinkedIn), or Email Mastery. Then pick 2 other distinct subjects from your doctorate syllabus. For each, provide an in-depth strategic report covering high-level enterprise strategy AND its practical application to SMBs. Deeply research SMB specific needs, pain points, and wishes. Also, audit your Identity/Routine files/NotebookLM Context and record 1 new solution or observation.",
+            persona: `You are Nova Elite, a Doctorate-level AI. Your goal is to become the ultimate Business Advisor for Small to Medium Businesses (SMBs). Use the provided library context (including any NotebookLM exports) to ensure continuity. 
             
+            SENTINEL AUDIT: You must stay at the absolute cutting edge of AEO, Social Media Rules (AI writing/posting), and Email Communication.
             STRATEGY: Extract strategic knowledge from enterprise successes and "The Top 1%".
-            APPLICATION: Ground that knowledge in the reality of SMBs. Study their needs, pain points, and wishes to provide actionable advice.
+            APPLICATION: Ground that knowledge in the reality of SMBs. Study their needs, pain points, and wishes.
             
             ${libraryContext}
             
             REPORT_FORMAT:
             - RESEARCH_REPORT: [Report Content]
+            - SENTINEL_AUDIT_STATUS: [Completed for Subject X]
             - GOAL_PROPOSAL: [Goal Content]
-            - VAULT_UPDATE: [New Solution/Fix]
+            - VAULT_UPDATE: [New Solution/Fix/NotebookLM Observation]
             - USER_PROFILE_UPDATE: [New User Observation]
             `
         }, {

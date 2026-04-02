@@ -9,14 +9,14 @@ Nova is currently reaching for 100-subject mastery. Her autonomous cycles are se
 
 ### Module 1: Marketing & Audience Strategy
 - Top 1% Internet Business Architecture
-- Advanced SEO (Legacy & Resilience) & **AEO (Answer Engine Optimization)**
-- **Email Marketing & High-Grade Communication Mastery**
+- **[SENTINEL]** Advanced SEO & **AEO (Answer Engine Optimization)**
+- **[SENTINEL]** **Email Marketing & High-Grade Communication Mastery**
 - Schema Sovereignty: JSON-LD for AI Crawlers
 - Vertical Video Dominance & High-Dwell Persuasion
 
 ### Module 2: Social Media & Authority
-- **Authority Platforms: X (Twitter), Pinterest, LinkedIn**
-- AI Social Media Rules: Posting Cans/Can'ts & Writing Ins and Outs
+- **[SENTINEL]** **Authority Platforms: X (Twitter), Pinterest, LinkedIn**
+- **[SENTINEL]** AI Social Media Rules: Posting Cans/Can'ts & Writing Ins and Outs (2026 Edition)
 - Sovereign Business Law & Digital Compliance
 - SaaS Contractual Integrity
 - Intellectual Property & Code Shielding (Nova-Elite Protection)

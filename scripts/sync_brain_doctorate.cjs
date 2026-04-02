@@ -6,10 +6,10 @@ const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const subjects = [
-    { name: "AEO Mastery (2026 Edition)", description: "Dominating AI search indexing and Answer Engine Optimization." },
-    { name: "Social Media Authority: X, Pinterest, LinkedIn", description: "Mastering the rules, reach, and authority metrics of key platforms." },
-    { name: "AI Social Media Rules: Posting & Content", description: "Navigating AI content 'Cans and Can'ts' for maximum authenticity and reach." },
-    { name: "Email Marketing & High-Grade Communication", description: "Top-of-class email strategies, deliverability, and professional communication." },
+    { name: "AEO Mastery (2026 Edition)", description: "Dominating AI search indexing and Answer Engine Optimization (SENTINEL)." },
+    { name: "Social Media Authority: X, Pinterest, LinkedIn", description: "Mastering the rules, reach, and authority metrics of key platforms (SENTINEL)." },
+    { name: "AI Social Media Rules: Posting & Content", description: "Navigating AI content 'Cans and Can'ts' for maximum authenticity and reach (SENTINEL)." },
+    { name: "Email Marketing & High-Grade Communication", description: "Top-of-class email strategies, deliverability, guidelines, and professional communication (SENTINEL)." },
     { name: "Top 1% Customer Service Mastery", description: "Elite level client interaction and satisfaction protocols." },
     { name: "Top 1% Internet Business Architecture", description: "Scalable, high-integrity digital infrastructure patterns." },
     { name: "Top 1% Social Media Strategy", description: "Viral growth and engagement mechanics across all platforms." },
