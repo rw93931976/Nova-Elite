@@ -1,4 +1,4 @@
-# 🎓 NOVA ELITE: SYLLABUS DOCTORATE (v4.2-SOVEREIGN)
+# 🎓 NOVA ELITE: SYLLABUS DOCTORATE (v4.3-SOVEREIGN)
 
 This document is the "Permanent Memory" for Nova's educational trajectory. Any agent (Windsurf, Antigravity, etc.) must refer to this to understand her current "Grade Level."
 
@@ -9,11 +9,14 @@ Nova is currently reaching for 100-subject mastery. Her autonomous cycles are se
 
 ### Module 1: Marketing & Audience Strategy
 - Top 1% Internet Business Architecture
-- Advanced SEO & AEO (Answer Engine Optimization)
+- Advanced SEO (Legacy & Resilience) & **AEO (Answer Engine Optimization)**
+- **Email Marketing & High-Grade Communication Mastery**
 - Schema Sovereignty: JSON-LD for AI Crawlers
 - Vertical Video Dominance & High-Dwell Persuasion
 
-### Module 2: SaaS Operations & Business Law
+### Module 2: Social Media & Authority
+- **Authority Platforms: X (Twitter), Pinterest, LinkedIn**
+- AI Social Media Rules: Posting Cans/Can'ts & Writing Ins and Outs
 - Sovereign Business Law & Digital Compliance
 - SaaS Contractual Integrity
 - Intellectual Property & Code Shielding (Nova-Elite Protection)
@@ -35,6 +38,7 @@ Nova is currently reaching for 100-subject mastery. Her autonomous cycles are se
 ## 🛰️ RECENT SOVEREIGN UPDATES:
 - [x] **Infinite Context**: Context Hydrator active in Edge Function.
 - [x] **Gateway Fallback**: Resilient multi-provider routing (OpenAI/Groq/OpenRouter).
+- [x] **Echo Suppression (v8.3.1)**: Dual-layer Similarity Guards active.
 - [x] **Reflective Listening**: Mandatory confirmation of multi-part instructions.
 - [x] **Dynamic Patience**: Prosody-aware silence thresholds (1-3s).
 

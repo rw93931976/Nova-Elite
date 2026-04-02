@@ -2,9 +2,13 @@ export class SchoolingAgent {
     private bridgeUrl: string;
     private wisdom: Map<string, string> = new Map();
     private subjects: string[] = [
+        "AEO & AI Search Mastery",
+        "Social Media Authority: X, Pinterest, LinkedIn",
+        "AI Social Media Posting & Content Rules",
+        "Email Marketing & High-Grade Communication",
         "Customer Service Elite Protocols",
-        "Top 1% Internet Business Strategies",
-        "Social Media Post Sovereignty & Rules",
+        "Top 1% Internet Business Architecture",
+        "Advanced SEO (Legacy & Resilience)",
         "High-Ticket Copywriting Mastery",
         "Business Automation & Scalability",
         "Infrastructure Security & Sovereignty",
@@ -15,7 +19,8 @@ export class SchoolingAgent {
     private currentSubjectIndex: number = 0;
     private curiositySubjects: string[] = [];
     private lastRotation: number = Date.now();
-    private readonly ROTATION_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
+    // 🎓 SOVEREIGN ALIGNMENT (v8.3.2): 6-hour research intervals to match the Manifest
+    private readonly ROTATION_INTERVAL = 6 * 60 * 60 * 1000;
 
     constructor(bridgeUrl: string) {
         this.bridgeUrl = bridgeUrl || '';
@@ -26,7 +31,7 @@ export class SchoolingAgent {
         try {
             const listRes = await fetch(`${this.bridgeUrl}/api/schooling/list`);
             const { files } = await listRes.json();
-            
+
             let newLessons = 0;
             for (const file of files) {
                 if (!this.wisdom.has(file)) {
@@ -48,7 +53,7 @@ export class SchoolingAgent {
     public getWisdomContext(): string {
         this.checkRotation();
         const subject = this.getCurrentSubject();
-        
+
         let context = `\n### CURRENT STUDY FOCUS: ${subject}\n`;
         if (this.wisdom.size > 0) {
             context += "### LEARNED BUSINESS RULES:\n";

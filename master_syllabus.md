@@ -6,18 +6,21 @@
 
 ### Module 1: Marketing & Audience Strategy
 - Top 1% Internet Business Architecture
-- Advanced Search Engine Optimization (SEO)
-- Answer Engine Optimization (AEO) for AI
+- Advanced Search Engine Optimization (SEO - Legacy & Resilience)
+- Answer Engine Optimization (AEO) for AI Mastery
 - Semantic Context & High-Intent Formatting
 - Schema Sovereignty: JSON-LD for AI Crawlers
 - Voice Search Optimization Patterns
 - Advanced Marketing Trends (2026)
 - Community-Led Growth Patterns
 - AI-Native Personalization Strategies
+- **Email Marketing & High-Grade Communication Mastery**
+- **Email Deliverability & Compliance Guidelines**
 
 ### Module 2: Social Media & Authority
-- Top 1% Social Media Strategy
-- Social Media Platform Rules & Compliance
+- Top 1% Social Media Strategy: **X (Twitter), Pinterest, LinkedIn**
+- Social Media Platform Rules, Compliance & "AI Posting" Cans/Can'ts
+- AI Content Writing Ins and Outs (Authenticity vs. Automation)
 - Advanced Copywriting & Persuasion
 - Vertical Video Dominance & High-Dwell Persuasion
 - E-E-A-T Authority Building (Experience, Expertise, Authoritativeness, Trustworthiness)

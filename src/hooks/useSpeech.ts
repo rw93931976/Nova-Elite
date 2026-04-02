@@ -57,6 +57,16 @@ export const useSpeech = (onResult: (text: string) => void) => {
             const latestResult = results[event.resultIndex];
             const text = (latestResult as any)[0].transcript.trim();
 
+            // 🛡️ ECHO GUARD (v8.3.1): Text Similarity suppression
+            const lastResponse = (window as any).lastNovaResponse?.toLowerCase() || "";
+            const normalizedText = text.toLowerCase();
+            if (lastResponse && (normalizedText.includes(lastResponse.substring(0, 30)) || lastResponse.includes(normalizedText))) {
+                if (normalizedText.length > 5) {
+                    console.log('[useSpeech] Ignoring echo (Similarity Guard):', text);
+                    return;
+                }
+            }
+
             if (isSpeaking) {
                 console.log('[useSpeech] Ignoring echo captured during playback');
                 return;
@@ -65,13 +75,12 @@ export const useSpeech = (onResult: (text: string) => void) => {
             if ((latestResult as any).isFinal) {
                 console.log('[useSpeech] Final intent detected:', text);
 
-                // ⏳ SOVEREIGN DEBOUNCE (v6.0): Optimized for Car/Elite stability (reduce from 1200ms)
+                // ⏳ SOVEREIGN DEBOUNCE (v6.0): Optimized for Car/Elite stability
                 debounceTimerRef.current = setTimeout(() => {
                     const isGlobalSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
                     const wordCount = text.trim().split(/\s+/).length;
 
-                    // 🚦 GATE: Don't interrupt if it's just a fragment (um, well, etc.) 
-                    // unless we're sure the user is done.
+                    // 🚦 GATE: Don't interrupt if it's just a fragment
                     if (text.length > 1 && !isGlobalSpeaking) {
                         if (wordCount < 2 && (latestResult as any).isFinal) {
                             console.log('[useSpeech] Fragment ignored to prevent interruption:', text);
@@ -106,14 +115,14 @@ export const useSpeech = (onResult: (text: string) => void) => {
             // AUTO-RESTART HEARTBEAT (The Dallas Pulse)
             if (shouldListenRef.current) {
                 setTimeout(() => {
-                    if (shouldListenRef.current && !isSpeakingRef.current) {
+                    if (shouldListenRef.current && !isSpeakingRef.current && !(window as any).isNovaSpeaking) {
                         try {
                             recognitionRef.current?.start();
                         } catch (e) {
                             // Already active or error
                         }
                     }
-                }, 100);
+                }, 1200); // 1.2s delay for auto-restart safety
             }
         };
 
@@ -237,9 +246,8 @@ export const useSpeech = (onResult: (text: string) => void) => {
     const speak = useCallback((text: string, vol = 0.5, pitch = 1.0, rate = 0.95) => {
         if (!window.speechSynthesis) return;
 
-        // SOVEREIGN GAIN SCALING (v8.0): Supporting the "20x Boost"
-        // Since browser volume is capped at 1.0, we normalize the slider (30-100)
-        // to ensure maximum clarity even at lower system settings.
+        (window as any).lastNovaResponse = text; // Unified Echo Guard tracking
+
         const normalizedVol = Math.max(0.1, Math.min(1.0, vol));
 
         window.speechSynthesis.cancel();
@@ -273,6 +281,7 @@ export const useSpeech = (onResult: (text: string) => void) => {
         }
 
         utterance.onend = () => {
+            // v8.3.1: Increased cooldown for audio buffer stabilization
             setTimeout(() => {
                 isSpeakingRef.current = false;
                 (window as any).isNovaSpeaking = false;
@@ -281,7 +290,7 @@ export const useSpeech = (onResult: (text: string) => void) => {
                         recognitionRef.current?.start();
                     } catch (e) { }
                 }
-            }, 300); // Optimized for Car/Elite handover (reduced from 800ms)
+            }, 1200);
         };
 
         setTimeout(() => {

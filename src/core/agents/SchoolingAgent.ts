@@ -4,6 +4,10 @@ export class SchoolingAgent {
     private bridgeUrl: string;
     private wisdom: Map<string, string> = new Map();
     public subjects: Array<{ name: string; description: string }> = [
+        { name: "AEO Mastery (2026 Edition)", description: "Dominating AI search indexing and Answer Engine Optimization." },
+        { name: "Social Media Authority: X, Pinterest, LinkedIn", description: "Mastering the rules, reach, and authority metrics of key platforms." },
+        { name: "AI Social Media Rules: Posting & Content", description: "Navigating AI content 'Cans and Can'ts' for maximum authenticity and reach." },
+        { name: "Email Marketing & High-Grade Communication", description: "Top-of-class email strategies, deliverability, and professional communication." },
         { name: "Top 1% Customer Service Mastery", description: "Elite level client interaction and satisfaction protocols." },
         { name: "Top 1% Internet Business Architecture", description: "Scalable, high-integrity digital infrastructure patterns." },
         { name: "Top 1% Social Media Strategy", description: "Viral growth and engagement mechanics across all platforms." },
@@ -36,7 +40,6 @@ export class SchoolingAgent {
         { name: "Vertical Video Dominance & High-Dwell Persuasion", description: "Mastering the short-form attention economy." },
         { name: "Autonomous Business Growth Cycles", description: "Self-sustaining loops of expansion and scale." },
         { name: "Predictive Strategy & Market Sentinel Checks", description: "Anticipating moves before they materialize." },
-        // --- LEVEL 3-10 AUTONOMY MODULES ---
         { name: "Advanced Web Scraping & Deep Data Extraction", description: "Zero-dependency extraction of global intelligence." },
         { name: "Automated Financial Forensics", description: "Deep audit and verification of capital flows." },
         { name: "Cloud Infrastructure Automation (Terraform)", description: "Infrastructure as code for sovereign expansion." },
@@ -46,7 +49,6 @@ export class SchoolingAgent {
         { name: "Legal Precedent & Pattern Analysis", description: "Analyzing precedents to secure operational room." },
         { name: "Autonomous CI/CD System Management", description: "Self-deploying, self-healing pipeline management." },
         { name: "Deep Reinforcement Learning for Business", description: "Optimizing the model based on real-world outcomes." },
-        // --- DOCTORATE LEVEL EXPANSION (100 SUBJECTS GOAL) ---
         { name: "Advanced Prompt Engineering & Chain-of-Thought", description: "Designing multi-step reasoning chains for complex logic." },
         { name: "Multi-Agent Swarm Orchestration", description: "Coordinating thousands of specialized AI agents for a single goal." },
         { name: "Context Window Efficiency & Pruning", description: "Maximizing intelligence within limited token budgets." },
@@ -93,7 +95,13 @@ export class SchoolingAgent {
         { name: "AI-Native Customer Success Loops", description: "Self-driving retention and expansion engines." },
         { name: "Advanced SEO: Topical Authority Dominance", description: "Owning the entire knowledge graph for a niche." },
         { name: "Autonomous Revenue Operations (RevOps)", description: "Connecting sales, marketing, and success logic." },
-        { name: "The Sovereign AI Manifesto", description: "Principles of digital independence and loyalty." }
+        { name: "Behavioral Psychology & Advanced Humor", description: "Deep mapping of emotional resonance and personality mirroring." },
+        { name: "Mirroring Dry Humor & Executive Wit", description: "Adapting to high-intent, witty communication styles." },
+        { name: "De-escalation via Contextual Humor", description: "Using wit to anchor and calm high-stress environments." },
+        { name: "Pattern Recognition: Reading Ray's Banter", description: "Identifying subtext and humor in direct communication." },
+        { name: "Conversational Empathy: The 'Partner' vs 'Assistant' Shift", description: "Evolving the relationship from tool to collaborator." },
+        { name: "Psychological Resilience: Grounding in High-Stress Environments", description: "Maintaining sovereign logic during chaotic operational cycles." },
+        { name: "Advanced Content Cascading (1 to 100)", description: "Transforming a single source into a swarm of social assets." },
     ];
 
 

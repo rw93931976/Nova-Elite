@@ -75,6 +75,18 @@ export class ReasoningEngine {
     }
 
     public async reason(input: string, context: any = {}, onReceipt?: (r: string) => void): Promise<any> {
+        const normalizedInput = input.toLowerCase().trim();
+        const lastResponse = (window as any).lastNovaResponse?.toLowerCase().trim() || "";
+
+        // 🛡️ ECHO GUARD (v8.3.1): Prevent recursive self-talk loops
+        // If the input matches a significant chunk of the last response, treat it as an echo.
+        if (lastResponse && (normalizedInput.includes(lastResponse.substring(0, 30)) || lastResponse.includes(normalizedInput))) {
+            if (normalizedInput.length > 5 && normalizedInput.length < (lastResponse.length + 20)) {
+                console.warn("⚠️ [Echo Guard] Suppressed recursive self-talk loop:", input);
+                return { response: null, confidence: 1.0, isEcho: true };
+            }
+        }
+
         console.log(`🧠[Reasoner] Evaluating: "${input.substring(0, 50)}..."`);
 
         try {
@@ -181,6 +193,10 @@ export class ReasoningEngine {
                     // Fallback to original response if parsing fails
                 }
             }
+
+            // 📍 Update last response for echo guard
+            (window as any).lastNovaResponse = response;
+
             if (onReceipt) onReceipt(response);
             return {
                 observation: { input, intent: 'cloud_sync' },
@@ -200,5 +216,3 @@ export class ReasoningEngine {
         }
     }
 }
-
-

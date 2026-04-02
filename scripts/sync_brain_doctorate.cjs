@@ -1,10 +1,15 @@
+require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = 'https://nqrtqfgbnwzsveemuyuu.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRxZmdibnd6c3ZlZW11eXV1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTg3NDUzOSwiZXhwIjoyMDg1NDUwNTM5fQ.e_W6mF8_X9I_-I9I_S_O_A_O_A_O_A_O_A_O_A_O_A_O_A_O_A_O_A_O_A_O';
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://nqrtqfgbnwzsveemuyuu.supabase.co';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const subjects = [
+    { name: "AEO Mastery (2026 Edition)", description: "Dominating AI search indexing and Answer Engine Optimization." },
+    { name: "Social Media Authority: X, Pinterest, LinkedIn", description: "Mastering the rules, reach, and authority metrics of key platforms." },
+    { name: "AI Social Media Rules: Posting & Content", description: "Navigating AI content 'Cans and Can'ts' for maximum authenticity and reach." },
+    { name: "Email Marketing & High-Grade Communication", description: "Top-of-class email strategies, deliverability, and professional communication." },
     { name: "Top 1% Customer Service Mastery", description: "Elite level client interaction and satisfaction protocols." },
     { name: "Top 1% Internet Business Architecture", description: "Scalable, high-integrity digital infrastructure patterns." },
     { name: "Top 1% Social Media Strategy", description: "Viral growth and engagement mechanics across all platforms." },
@@ -103,7 +108,7 @@ const subjects = [
 
 
 async function sync() {
-    console.log("🚀 Syncing 100 Doctorate Subjects to Cloud Brain...");
+    console.log("🚀 Syncing 100+ Doctorate Subjects to Cloud Brain...");
 
     for (const s of subjects) {
         const { error } = await supabase
