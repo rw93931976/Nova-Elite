@@ -10,10 +10,10 @@ interface Stage {
 
 const STAGES: Stage[] = [
     { id: 1, label: "Foundational Sync", items: ["READ LOCAL FILES", "ONLINE WEATHER/NEWS", "BASIC MEMORY", "INTERFERENCE RESISTANCE"], status: 'active' },
-    { id: 2, label: "Environmental Awareness", items: ["TONE MATCHING", "LIVE LISTENING", "GRACEFUL INTERRUPTIONS"], status: 'evolving' },
-    { id: 3, label: "Operational Agency", items: ["SYSTEM INTEGRATION", "TASK AUTOMATION (OODAR)", "LOCAL COMMAND EXECUTION"], status: 'evolving' },
+    { id: 2, label: "Environmental Awareness", items: ["TONE MATCHING", "LIVE LISTENING", "GRACEFUL INTERRUPTIONS"], status: 'active' },
+    { id: 3, label: "Operational Agency", items: ["SYSTEM INTEGRATION", "TASK AUTOMATION (OODAR)", "LOCAL COMMAND EXECUTION"], status: 'active' },
     { id: 4, label: "Emotional Resonance", items: ["EMOTIONAL INTELLIGENCE", "COGNITIVE MIRRORING (RAY)", "INTENT PARSING"], status: 'active' },
-    { id: 5, label: "Sovereign Study", items: ["SCHOOLING AGENT (6H CYCLE)", "SOVEREIGN MIND HUB SYNC", "SOVEREIGN SCRIBE (LOCAL)"], status: 'active' },
+    { id: 5, label: "Sovereign Study", items: ["SCHOOLING AGENT (6H CYCLE)", "SOVEREIGN MIND HUB SYNC", "SUBJECT MASTERY (AEO/SOCIAL)"], status: 'active' },
     { id: 6, label: "Tool Discovery", items: ["RESEARCH APIS/SDKS", "DRAFT AGENT BLUEPRINTS", "TEMPLATE CREATION"], status: 'discovery' },
     { id: 7, label: "Agent Spawning", items: ["PROPOSE SPAWNING", "MULTI-AGENT REGISTRY", "MESH-INTEROP"], status: 'discovery' },
     { id: 8, label: "Market Discovery", items: ["WHARTON STRATEGY SCAN", "PROFITABILITY ANALYSIS", "BUSINESS CASE DRAFTING"], status: 'discovery' },

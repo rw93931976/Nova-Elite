@@ -28,6 +28,8 @@ const Autonomy: React.FC = () => {
     { id: "a13", name: "Doctorate Cycle", description: "6h Autonomous Schooling", level: 5, completed: true, icon: <Rocket size={20} />, progress: 100 },
     { id: "a14", name: "Memory Density", description: "333% RAG Efficiency", level: 5, completed: true, icon: <HardDrive size={20} />, progress: 100 },
     { id: "a15", name: "Fortress Backups", description: "Nightly Sync & Mirroring", level: 5, completed: true, icon: <Lock size={20} />, progress: 100 },
+    { id: "a16", name: "Subject Mastery", description: "AEO/Social/Email Modules", level: 5, completed: true, icon: <Brain size={20} />, progress: 100 },
+    { id: "a17", name: "Sovereign Mind Hub", description: "Cloud Sync & Logic Relay", level: 5, completed: true, icon: <Globe size={20} />, progress: 100 },
   ]);
 
   useEffect(() => {
