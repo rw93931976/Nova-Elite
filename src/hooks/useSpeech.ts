@@ -54,16 +54,18 @@ export const useSpeech = (onResult: (text: string) => void) => {
             const latestResult = results[event.resultIndex];
             const text = (latestResult as any)[0].transcript.trim();
 
-            // 🛡️ ECHO GUARD (v8.3.7): Precision Suppression
+            // 🛡️ ECHO GUARD (v8.4.0): Nuclear Suppression
             const lastResponse = (window as any).lastNovaResponse?.toLowerCase() || "";
             const normalizedText = text.toLowerCase();
 
             if (lastResponse && isSpeaking) {
-                // If the mic hears Nova's own words, kill it immediately to prevent recursive Barge-In
-                const isEcho = lastResponse.includes(normalizedText) || normalizedText.includes(lastResponse.substring(0, 20));
-                if (isEcho) {
+                const words = normalizedText.split(/\s+/);
+                const refWords = lastResponse.split(/\s+/);
+                const overlap = words.filter(w => refWords.includes(w)).length / words.length;
+
+                if (overlap > 0.8 || lastResponse.includes(normalizedText)) {
                     if (!((latestResult as any).isFinal && normalizedText.length > 60)) {
-                        console.log('[useSpeech] Echo caught (v8.3.7):', text);
+                        console.log(`[useSpeech] Echo caught (v8.4.0) [Overlap: ${(overlap * 100).toFixed(0)}%]:`, text);
                         return;
                     }
                 }
@@ -82,7 +84,7 @@ export const useSpeech = (onResult: (text: string) => void) => {
                     }
 
                     const wordCount = text.split(/\s+/).length;
-                    if (wordCount >= 3) {
+                    if (wordCount >= 4) {
                         console.log('[useSpeech] ⚡ BARGE-IN DETECTED. Killing speech for new intent:', text);
                         window.speechSynthesis.cancel();
                         isSpeakingRef.current = false;

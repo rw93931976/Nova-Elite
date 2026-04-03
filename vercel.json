@@ -25,7 +25,7 @@
             "destination": "https://31.220.59.237:39922/$1"
         },
         {
-            "source": "/((?!assets/|rescue.html|icon.png|manifest.json).*)",
+            "source": "/((?!assets/|rescue.html|icon.png|manifest.json|manifest.webmanifest).*)",
             "destination": "/index.html"
         }
     ]

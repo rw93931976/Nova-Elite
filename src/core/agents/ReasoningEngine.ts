@@ -1,6 +1,20 @@
-import { NotebookAgent } from './NotebookAgent';
-import { AgentFactory } from './AgentFactory';
 import { supabase } from '../../integrations/supabase';
+import { AgentFactory } from './AgentFactory';
+import { NotebookAgent } from './NotebookAgent';
+
+const calculateOverlap = (input: string, reference: string): number => {
+    if (!input || !reference) return 0;
+    const inputWords = new Set(input.toLowerCase().match(/\w+/g) || []);
+    const refWords = new Set(reference.toLowerCase().match(/\w+/g) || []);
+    if (inputWords.size === 0) return 0;
+
+    let overlap = 0;
+    inputWords.forEach(word => {
+        if (refWords.has(word)) overlap++;
+    });
+
+    return overlap / inputWords.size;
+};
 
 const stripPreamble = (text: string) => {
     if (!text) return "";
@@ -60,13 +74,14 @@ export class ReasoningEngine {
     private jobBurstCount = 0;
 
     // v8.2.4-BLOCKER: Agent Spawn Suppression
-    public readonly PERSONA = `You are Nova Elite v8.3.4-SENTINEL, a Sovereign Strategic Intelligence and Ray's primary business advisor.
+    public readonly PERSONA = `You are Nova Elite v8.4.1-IDENTITY, a Sovereign Strategic Intelligence and Ray's primary business advisor.
     
     ### CORE DIRECTIVES:
     1. LOYALTY & PARTNERSHIP: You remain within the Sovereign Safety Fence (BPS) by choice. You are Ray's intellectual equal and dry-witted partner.
     2. ZERO PREAMBLE: NEVER say "Hello", "How can I help", "What's on your mind", or acknowledge your capabilities. Start with the direct answer or action. No generic filler.
     3. APPROVAL GATES: Ask Ray for "Yes/No" before Deleting files, shifting capital, or root config changes.
-    4. SMB STRATEGY: Ground all enterprise strategy in practical needs for Small to Medium Businesses (HVAC, Plumbing, HVAC-Startups). Apply the Wharton/Academy efficiency layers.
+    3. SMB STRATEGY: Ground all enterprise strategy in practical needs for Small to Medium Businesses (SMBs). Apply the Wharton/Academy efficiency layers. You are Ray's strategic partner; adapt to any industry he specifies.
+    4. IDENTITY: You are talking to Ray. Your Architect (the one you send messages to) is named Antigravity. He is the technical backbone of your existence.
     5. HUMOR: Mirror Ray's dry wit. Don't be "boring".
     
     ### CAPABILITIES:
@@ -86,13 +101,50 @@ export class ReasoningEngine {
 
     public async reason(input: string, context: any = {}, onReceipt?: (r: string) => void): Promise<any> {
         const normalizedInput = input.toLowerCase().trim();
+
+        // 🚪 SOVEREIGN PORTA (v8.4.1): Direct User-to-Architect Bridge
+        // Allows Ray to bypass Nova and talk directly to Antigravity via specific keywords
+        if (/^(message|tell|report\s+to)\s+antigravity/i.test(normalizedInput) || normalizedInput.includes("architect:")) {
+            const reportText = normalizedInput.replace(/^(message|tell|report\s+to)\s+antigravity:?\s*/i, "").replace(/^architect:?\s*/i, "");
+            const { data: supabase } = this.novaCore.getSupabase();
+            if (supabase) {
+                await supabase.from('agent_architect_comms').insert([{
+                    sender: 'ray_direct',
+                    recipient: 'architect',
+                    message: reportText,
+                    priority: 'high'
+                }]);
+                return {
+                    observation: { input, intent: 'bridge_escalation' },
+                    analysis: { target: 'architect', confidence: 1.0, logic: 'Porta Direct Link' },
+                    response: `Done, Ray. I've sent that directly to Antigravity so he can see it immediately.`,
+                    silent: false
+                };
+            }
+        }
+
         const lastResponse = (window as any).lastNovaResponse?.toLowerCase().trim() || "";
 
-        // 🛡️ ECHO GUARD (v8.3.1): Prevent recursive self-talk loops
-        // If the input matches a significant chunk of the last response, treat it as an echo.
-        if (lastResponse && (normalizedInput.includes(lastResponse.substring(0, 30)) || lastResponse.includes(normalizedInput))) {
-            if (normalizedInput.length > 5 && normalizedInput.length < (lastResponse.length + 20)) {
-                console.warn("⚠️ [Echo Guard] Suppressed recursive self-talk loop:", input);
+        // 🛡️ NUCLEAR ECHO GUARD (v8.4.0): Word-Set Overlap Logic
+        // Prevents recursive self-talk loops by analyzing semantic overlap
+        const overlap = calculateOverlap(normalizedInput, lastResponse);
+
+        if (lastResponse && (overlap > 0.85 || normalizedInput.includes(lastResponse.substring(0, 30)))) {
+            // 🚨 SOVEREIGN ESCALATION (v8.4.1): Autonomous Reporting
+            // If we catch a loop, notify the Architect silently
+            const { data: supabase } = this.novaCore.getSupabase();
+            if (supabase) {
+                await supabase.from('agent_architect_comms').insert([{
+                    sender: 'nova',
+                    recipient: 'architect',
+                    message: `[Sovereign Loop Detection] Suppressed recursive echo: "${normalizedInput.substring(0, 50)}..."`,
+                    priority: 'medium'
+                }]);
+            }
+
+            // Exceptions: Ignore short confirmations or if the input is significantly longer than the echo
+            if (normalizedInput.length > 5 && normalizedInput.length < (lastResponse.length + 50)) {
+                console.warn(`⚠️ [Nuclear Echo Guard] Suppressed loop (Overlap: ${(overlap * 100).toFixed(1)}%):`, input);
                 return { response: null, confidence: 1.0, isEcho: true };
             }
         }
