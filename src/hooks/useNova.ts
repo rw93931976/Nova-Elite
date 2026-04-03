@@ -28,6 +28,7 @@ export function useNova() {
 
   // 🎙️ BREAK CIRCULAR DEPENDENCY: Use a ref for the speak function
   const speakRef = useRef<(text: string) => void>(() => { });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const processWithNova = useCallback(async (input: string, options?: { onReceipt?: (r: string) => void }) => {
     if (processingLock.current) {
@@ -88,12 +89,22 @@ export function useNova() {
     }
   }, [core, messages]);
 
+  const stopAllSpeech = useCallback(() => {
+    window.speechSynthesis.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    (window as any).isNovaSpeaking = false;
+    console.log("🛑 [useNova] NUCLEAR SILENCE: All speech terminated.");
+  }, []);
+
   const sendMessage = useCallback(async (text: string) => {
     return processWithNova(text);
   }, [processWithNova]);
 
   // 🎙️ Initialize Speech Hook
-  const { isListening, toggleListening, speak } = useSpeech(sendMessage);
+  const { isListening, toggleListening, speak } = useSpeech(sendMessage, { onBargeIn: stopAllSpeech });
 
   // Keep speakRef in sync
   useEffect(() => {
@@ -156,17 +167,21 @@ export function useNova() {
     // 🔊 AUDIO RELAY: Sync speech from Bridge to Browser (Pulse Sync)
     const playBridgeAudio = async (url?: string) => {
       try {
+        stopAllSpeech(); // Pre-emptive kill
         (window as any).isNovaSpeaking = true;
         const bridgeUrl = url || `/bridge-vps/speech?t=${Date.now()}`;
         const audio = new Audio(bridgeUrl);
+        audioRef.current = audio;
         audio.onended = () => {
           setTimeout(() => {
             (window as any).isNovaSpeaking = false;
+            audioRef.current = null;
             console.log('🔇 [AudioRelay] Bridge speech ended');
           }, 500); // 500ms safety tail
         };
         audio.onerror = () => {
           (window as any).isNovaSpeaking = false;
+          audioRef.current = null;
           console.error('❌ [AudioRelay] Audio element error');
         };
         await audio.play();

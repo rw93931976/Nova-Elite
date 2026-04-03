@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
  * useSpeech: LEVEL 3 Sovereign Recovery
  * Priority: Mobile Chrome Reliability + Audio Unlock Gesture
  */
-export const useSpeech = (onResult: (text: string) => void) => {
+export const useSpeech = (onResult: (text: string) => void, options?: { onBargeIn?: () => void }) => {
     const [isListening, setIsListening] = useState(false);
     const recognitionRef = useRef<any>(null);
     const isSpeakingRef = useRef(false); // Global speaking gate
@@ -84,7 +84,11 @@ export const useSpeech = (onResult: (text: string) => void) => {
                     const wordCount = text.split(/\s+/).length;
                     if (wordCount >= 2) {
                         console.log('[useSpeech] ⚡ BARGE-IN DETECTED. Killing speech for new intent:', text);
-                        window.speechSynthesis.cancel();
+                        if (options?.onBargeIn) {
+                            options.onBargeIn();
+                        } else {
+                            window.speechSynthesis.cancel();
+                        }
                         isSpeakingRef.current = false;
                         (window as any).isNovaSpeaking = false;
                         onResultRef.current(text);

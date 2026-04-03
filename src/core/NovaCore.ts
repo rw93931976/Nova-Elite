@@ -20,13 +20,14 @@ export class NovaCore {
     private startTime: number = Date.now();
     private interferenceLog: Array<{ time: number; type: string; detail: string }> = [];
 
-    public readonly version = 'v8.4.1-IDENTITY';
+    public readonly version = 'v8.4.3-STABILITY';
     public isHalted: boolean = false;
     public beastModeEnabled: boolean = false; // THE HUMAN-CONTROLLED SWITCH
     private currentHealth: any = { status: 'online', bridge: 'offline', database: 'online', lastBridgePulse: 0 };
     private sentinel: SecuritySentinel = new SecuritySentinel();
 
     constructor() {
+        this.loadState(); // 🧠 RESTORE MEMORY IMMEDIATELY
         this.spawnCoreAgents();
         this.startHealthPulse();
         this.startInterferenceMonitoring();
