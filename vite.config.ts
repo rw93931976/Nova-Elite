@@ -46,20 +46,20 @@ export default defineConfig({
   server: {
     proxy: {
       '/bridge-vps': {
-        target: 'http://localhost:3505',
+        target: 'http://31.220.59.237:3505',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/bridge-vps/, '')
       },
       '/api': {
-        target: 'http://localhost:3505',
+        target: 'http://31.220.59.237:3505',
         changeOrigin: true
       },
       '/deep-discovery': {
-        target: 'http://localhost:3505',
+        target: 'http://31.220.59.237:3505',
         changeOrigin: true
       },
       '/health': {
-        target: 'http://localhost:3505',
+        target: 'http://31.220.59.237:3505',
         changeOrigin: true
       }
     }

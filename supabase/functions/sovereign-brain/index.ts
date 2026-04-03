@@ -140,6 +140,39 @@ serve(async (req) => {
 
         if (!input) return new Response(JSON.stringify({ response: "I'm listening." }), { headers: corsHeaders });
 
+        // 🚪 SOVEREIGN PORTA (v8.4.6-CLOUD): Fuzzy Architect Bridge (STT Resilience)
+        // Strips preambles and detects fuzzy keywords (arch, grav, ant, gravity, ark)
+        const cleanInput = input.toLowerCase().trim().replace(/^(nova|hey nova|hi nova),?\s*/i, "").trim();
+        const portaRegex = /^(message|tell|report|notify|hey|ask)\s+(antigravity|the\s+architect|architect|arch|grav|ant|archie|ark):?\s*/i;
+
+        if (portaRegex.test(cleanInput) || cleanInput.includes("architect:")) {
+            const reportText = cleanInput.replace(portaRegex, "").replace(/^architect:?\s*/i, "");
+            const { data, error: portaErr } = await supabase.from('agent_architect_comms').insert([{
+                sender: 'ray_direct',
+                recipient: 'architect',
+                message: reportText,
+                priority: 'high'
+            }]).select();
+
+            if (!portaErr) {
+                const receiptId = data?.[0]?.id ? data[0].id.substring(0, 8) : 'ACK-CLOUD';
+                const responseText = `Done, Ray. I've sent that directly to Antigravity [ID: ${receiptId}]. He will see it immediately.`;
+
+                // Trigger vocalization for the bridge
+                if (!body.silent) {
+                    await supabase.from('relay_jobs').insert({
+                        type: 'speech',
+                        payload: { text: responseText, prosody: 'standard' },
+                        status: 'pending'
+                    });
+                }
+
+                return new Response(JSON.stringify({ response: responseText }), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+        }
+
         const isResearchRequest = input.toLowerCase().includes("notebook") || input.toLowerCase().includes("research") || input.toLowerCase().includes("read");
 
         // 🧠 LONG-TERM MEMORY (RAG): Retrieve relevant context from nova_memories

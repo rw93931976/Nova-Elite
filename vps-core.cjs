@@ -293,7 +293,7 @@ setInterval(async () => {
             status: 'read'
         });
     } catch { }
-}, 10000);
+}, 60000);
 
 log('🚀 [Relay] Polling active (v2.9 Deep Sensory Fix)...');
 setInterval(pollJobs, 500); // Increased polling speed!

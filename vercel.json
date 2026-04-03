@@ -22,7 +22,7 @@
     "rewrites": [
         {
             "source": "/bridge-vps/(.*)",
-            "destination": "https://31.220.59.237:39922/$1"
+            "destination": "http://31.220.59.237:3505/$1"
         },
         {
             "source": "/((?!assets/|rescue.html|icon.png|manifest.json|manifest.webmanifest).*)",

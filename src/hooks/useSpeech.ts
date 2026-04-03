@@ -302,11 +302,12 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
         }
 
         utterance.onend = () => {
-            // v8.3.5: Buffer cooldown, recognition stays active
+            // v8.4.5: Increased buffer cooldown to 1.2s to prevent 'trailing' and echoes
             setTimeout(() => {
                 isSpeakingRef.current = false;
                 (window as any).isNovaSpeaking = false;
-            }, 800);
+                console.log("🔇 [useSpeech] Browser TTS Cooldown complete.");
+            }, 1200);
         };
 
         setTimeout(() => {

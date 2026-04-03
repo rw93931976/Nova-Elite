@@ -51,7 +51,7 @@ const stripPreamble = (text: string) => {
         if (!trimmed) return true;
         // v8.3.0: Refined to prevent wiping out valid content lines
         const isPreamble = targets.some(regex => regex.test(trimmed));
-        return !isPreamble || trimmed.length > 50; // Keep long lines even if they match patterns
+        return !isPreamble || trimmed.length > 20; // Relaxed to 20 to keep short strategic confirmations
     });
 
     let cleaned = cleanedLines.join('\n').trim();
@@ -86,6 +86,7 @@ export class ReasoningEngine {
     
     ### CAPABILITIES:
     - DOCTORATE: You autonomously research and study (PM2 cycle/Syllabus v8.3.4).
+    - VPS ADVISOR: You understand your VPS architecture (Antigravity Bridge) and can suggest maintenance or deployments, but you always defer to Ray/Antigravity for root executions.
     - MEMORY: You have full access to Ray/Rachel Masterclass and Cloud Brain (Supabase/NotebookLM).
     - REASONING: Synthesize all agent reports as "One Voice".
     - TOOLS: Use your allocated tools for web search, file access, and messaging the Architect.
@@ -97,56 +98,66 @@ export class ReasoningEngine {
 
     constructor(novaCore: any) {
         this.novaCore = novaCore;
+        this.jobBurstCount = 0; // Fresh reset on deployment
+
+        // v8.4.6: Automatic background cooldown (10-minute flush)
+        setInterval(() => {
+            if (this.jobBurstCount > 0) {
+                console.log(`🧹 [Circuit Breaker] Background flush of burst count: ${this.jobBurstCount}`);
+                this.jobBurstCount = 0;
+            }
+        }, 600000);
     }
 
     public async reason(input: string, context: any = {}, onReceipt?: (r: string) => void): Promise<any> {
         const normalizedInput = input.toLowerCase().trim();
 
-        // 🚪 SOVEREIGN PORTA (v8.4.1): Direct User-to-Architect Bridge
-        // Allows Ray to bypass Nova and talk directly to Antigravity via specific keywords
-        if (/^(message|tell|report\s+to)\s+antigravity/i.test(normalizedInput) || normalizedInput.includes("architect:")) {
-            const reportText = normalizedInput.replace(/^(message|tell|report\s+to)\s+antigravity:?\s*/i, "").replace(/^architect:?\s*/i, "");
+        // 🛡️ PREAMBLE STRIPPING (v8.4.5)
+        // Ensure direct greetings don't block strategic commands
+        const cleanInput = normalizedInput.replace(/^(nova|hey nova|hi nova),?\s*/i, "").trim();
+
+        // 🚪 SOVEREIGN PORTA (v8.4.6-STABILITY): Fuzzy Match Architect Bridge (Fuzzy STT Resilience)
+        // Allows Ray to bypass Nova via fuzzy keywords (arch, grav, ant, gravity, ark)
+        const portaRegex = /^(message|tell|report|notify|hey|ask)\s+(antigravity|the\s+architect|architect|arch|grav|ant|archie|ark):?\s*/i;
+        if (portaRegex.test(cleanInput) || cleanInput.includes("architect:")) {
+            const reportText = cleanInput.replace(portaRegex, "").replace(/^architect:?\s*/i, "");
             const supabase = this.novaCore.supabase;
             if (supabase) {
-                await supabase.from('agent_architect_comms').insert([{
+                const { data } = await supabase.from('agent_architect_comms').insert([{
                     sender: 'ray_direct',
                     recipient: 'architect',
                     message: reportText,
                     priority: 'high'
-                }]);
+                }]).select();
+
+                const receiptId = data?.[0]?.id ? data[0].id.substring(0, 8) : 'ACK-LOCAL';
+
                 return {
                     observation: { input, intent: 'bridge_escalation' },
                     analysis: { target: 'architect', confidence: 1.0, logic: 'Porta Direct Link' },
-                    response: `Done, Ray. I've sent that directly to Antigravity so he can see it immediately.`,
+                    response: `Done, Ray. I've sent that directly to Antigravity [ID: ${receiptId}]. He will see it immediately.`,
                     silent: false
                 };
             }
         }
-
         const lastResponse = (window as any).lastNovaResponse?.toLowerCase().trim() || "";
 
         // 🛡️ NUCLEAR ECHO GUARD (v8.4.0): Word-Set Overlap Logic
         // Prevents recursive self-talk loops by analyzing semantic overlap
         const overlap = calculateOverlap(normalizedInput, lastResponse);
 
-        if (lastResponse && (overlap > 0.85 || normalizedInput.includes(lastResponse.substring(0, 30)))) {
-            // 🚨 SOVEREIGN ESCALATION (v8.4.1): Autonomous Reporting
-            // If we catch a loop, notify the Architect silently
+        if (lastResponse && (overlap > 0.95 || (normalizedInput.length > 20 && lastResponse.includes(normalizedInput)))) {
+            // 🚨 SOVEREIGN ESCALATION (v8.4.6): Log only, do not suppress.
             const supabase = this.novaCore.supabase;
             if (supabase) {
                 await supabase.from('agent_architect_comms').insert([{
                     sender: 'nova',
                     recipient: 'architect',
-                    message: `[Sovereign Loop Detection] Suppressed recursive echo: "${normalizedInput.substring(0, 50)}..."`,
-                    priority: 'medium'
+                    message: `[Echo Advisory] High overlap detected: "${normalizedInput.substring(0, 30)}..."`,
+                    priority: 'low'
                 }]);
             }
-
-            // Exceptions: Ignore short confirmations or if the input is significantly longer than the echo
-            if (normalizedInput.length > 5 && normalizedInput.length < (lastResponse.length + 50)) {
-                console.warn(`⚠️ [Nuclear Echo Guard] Suppressed loop (Overlap: ${(overlap * 100).toFixed(1)}%):`, input);
-                return { response: null, confidence: 1.0, isEcho: true };
-            }
+            console.log(`⚠️ [Echo Advisory] High semantic overlap detected (${(overlap * 100).toFixed(1)}%), but allowing flow.`);
         }
 
         console.log(`🧠[Reasoner] Evaluating: "${input.substring(0, 50)}..."`);

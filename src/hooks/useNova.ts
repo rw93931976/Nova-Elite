@@ -100,6 +100,11 @@ export function useNova() {
   }, []);
 
   const sendMessage = useCallback(async (text: string) => {
+    // 🛡️ EARPLUG GUARD (防止自問自答): If Nova is currently vocalizing, ignore the input.
+    if ((window as any).isNovaSpeaking) {
+      console.log("🔇 [useNova] Input suppressed: Nova is currently speaking.");
+      return;
+    }
     return processWithNova(text);
   }, [processWithNova]);
 
@@ -240,9 +245,15 @@ export function useNova() {
   }, [messages]);
 
   const toggleHalt = useCallback(() => {
+    stopAllSpeech(); // NUCLEAR SILENCE: Immediately kill local audio
     core.toggleHalt();
     setIsHalted(core.isHalted);
-  }, [core]);
+
+    // Notify Bridge to clear buffer if halting
+    if (!isHalted) {
+      core.supabase.from("relay_jobs").insert([{ type: "halt", status: "pending", payload: { clear_buffer: true } }]);
+    }
+  }, [core, isHalted, stopAllSpeech]);
 
   const handleHardRefresh = useCallback(async () => {
     localStorage.clear();
