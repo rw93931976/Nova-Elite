@@ -54,7 +54,7 @@ export const useSpeech = (onResult: (text: string) => void) => {
             const latestResult = results[event.resultIndex];
             const text = (latestResult as any)[0].transcript.trim();
 
-            // 🛡️ ECHO GUARD (v8.4.0): Nuclear Suppression
+            // 🛡️ ECHO GUARD (v8.4.1): Nuclear Suppression
             const lastResponse = (window as any).lastNovaResponse?.toLowerCase() || "";
             const normalizedText = text.toLowerCase();
 
@@ -65,7 +65,7 @@ export const useSpeech = (onResult: (text: string) => void) => {
 
                 if (overlap > 0.8 || lastResponse.includes(normalizedText)) {
                     if (!((latestResult as any).isFinal && normalizedText.length > 60)) {
-                        console.log(`[useSpeech] Echo caught (v8.4.0) [Overlap: ${(overlap * 100).toFixed(0)}%]:`, text);
+                        console.log(`[useSpeech] Echo caught (v8.4.1) [Overlap: ${(overlap * 100).toFixed(0)}%]:`, text);
                         return;
                     }
                 }

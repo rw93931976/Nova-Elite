@@ -106,7 +106,7 @@ export class ReasoningEngine {
         // Allows Ray to bypass Nova and talk directly to Antigravity via specific keywords
         if (/^(message|tell|report\s+to)\s+antigravity/i.test(normalizedInput) || normalizedInput.includes("architect:")) {
             const reportText = normalizedInput.replace(/^(message|tell|report\s+to)\s+antigravity:?\s*/i, "").replace(/^architect:?\s*/i, "");
-            const { data: supabase } = this.novaCore.getSupabase();
+            const supabase = this.novaCore.supabase;
             if (supabase) {
                 await supabase.from('agent_architect_comms').insert([{
                     sender: 'ray_direct',
@@ -132,7 +132,7 @@ export class ReasoningEngine {
         if (lastResponse && (overlap > 0.85 || normalizedInput.includes(lastResponse.substring(0, 30)))) {
             // 🚨 SOVEREIGN ESCALATION (v8.4.1): Autonomous Reporting
             // If we catch a loop, notify the Architect silently
-            const { data: supabase } = this.novaCore.getSupabase();
+            const supabase = this.novaCore.supabase;
             if (supabase) {
                 await supabase.from('agent_architect_comms').insert([{
                     sender: 'nova',
