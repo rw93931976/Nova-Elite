@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Exorcism</title>
+    <style>
+        body {
+            background: #000;
+            color: #0BF9EA;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid rgba(11, 249, 234, 0.1);
+            border-top: 4px solid #0BF9EA;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="spinner"></div>
+    <h1>PURGING SOVEREIGN CACHE...</h1>
+    <p id="status">Scanning for ghosts...</p>
+    <script>
+        const status = document.getElementById('status');
+        async function purge() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                        console.log('Ghost neutralized:', registration);
+                    }
+                    status.innerText = "Ghosts neutralized. Clearing memory...";
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    status.innerText = "Sovereign brain initialized. Returning Home...";
+                    setTimeout(() => {
+                        window.location.href = '/?nova_exorcised=' + Date.now();
+                    }, 2000);
+                } catch (e) {
+                    status.innerText = "Fatal resistance. Retrying...";
+                    setTimeout(purge, 1000);
+                }
+            } else {
+                status.innerText = "No ghosts detected. Returning Home...";
+                window.location.href = '/';
+            }
+        }
+        purge();
+    </script>
+</body>
+
+</html>
