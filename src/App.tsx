@@ -41,13 +41,13 @@ function App() {
 
         // 🛡️ ARCHITECT VOICE ALERT: Vocalize when a new message arrives and we aren't looking at the chat
         if (hasNewArchMsg && currentView !== "chat") {
-            const vocalAlert = () => {
-                const utterance = new SpeechSynthesisUtterance("Ray, you have a new directive from the Architect.");
+            const utteranceClass = (window as any).SpeechSynthesisUtterance || (window as any).webkitSpeechSynthesisUtterance;
+            if (window.speechSynthesis && utteranceClass) {
+                const utterance = new utteranceClass("Ray, you have a new directive from the Architect.");
                 utterance.pitch = 1.1;
                 utterance.rate = 1.0;
                 window.speechSynthesis.speak(utterance);
-            };
-            vocalAlert();
+            }
         }
     }, [currentView, hasNewArchMsg, resetArchAlert]);
 
@@ -122,7 +122,12 @@ function App() {
                         <div className="relative flex justify-center mb-16">
                             <div className={`absolute inset-0 bg-[#0BF9EA]/20 blur-[80px] rounded-full pointer-events-none transition-all duration-1000 ${isListening ? "scale-150 animate-pulse" : "scale-75"}`}></div>
                             <button
-                                onClick={toggleListening}
+                                onClick={() => {
+                                    toggleListening();
+                                    if (typeof (nova as any).unlockAudio === 'function') {
+                                        (nova as any).unlockAudio();
+                                    }
+                                }}
                                 className={`mic-button relative z-10 ${isListening ? "active" : ""}`}
                             >
                                 <Mic size={48} />
@@ -155,13 +160,11 @@ function App() {
     return (
         <div className="min-h-screen bg-[#121212] flex flex-col items-center">
             <div className="main-content">
-                <header className="flex justify-between items-center mb-8 pt-4">
+                <header className="flex justify-between items-center mb-10 pt-6 px-4">
                     <div className="flex flex-col">
-                        <h1 className="text-3xl font-black italic tracking-tighter text-[#0BF9EA] uppercase drop-shadow-[0_0_15px_rgba(11,249,234,0.4)]">Nova Sovereign</h1>
-                        <span className="text-[9px] font-black text-[#0BF9EA]/60 tracking-[0.5em] uppercase">Elite {nova.version}</span>
+                        <h1 className="text-4xl font-black italic tracking-tighter text-[#0BF9EA] uppercase drop-shadow-[0_0_25px_rgba(11,249,234,0.6)]">Nova Sovereign</h1>
+                        <span className="text-[10px] font-black text-[#0BF9EA]/60 tracking-[0.6em] uppercase mt-1">Elite {nova.version}</span>
                     </div>
-
-                    <StatusBadge label="Sovereign" status="online" />
                 </header>
 
                 <main>

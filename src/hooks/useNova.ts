@@ -95,7 +95,9 @@ export function useNova() {
   }, [core, messages]);
 
   const stopAllSpeech = useCallback(() => {
-    window.speechSynthesis.cancel();
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
@@ -199,7 +201,7 @@ export function useNova() {
       try {
         stopAllSpeech(); // Pre-emptive kill
         (window as any).isNovaSpeaking = true;
-        const bridgeUrl = url || `/bridge-vps/speech?t=${Date.now()}`;
+        const bridgeUrl = url || `http://31.220.59.237:3505/speech?t=${Date.now()}`;
         const audio = new Audio(bridgeUrl);
         audioRef.current = audio;
         audio.onended = () => {
@@ -295,7 +297,7 @@ export function useNova() {
     lastTone,
     hasNewArchMsg,
     resetArchAlert,
-    toggleListening,
+    unlockAudio,
     sendMessage,
     toggleHalt,
     handleHardRefresh,

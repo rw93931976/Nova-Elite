@@ -250,9 +250,12 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
         const unlock = () => {
             try {
                 const synth = window.speechSynthesis;
-                const ut = new SpeechSynthesisUtterance('');
-                ut.volume = 0;
-                synth.speak(ut);
+                const utteranceClass = (window as any).SpeechSynthesisUtterance || (window as any).webkitSpeechSynthesisUtterance;
+                if (synth && utteranceClass) {
+                    const ut = new utteranceClass('');
+                    ut.volume = 0;
+                    synth.speak(ut);
+                }
 
                 if (!recognitionRef.current) recognitionRef.current = initRecognition();
 
@@ -269,14 +272,20 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
     }, []);
 
     const speak = useCallback((text: string, vol = 0.5, pitch = 1.0, rate = 0.95) => {
-        if (!window.speechSynthesis) return;
+        const synth = window.speechSynthesis;
+        const utteranceClass = (window as any).SpeechSynthesisUtterance || (window as any).webkitSpeechSynthesisUtterance;
+
+        if (!synth || !utteranceClass) {
+            console.warn("🔇 [useSpeech] Native TTS or SpeechSynthesisUtterance not available. Sovereign Silence active.");
+            return;
+        }
 
         (window as any).lastNovaResponse = text; // Unified Echo Guard tracking
 
         const normalizedVol = Math.max(0.1, Math.min(1.0, vol));
 
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
+        synth.cancel();
+        const utterance = new utteranceClass(text);
         utterance.volume = normalizedVol;
         utterance.pitch = pitch;
         utterance.rate = rate;
