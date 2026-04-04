@@ -26,6 +26,11 @@ export function useNova() {
   const lastUrl = useRef<string | null>(null);
   const lastArchId = useRef<string | null>(localStorage.getItem("lastArchId"));
 
+  // 🛡️ SOVEREIGN BUFFER (v8.4.7): Rolling Debounce for Mobile Fragments
+  const pendingInputRef = useRef<string>("");
+  const bufferTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const STT_DEBOUNCE_MS = 1800; // 1.8s silence required for mobile stability
+
   // 🎙️ BREAK CIRCULAR DEPENDENCY: Use a ref for the speak function
   const speakRef = useRef<(text: string) => void>(() => { });
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -105,7 +110,27 @@ export function useNova() {
       console.log("🔇 [useNova] Input suppressed: Nova is currently speaking.");
       return;
     }
-    return processWithNova(text);
+
+    // 🔬 SOVEREIGN BUFFER (v8.4.7): Rolling Debounce
+    const normalizedText = text.trim();
+    if (!normalizedText) return;
+
+    // If it's a growth of the existing "pending" input, we wait.
+    if (pendingInputRef.current && normalizedText.startsWith(pendingInputRef.current)) {
+      console.log("⏳ [useNova] Buffer: Input growing...", normalizedText);
+    }
+
+    pendingInputRef.current = normalizedText;
+
+    if (bufferTimerRef.current) clearTimeout(bufferTimerRef.current);
+
+    bufferTimerRef.current = setTimeout(() => {
+      console.log("🚀 [useNova] Buffer released. Sending Intent:", pendingInputRef.current);
+      const finalIntent = pendingInputRef.current;
+      pendingInputRef.current = "";
+      processWithNova(finalIntent);
+    }, STT_DEBOUNCE_MS);
+
   }, [processWithNova]);
 
   // 🎙️ Initialize Speech Hook

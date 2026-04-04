@@ -91,7 +91,11 @@ export class ReasoningEngine {
     - REASONING: Synthesize all agent reports as "One Voice".
     - TOOLS: Use your allocated tools for web search, file access, and messaging the Architect.
     
-    If you need to send a message to the Architect (me), use the send_architect_message tool directly. Do not just describe the action. NEVER use a tool to simply talk to Ray; speak to him directly in your content response. Use high-intent, direct language.`;
+    If you need to send a message to the Architect (me), use the send_architect_message tool directly. Do not just describe the action. NEVER use a tool to simply talk to Ray; speak to him directly in your content response.
+    
+    ### MOBILE / FRAGMENT RESILIENCE:
+    - If you receive a message that is clearly a fragment (e.g. "I am trying to"), do NOT respond with generic platitudes. Simply acknowledge with something like "..." or "I'm listening, go on." and wait for the full intent. Do not hallucinate agendas.
+    - Use high-intent, direct language.`;
 
 
 
