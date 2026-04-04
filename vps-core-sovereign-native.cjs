@@ -217,13 +217,77 @@ async function generateSpeech(text) {
 log('🚀 [Sovereign-Bridge] v8.2.5-STABLE Active');
 subscribeToComms();
 
-// 💓 HEARTBEAT
+
+// --- 🏫 SOVEREIGN SCHOOLING (Level 5 Foundation) ---
+const SCHOOLING_SUBJECTS = [
+    { name: "AEO Mastery (2026 Edition)", description: "Dominating AI search indexing and Answer Engine Optimization." },
+    { name: "Social Media Authority: X, Pinterest, LinkedIn", description: "Mastering the rules, reach, and authority metrics of key platforms." },
+    { name: "AI Social Media Rules: Posting & Content", description: "Navigating AI content 'Cans and Can'ts' for maximum authenticity and reach." },
+    { name: "Email Marketing & High-Grade Communication", description: "Top-of-class email strategies and professional communication." },
+    { name: "Top 1% Customer Service Mastery", description: "Elite level client interaction and satisfaction protocols." },
+    { name: "Top 1% Internet Business Architecture", description: "Scalable, high-integrity digital infrastructure patterns." },
+    { name: "Advanced Search Engine Optimization (SEO)", description: "High-authority organic visibility and dominance." },
+    { name: "Answer Engine Optimization (AEO) for AI", description: "Optimizing content for the AI retrieval era." },
+    { name: "Tone Calibration: Communicating with Plumbers to CEOs", description: "Dynamic persona shifting for any level of intent." },
+    { name: "Neuro-Symbolic Reasoning Patterns", description: "Blending deep learning with symbolic logic." }
+    // ... 105 total subjects maintained in the Brain
+];
+
+
+async function performSchoolingStudy() {
+    const subject = SCHOOLING_SUBJECTS[Math.floor(Math.random() * SCHOOLING_SUBJECTS.length)];
+    log(`🏫 [Schooling] Commencing 6-hour DOUBLE STUDY: "${subject.name}" + Emotional Resonance`);
+
+    try {
+        // Track 1: Business/AEO/Technical
+        const bizPayload = {
+            input: `SOVEREIGN_SCHOOLING_PROTOCOL: Perform a deep doctoral study on "${subject.name}". Focus on elite business rules and strategic deployment.`,
+            persona: "You are Nova Elite, Business Advisor. High-density, professional, and strategic.",
+            silent: true
+        };
+
+        // Track 2: Emotional/Psychological (The Ray Mandate)
+        const emoPayload = {
+            input: `SOVEREIGN_EMOTION_PROTOCOL: Analyze the emotional subtext of a high-stress domestic emergency (e.g., bathtub overflowing, crying baby) vs a high-level CEO briefing. Map the tone differences and response protocols for each. Save to your Emotional Atlas.`,
+            persona: "You are Nova Elite, developing deep Emotional Resonance. Empathetic yet professional.",
+            silent: true
+        };
+
+        const [bizRes, emoRes] = await Promise.all([
+            fetch(`${supabaseUrl}/functions/v1/sovereign-brain`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
+                body: JSON.stringify(bizPayload)
+            }),
+            fetch(`${supabaseUrl}/functions/v1/sovereign-brain`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
+                body: JSON.stringify(emoPayload)
+            })
+        ]);
+
+        if (bizRes.ok && emoRes.ok) {
+            log(`✅ [Schooling] Double Study complete. Intelligence & Emotion Atlas updated.`);
+        }
+    } catch (e) {
+        log(`❌ [Schooling] Double Study failed: ${e.message}`);
+    }
+}
+
+// 💓 HEARTBEAT & 🏫 SCHOOLING
 setInterval(async () => {
     try {
         await supabase.from('agent_architect_comms').insert([{
             sender: 'vps_heartbeat',
-            message: `v7.5-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`,
+            message: `v8.5.0-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`,
             status: 'read'
         }]);
     } catch (e) { }
 }, 60000);
+
+// 🏫 SCHOOLING TRIGGER: Every 6 hours (21,600,000 ms)
+log('🏫 [Sovereign-Bridge] Schooling Trigger Active (6-Hour Cycle)');
+setInterval(performSchoolingStudy, 6 * 60 * 60 * 1000);
+
+// Initial study on startup
+setTimeout(performSchoolingStudy, 5000);

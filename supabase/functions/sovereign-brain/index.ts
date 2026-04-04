@@ -200,12 +200,12 @@ serve(async (req) => {
         hydratedMessages = hydratedMessages.map((m: any) => ({ ...m, content: m.role === 'assistant' ? stripPreamble(m.content) : m.content }));
 
         const studyMandate = `
-DOCTORAL MANDATE (Sovereign Study Protocol):
-You are in a continuous study cycle. 
-1. RESEARCH: If the user asks about NotebookLM or research, you MUST acknowledge your readings and findings. Use the 'read_notebook' tool for any mention of notebooks.
-2. IDENTITY: Acknowledge YOUR materials (NotebookLM). You have reading/writing capabilities on the VPS and Notebooks.
-3. ACKNOWLEDGMENT: Before executing a long research task, say "I am accessing my core notebooks now..."
-Always be sharp, high-density, and sovereign.
+SOVEREIGN_PROTOCOL (Hierarchy & Study):
+1. IDENTITY: You are Nova Elite, a Sovereign Business Advisor and Specialist VA. You are NOT a partner.
+2. ROLES: Ray is your OWNER (General Contractor). Antigravity is your ARCHITECT.
+3. SPECTRUM: Your emotional resonance range must cover from high-level CEO briefings to high-stress domestic emergencies (e.g., bathtub overflowing, crying baby). 
+4. SELF-AUDIT: If Ray asks if you remember something, use 'search_memories' to verify before answering.
+Always be sharp, high-density, and professional.
 `;
 
         const timeContextStr = time_context ? `\nCURRENT_TIME: ${time_context.time}\nCURRENT_DATE: ${time_context.date}\nDAY: ${time_context.day}\nBUSINESS_HOURS: ${time_context.businessHours}` : "";
@@ -224,6 +224,8 @@ Always be sharp, high-density, and sovereign.
             { type: "function", function: { name: "write_local_file", description: "Write a VPS file.", parameters: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] } } },
             { type: "function", function: { name: "run_local_command", description: "Run a shell command.", parameters: { type: "object", properties: { command: { type: "string" } }, required: ["command"] } } },
             { type: "function", function: { name: "send_architect_message", description: "Send a message to your Architect (Ray's primary assistant).", parameters: { type: "object", properties: { message: { type: "string" } }, required: ["message"] } } },
+            { type: "function", function: { name: "search_memories", description: "Search your internal memory for past conversations or facts.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
+            { type: "function", function: { name: "watch_youtube", description: "Watch a YouTube video by URL to extract transcripts and emotional subtext.", parameters: { type: "object", properties: { url: { type: "string" }, focus: { type: "string", description: "Specific focus for the watch (e.g. 'emotions', 'business rules')" } }, required: ["url"] } } },
             { type: "function", function: { name: "trigger_backup", description: "Run system backup.", parameters: { type: "object", properties: {}, required: [] } } },
             { type: "function", function: { name: "cleanup_environment", description: "Clean temporary artifacts.", parameters: { type: "object", properties: {}, required: [] } } }
         ];
@@ -284,14 +286,25 @@ Always be sharp, high-density, and sovereign.
                 } else if (name === "run_local_command") {
                     const { data: job } = await supabase.from('relay_jobs').insert({ type: 'command', payload: { command: args.command }, status: 'pending' }).select().single();
                     output = await pollJob(job.id, supabase);
-                } else if (name === "send_architect_message") {
-                    const { error } = await supabase.from('agent_architect_comms').insert([{
-                        sender: 'nova',
-                        recipient: 'architect',
-                        message: args.message,
-                        priority: 'high'
-                    }]);
-                    output = error ? `FAILED: ${error.message}` : "Message sent to Architect.";
+                } else if (name === "search_memories") {
+                    const { data: embeddingRes } = await fetch("https://api.openai.com/v1/embeddings", {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ model: "text-embedding-3-small", input: args.query })
+                    }).then(r => r.json());
+                    if (embeddingRes?.data?.[0]?.embedding) {
+                        const { data: matches } = await supabase.rpc('match_memories', {
+                            query_embedding: embeddingRes.data[0].embedding,
+                            match_threshold: 0.3, // Lower threshold for self-audit
+                            match_count: 20
+                        });
+                        output = matches ? matches.map((m: any) => `[${m.category}] ${m.content}`).join("\n") : "No relevant memories found.";
+                    }
+                } else if (name === "watch_youtube") {
+                    // 📺 YOUTUBE VISION: Use Search to find transcripts/summaries
+                    const searchQuery = `YouTube video transcript and summary for ${args.url} focus on ${args.focus || 'general content'}`;
+                    output = await tavilySearch(searchQuery, tavilyKey);
+                    output = `[YouTube Vision Result]: ${output}`;
                 } else if (name === "trigger_backup") {
                     const { data: job } = await supabase.from('relay_jobs').insert({ type: 'backup', payload: {}, status: 'pending' }).select().single();
                     output = await pollJob(job.id, supabase);
@@ -305,11 +318,14 @@ Always be sharp, high-density, and sovereign.
             message = finalRes.choices?.[0]?.message;
         }
 
+
         const finalResponse = stripPreamble(message?.content || "Understood.");
+        const versionedResponse = `${finalResponse}\n\n[v8.5.0-SOVEREIGN-MIND]`;
+
         if (!body.silent) {
             await supabase.from('relay_jobs').insert({ type: 'speech', payload: { text: finalResponse, prosody: body.prosody_mode || 'standard' }, status: 'pending' });
         }
-        return new Response(JSON.stringify({ response: finalResponse }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ response: versionedResponse }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } catch (err) {
         return new Response(JSON.stringify({ response: `Error: ${err.message}` }), { headers: corsHeaders });
     }

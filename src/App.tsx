@@ -38,7 +38,18 @@ function App() {
         if (currentView === "chat") {
             resetArchAlert();
         }
-    }, [currentView, resetArchAlert]);
+
+        // 🛡️ ARCHITECT VOICE ALERT: Vocalize when a new message arrives and we aren't looking at the chat
+        if (hasNewArchMsg && currentView !== "chat") {
+            const vocalAlert = () => {
+                const utterance = new SpeechSynthesisUtterance("Ray, you have a new directive from the Architect.");
+                utterance.pitch = 1.1;
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            };
+            vocalAlert();
+        }
+    }, [currentView, hasNewArchMsg, resetArchAlert]);
 
     const renderContent = () => {
         switch (currentView) {
@@ -160,13 +171,13 @@ function App() {
                 <nav className="nav-bar">
                     <button
                         onClick={() => setCurrentView("home")}
-                        className={`nav-item p-3 ${currentView === "home" ? "active bg-[#0BF9EA] text-[#121212]" : "text-[#0BF9EA]/40"}`}
+                        className={`nav-item p-3 ${currentView === "home" ? "active bg-[#0BF9EA] text-[#121212] shadow-[0_0_20px_rgba(11,249,234,0.6)]" : "text-[#0BF9EA]/70"}`}
                     >
                         <Home size={24} />
                     </button>
                     <button
                         onClick={() => setCurrentView("chat")}
-                        className={`nav-item p-3 relative ${currentView === "chat" ? "active bg-[#0BF9EA] text-[#121212]" : "text-[#0BF9EA]/40"}`}
+                        className={`nav-item p-3 relative ${currentView === "chat" ? "active bg-[#0BF9EA] text-[#121212] shadow-[0_0_20px_rgba(11,249,234,0.6)]" : "text-[#0BF9EA]/70"}`}
                     >
                         <MessageSquare size={24} />
                         {hasNewArchMsg && (
@@ -178,25 +189,25 @@ function App() {
                     </button>
                     <button
                         onClick={() => setCurrentView("features")}
-                        className={`nav-item p-3 ${currentView === "features" ? "active bg-[#0BF9EA] text-[#121212]" : "text-[#0BF9EA]/40"}`}
+                        className={`nav-item p-3 ${currentView === "features" ? "active bg-[#0BF9EA] text-[#121212] shadow-[0_0_20px_rgba(11,249,234,0.6)]" : "text-[#0BF9EA]/70"}`}
                     >
                         <Brain size={24} />
                     </button>
                     <button
                         onClick={() => setCurrentView("autonomy")}
-                        className={`nav-item p-3 ${currentView === "autonomy" ? "active bg-[#0BF9EA] text-[#121212]" : "text-[#0BF9EA]/40"}`}
+                        className={`nav-item p-3 ${currentView === "autonomy" ? "active bg-[#0BF9EA] text-[#121212] shadow-[0_0_20px_rgba(11,249,234,0.6)]" : "text-[#0BF9EA]/70"}`}
                     >
                         <Activity size={24} />
                     </button>
                     <button
                         onClick={() => setCurrentView("inventory")}
-                        className={`nav-item p-3 ${currentView === "inventory" ? "active bg-[#0BF9EA] text-[#121212]" : "text-[#0BF9EA]/40"}`}
+                        className={`nav-item p-3 ${currentView === "inventory" ? "active bg-[#0BF9EA] text-[#121212] shadow-[0_0_20px_rgba(11,249,234,0.6)]" : "text-[#0BF9EA]/70"}`}
                     >
                         <Database size={24} />
                     </button>
                     <button
                         onClick={() => setCurrentView("settings")}
-                        className={`nav-item p-3 ${currentView === "settings" ? "active bg-[#0BF9EA] text-[#121212]" : "text-[#0BF9EA]/40"}`}
+                        className={`nav-item p-3 ${currentView === "settings" ? "active bg-[#0BF9EA] text-[#121212] shadow-[0_0_20px_rgba(11,249,234,0.6)]" : "text-[#0BF9EA]/70"}`}
                     >
                         <Settings size={24} />
                     </button>

@@ -204,13 +204,14 @@ export class ReasoningEngine {
             const prosody_mode = input.length > 100 || /!/.test(input) ? 'stressed' : 'unstressed';
             console.log(`🔊[Prosody] Detected: ${prosody_mode} `);
 
-            // v4.5-MESH: Hydrate context with Architect Communications
+            // v8.4.7-STABILITY: Hydrate context with ALL recent Architect Bridge activity
+            // This ensures Nova knows if her messages were 'Read' or 'Unread'
             const { data: comms } = await supabase
                 .from('agent_architect_comms')
-                .select('sender, message, created_at')
-                .or('recipient.eq.ray,recipient.eq.nova,recipient.eq.all')
+                .select('sender, recipient, message, status, created_at')
+                .or('recipient.eq.ray,recipient.eq.nova,recipient.eq.all,sender.eq.nova')
                 .order('created_at', { ascending: false })
-                .limit(5);
+                .limit(10);
 
             // v5.0: Notebook Research Context
             const notebookAgent = new NotebookAgent();

@@ -20,7 +20,7 @@ export class NovaCore {
     private startTime: number = Date.now();
     private interferenceLog: Array<{ time: number; type: string; detail: string }> = [];
 
-    public readonly version = 'v8.4.7-STABILITY';
+    public readonly version = 'v8.5.0-SOVEREIGN';
     public isHalted: boolean = false;
     public beastModeEnabled: boolean = false; // THE HUMAN-CONTROLLED SWITCH
     private currentHealth: any = { status: 'online', bridge: 'offline', database: 'online', lastBridgePulse: 0 };
@@ -221,7 +221,7 @@ export class NovaCore {
         this.agents.set('evolution', new EvolutionAgent(this));
         this.agents.set('security', this.sentinel);
 
-        console.log("🛡️ [NovaCore] Safety Protocols Active (v8.4.6-SENTINEL-FINAL)");
+        console.log("🛡️ [NovaCore] Safety Protocols Active (v8.5.0-SENTINEL-FINAL)");
     }
 
     public toggleHalt() {
