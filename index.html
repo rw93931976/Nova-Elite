@@ -7,6 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nova Elite</title>
   <script>
+    // 🛡️ SOVEREIGN ARMOR: Ensure TTS classes are never undefined (Fixes Error 117)
+    if (typeof window !== 'undefined' && typeof window.SpeechSynthesisUtterance === 'undefined') {
+      window.SpeechSynthesisUtterance = function () { return { pitch: 1, rate: 1, text: "" }; };
+    }
     const params = new URLSearchParams(window.location.search);
     if (params.get('purge')) {
       if ('serviceWorker' in navigator) {
