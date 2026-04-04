@@ -7,8 +7,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nova Elite</title>
   <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('purge')) {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) registration.unregister();
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = window.location.pathname + '?v=' + Date.now();
+        });
+      }
+    }
     window.onerror = function (msg, url, line) {
-      alert("❌ FATAL NOVA ERROR: " + msg + " \nFile: " + url + " \nLine: " + line);
+      console.error("❌ FATAL NOVA ERROR:", msg, "File:", url, "Line:", line);
     };
     window.NOVA_USE_BROWSER_TTS = true;
   </script>
