@@ -34,7 +34,7 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
         if (!SpeechRecognition) return null;
 
         const recognizer = new SpeechRecognition();
-        recognizer.continuous = true; // Continuous mode (v10): Maintains focus through pauses
+        recognizer.continuous = false; // Level 5 Mobile Sync: Switch to discrete mode for better Android accuracy
         recognizer.interimResults = true; // Still show interim for responsiveness
         recognizer.lang = 'en-US';
 
@@ -147,7 +147,7 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
                             // Already active or error
                         }
                     }
-                }, 800); // Faster restart for better responsiveness
+                }, 200); // Level 5 Mobile Sync: 200ms restart for instant reactivity
             }
         };
 
@@ -302,12 +302,12 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
         }
 
         utterance.onend = () => {
-            // v8.4.5: Increased buffer cooldown to 1.2s to prevent 'trailing' and echoes
+            // Level 5 Mobile Sync: Reduced buffer cooldown to 200ms to eliminate 'first word' suppression
             setTimeout(() => {
                 isSpeakingRef.current = false;
                 (window as any).isNovaSpeaking = false;
                 console.log("🔇 [useSpeech] Browser TTS Cooldown complete.");
-            }, 1200);
+            }, 200);
         };
 
         setTimeout(() => {
