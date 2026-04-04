@@ -283,9 +283,15 @@ export function useNova() {
   }, [core, isHalted, stopAllSpeech]);
 
   const handleHardRefresh = useCallback(async () => {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+      }
+    }
     localStorage.clear();
     sessionStorage.clear();
-    window.location.reload();
+    window.location.reload(); // Samsung/Chrome will now pull a fresh copy
   }, []);
 
   return {
