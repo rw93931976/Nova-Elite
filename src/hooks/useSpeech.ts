@@ -58,13 +58,23 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
             const lastResponse = (window as any).lastNovaResponse?.toLowerCase() || "";
             const normalizedText = text.toLowerCase();
 
-            if (lastResponse && isSpeaking) {
+            // ⚡ EMERGENCY BARGE-IN (v8.8.2): Kill speech on ANY result (Interim or Final)
+            if (isSpeaking && normalizedText.length > 0) {
                 const words = normalizedText.split(/\s+/);
-                const refWords = lastResponse.split(/\s+/);
-                const overlap = words.filter(w => refWords.includes(w)).length / words.length;
+                const lastResponseWords = lastResponse.split(/\s+/);
+                const overlap = words.filter(w => lastResponseWords.includes(w)).length / words.length;
 
-                if (overlap > 0.8 || lastResponse.includes(normalizedText) || normalizedText.includes(lastResponse)) {
-                    console.log(`[useSpeech] Echo caught (v8.4.1) [Overlap: ${(overlap * 100).toFixed(0)}%]:`, text);
+                // Only suppress if it's a high-confidence echo, otherwise it's a Barge-In
+                if (overlap < 0.6) {
+                    console.log('[useSpeech] ⚡ BARGE-IN DETECTED (Interim). Killing speech:', text);
+                    window.speechSynthesis.cancel();
+                    (window as any).lastNovaResponse = ""; // Force clear echo guard
+                    isSpeakingRef.current = false;
+                    (window as any).isNovaSpeaking = false;
+                    if (options?.onBargeIn) options.onBargeIn();
+                    return; // Stop result processing until she's silent
+                } else {
+                    console.log(`[useSpeech] Echo ignored [Overlap: ${(overlap * 100).toFixed(0)}%]:`, text);
                     return;
                 }
             }
@@ -72,273 +82,247 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
             if ((latestResult as any).isFinal) {
                 console.log('[useSpeech] Final intent detected:', text);
 
-                // ⚡ BARGE-IN TRIGGER: If Nova is talking, evaluate if we should kill her speech
-                if (isSpeaking) {
-                    // v8.3.8: Final catch for echoes that leaked past the interim filter
-                    const isFinalEcho = lastResponse.includes(normalizedText) || normalizedText.includes(lastResponse.substring(0, 20));
-                    if (isFinalEcho) {
-                        console.log('[useSpeech] Final intent suppressed as echo (v8.3.8):', text);
-                        return;
-                    }
-
-                    const wordCount = text.split(/\s+/).length;
-                    if (wordCount >= 2) {
-                        console.log('[useSpeech] ⚡ BARGE-IN DETECTED. Killing speech for new intent:', text);
-                        if (options?.onBargeIn) {
-                            options.onBargeIn();
-                        } else {
-                            window.speechSynthesis.cancel();
-                        }
-                        isSpeakingRef.current = false;
-                        (window as any).isNovaSpeaking = false;
-                        onResultRef.current(text);
-                        return;
-                    } else {
-                        console.log('[useSpeech] Fragment during speech ignored:', text);
-                        return;
-                    }
-                }
-
-                // ⏳ SOVEREIGN DEBOUNCE (v8.3.4): 1.4s for non-interruption cases
+                // ⏳ SOVEREIGN DEBOUNCE (v8.3.4)
                 debounceTimerRef.current = setTimeout(() => {
                     const isStillSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
-                    const wordCount = text.trim().split(/\s+/).length;
-
                     if (text.length > 1 && !isStillSpeaking) {
-                        // 🚦 GATE (v8.3.8): Allow short intents like "Hey Nova" (2+ words or wake-words)
-                        // Dialect support: "Pay Nova", "Hay Nova", "Hina"
-                        const isWakeWord = /^(hey|pay|hay|hi|hi\s*na)\s*nova/i.test(normalizedText);
-                        if (wordCount < 2 && !isWakeWord) {
-                            console.log('[useSpeech] Fragment ignored (v8.3.8):', text);
-                            return;
-                        }
                         onResultRef.current(text);
                     }
                 }, 1400);
             }
-        };
-
-        recognizer.onerror = (event: any) => {
-            console.error('[useSpeech] Recognition Error:', event.error);
-            if (event.error === 'no-speech' || event.error === 'network') {
-                if (shouldListenRef.current) {
-                    setTimeout(() => {
-                        try { recognitionRef.current?.start(); } catch (e) { }
-                    }, 200);
-                }
-            } else {
-                setIsListening(false);
+            // Dialect support: "Pay Nova", "Hay Nova", "Hina"
+            const isWakeWord = /^(hey|pay|hay|hi|hi\s*na)\s*nova/i.test(normalizedText);
+            if (wordCount < 2 && !isWakeWord) {
+                console.log('[useSpeech] Fragment ignored (v8.3.8):', text);
+                return;
             }
+            onResultRef.current(text);
+        }
+    }, 1400);
+}
         };
 
-        recognizer.onend = () => {
-            console.log('[useSpeech] Recognition Ended - Pulse check...');
-            setIsListening(false);
-            (window as any).isNovaListening = false;
+recognizer.onerror = (event: any) => {
+    console.error('[useSpeech] Recognition Error:', event.error);
+    if (event.error === 'no-speech' || event.error === 'network') {
+        if (shouldListenRef.current) {
+            setTimeout(() => {
+                try { recognitionRef.current?.start(); } catch (e) { }
+            }, 200);
+        }
+    } else {
+        setIsListening(false);
+    }
+};
 
-            // AUTO-RESTART HEARTBEAT (v8.3.6): Always restart if shouldListen is true
-            // Removed !isSpeaking requirement to allow Barge-In to recover if browser stops STT
+recognizer.onend = () => {
+    console.log('[useSpeech] Recognition Ended - Pulse check...');
+    setIsListening(false);
+    (window as any).isNovaListening = false;
+
+    // AUTO-RESTART HEARTBEAT (v8.3.6): Always restart if shouldListen is true
+    // Removed !isSpeaking requirement to allow Barge-In to recover if browser stops STT
+    if (shouldListenRef.current) {
+        setTimeout(() => {
             if (shouldListenRef.current) {
-                setTimeout(() => {
-                    if (shouldListenRef.current) {
-                        try {
-                            recognitionRef.current?.start();
-                        } catch (e) {
-                            // Already active or error
-                        }
-                    }
-                }, 200); // Level 5 Mobile Sync: 200ms restart for instant reactivity
+                try {
+                    recognitionRef.current?.start();
+                } catch (e) {
+                    // Already active or error
+                }
             }
-        };
+        }, 200); // Level 5 Mobile Sync: 200ms restart for instant reactivity
+    }
+};
 
-        return recognizer;
+return recognizer;
     };
 
-    // 🔋 BACKGROUND SOVEREIGNTY (v5.8): Screen Wake Lock + Silent Audio Loop
-    useEffect(() => {
-        const handleWakeLock = async () => {
-            if (shouldListenRef.current && 'wakeLock' in navigator) {
-                try {
-                    wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-                } catch (err) { }
-            } else if (!shouldListenRef.current && wakeLockRef.current) {
-                wakeLockRef.current.release().then(() => {
-                    wakeLockRef.current = null;
-                });
-            }
-        };
-
-        const handleSilentLoop = () => {
-            if (shouldListenRef.current) {
-                if (!silentAudioRef.current) {
-                    const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQL6AAAAAAA=";
-                    silentAudioRef.current = new Audio(silentSrc);
-                    silentAudioRef.current.loop = true;
-                    silentAudioRef.current.volume = 0.01;
-                }
-                silentAudioRef.current.play().catch(() => { });
-            } else if (silentAudioRef.current) {
-                silentAudioRef.current.pause();
-            }
-        };
-
-        handleWakeLock();
-        handleSilentLoop();
-
-        const onVisibility = () => {
-            if (document.visibilityState === 'visible') handleWakeLock();
-        };
-        document.addEventListener('visibilitychange', onVisibility);
-
-        return () => {
-            document.removeEventListener('visibilitychange', onVisibility);
-            wakeLockRef.current?.release();
-            if (silentAudioRef.current) {
-                silentAudioRef.current.pause();
-                silentAudioRef.current = null;
-            }
-        };
-    }, [shouldListenRef.current]);
-
-    // 🔬 STT PULSE (v5.8)
-    useEffect(() => {
-        const pulse = setInterval(() => {
-            const isSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
-            if (shouldListenRef.current && !isListening && !isSpeaking) {
-                try {
-                    if (!recognitionRef.current) recognitionRef.current = initRecognition();
-                    recognitionRef.current.start();
-                } catch (e) { }
-            }
-        }, 5000);
-        return () => clearInterval(pulse);
-    }, [isListening]);
-
-    const toggleListening = useCallback(() => {
-        if (!shouldListenRef.current) setIsListening(true);
-        shouldListenRef.current = !shouldListenRef.current;
-
-        if (shouldListenRef.current) {
-            if (!recognitionRef.current) recognitionRef.current = initRecognition();
+// 🔋 BACKGROUND SOVEREIGNTY (v5.8): Screen Wake Lock + Silent Audio Loop
+useEffect(() => {
+    const handleWakeLock = async () => {
+        if (shouldListenRef.current && 'wakeLock' in navigator) {
             try {
+                wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+            } catch (err) { }
+        } else if (!shouldListenRef.current && wakeLockRef.current) {
+            wakeLockRef.current.release().then(() => {
+                wakeLockRef.current = null;
+            });
+        }
+    };
+
+    const handleSilentLoop = () => {
+        if (shouldListenRef.current) {
+            if (!silentAudioRef.current) {
+                const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQL6AAAAAAA=";
+                silentAudioRef.current = new Audio(silentSrc);
+                silentAudioRef.current.loop = true;
+                silentAudioRef.current.volume = 0.01;
+            }
+            silentAudioRef.current.play().catch(() => { });
+        } else if (silentAudioRef.current) {
+            silentAudioRef.current.pause();
+        }
+    };
+
+    handleWakeLock();
+    handleSilentLoop();
+
+    const onVisibility = () => {
+        if (document.visibilityState === 'visible') handleWakeLock();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+        document.removeEventListener('visibilitychange', onVisibility);
+        wakeLockRef.current?.release();
+        if (silentAudioRef.current) {
+            silentAudioRef.current.pause();
+            silentAudioRef.current = null;
+        }
+    };
+}, [shouldListenRef.current]);
+
+// 🔬 STT PULSE (v5.8)
+useEffect(() => {
+    const pulse = setInterval(() => {
+        const isSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
+        if (shouldListenRef.current && !isListening && !isSpeaking) {
+            try {
+                if (!recognitionRef.current) recognitionRef.current = initRecognition();
                 recognitionRef.current.start();
             } catch (e) { }
-        } else {
-            try {
-                recognitionRef.current?.stop();
-            } catch (e) { }
         }
-    }, []);
+    }, 5000);
+    return () => clearInterval(pulse);
+}, [isListening]);
 
-    const reinitialize = useCallback(() => {
-        try {
-            if (recognitionRef.current) {
-                recognitionRef.current.onend = null;
-                recognitionRef.current.onerror = null;
-                recognitionRef.current.stop();
-            }
-        } catch (e) { }
+const toggleListening = useCallback(() => {
+    if (!shouldListenRef.current) setIsListening(true);
+    shouldListenRef.current = !shouldListenRef.current;
 
-        recognitionRef.current = initRecognition();
-        shouldListenRef.current = true;
+    if (shouldListenRef.current) {
+        if (!recognitionRef.current) recognitionRef.current = initRecognition();
         try {
             recognitionRef.current.start();
         } catch (e) { }
-    }, []);
+    } else {
+        try {
+            recognitionRef.current?.stop();
+        } catch (e) { }
+    }
+}, []);
 
-    const unlockAudio = useCallback(() => {
-        const unlock = () => {
-            try {
-                const synth = window.speechSynthesis;
-                const utteranceClass = (window as any).SpeechSynthesisUtterance || (window as any).webkitSpeechSynthesisUtterance;
-                if (synth && utteranceClass) {
-                    const ut = new utteranceClass('');
-                    ut.volume = 0;
-                    synth.speak(ut);
-                }
-
-                if (!recognitionRef.current) recognitionRef.current = initRecognition();
-
-                const AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
-                if (AudioContext) {
-                    const ctx = new AudioContext();
-                    if (ctx.state === 'suspended') ctx.resume();
-                }
-                window.removeEventListener('click', unlock);
-                window.removeEventListener('touchstart', unlock);
-            } catch (e) { }
-        };
-        unlock();
-    }, []);
-
-    const speak = useCallback((text: string, vol = 0.5, pitch = 1.0, rate = 0.95) => {
-        const synth = window.speechSynthesis;
-        const utteranceClass = (window as any).SpeechSynthesisUtterance || (window as any).webkitSpeechSynthesisUtterance;
-
-        if (!synth || !utteranceClass) {
-            console.warn("🔇 [useSpeech] Native TTS or SpeechSynthesisUtterance not available. Sovereign Silence active.");
-            return;
+const reinitialize = useCallback(() => {
+    try {
+        if (recognitionRef.current) {
+            recognitionRef.current.onend = null;
+            recognitionRef.current.onerror = null;
+            recognitionRef.current.stop();
         }
+    } catch (e) { }
 
-        (window as any).lastNovaResponse = text; // Unified Echo Guard tracking
+    recognitionRef.current = initRecognition();
+    shouldListenRef.current = true;
+    try {
+        recognitionRef.current.start();
+    } catch (e) { }
+}, []);
 
-        const normalizedVol = Math.max(0.1, Math.min(1.0, vol));
+const unlockAudio = useCallback(() => {
+    const unlock = () => {
+        try {
+            const synth = window.speechSynthesis;
+            const utteranceClass = (window as any).SpeechSynthesisUtterance || (window as any).webkitSpeechSynthesisUtterance;
+            if (synth && utteranceClass) {
+                const ut = new utteranceClass('');
+                ut.volume = 0;
+                synth.speak(ut);
+            }
 
-        synth.cancel();
-        const utterance = new utteranceClass(text);
-        utterance.volume = normalizedVol;
-        utterance.pitch = pitch;
-        utterance.rate = rate;
+            if (!recognitionRef.current) recognitionRef.current = initRecognition();
 
-        const wasListening = shouldListenRef.current;
-        // v8.3.5: No longer stopping recognition for Barge-In
+            const AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
+            if (AudioContext) {
+                const ctx = new AudioContext();
+                if (ctx.state === 'suspended') ctx.resume();
+            }
+            window.removeEventListener('click', unlock);
+            window.removeEventListener('touchstart', unlock);
+        } catch (e) { }
+    };
+    unlock();
+}, []);
 
-        utterance.onstart = () => {
-            isSpeakingRef.current = true;
-            (window as any).isNovaSpeaking = true;
-        };
+const speak = useCallback((text: string, vol = 0.5, pitch = 1.0, rate = 0.95) => {
+    const synth = window.speechSynthesis;
+    const utteranceClass = (window as any).SpeechSynthesisUtterance || (window as any).webkitSpeechSynthesisUtterance;
 
-        const loadVoices = () => {
-            let voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v => v.name.includes("Google US English")) || voices.find(v => v.name.includes("Natural") || v.name.includes("Neural")) || voices.find(v => v.name.includes("Female"));
-            if (preferredVoice) utterance.voice = preferredVoice;
-        };
+    if (!synth || !utteranceClass) {
+        console.warn("🔇 [useSpeech] Native TTS or SpeechSynthesisUtterance not available. Sovereign Silence active.");
+        return;
+    }
 
-        if (window.speechSynthesis.getVoices().length === 0) {
-            window.speechSynthesis.onvoiceschanged = loadVoices;
-        } else {
-            loadVoices();
-        }
+    (window as any).lastNovaResponse = text; // Unified Echo Guard tracking
 
-        utterance.onend = () => {
-            // Level 5 Mobile Sync: Reduced buffer cooldown to 200ms to eliminate 'first word' suppression
-            setTimeout(() => {
-                isSpeakingRef.current = false;
-                (window as any).isNovaSpeaking = false;
-                console.log("🔇 [useSpeech] Browser TTS Cooldown complete.");
-            }, 200);
-        };
+    const normalizedVol = Math.max(0.1, Math.min(1.0, vol));
 
+    synth.cancel();
+    const utterance = new utteranceClass(text);
+    utterance.volume = normalizedVol;
+    utterance.pitch = pitch;
+    utterance.rate = rate;
+
+    const wasListening = shouldListenRef.current;
+    // v8.3.5: No longer stopping recognition for Barge-In
+
+    utterance.onstart = () => {
+        isSpeakingRef.current = true;
+        (window as any).isNovaSpeaking = true;
+    };
+
+    const loadVoices = () => {
+        let voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => v.name.includes("Google US English")) || voices.find(v => v.name.includes("Natural") || v.name.includes("Neural")) || voices.find(v => v.name.includes("Female"));
+        if (preferredVoice) utterance.voice = preferredVoice;
+    };
+
+    if (window.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+    } else {
+        loadVoices();
+    }
+
+    utterance.onend = () => {
+        // Level 5 Mobile Sync: Reduced buffer cooldown to 200ms to eliminate 'first word' suppression
         setTimeout(() => {
-            window.speechSynthesis.speak(utterance);
-        }, 100);
-    }, []);
+            isSpeakingRef.current = false;
+            (window as any).isNovaSpeaking = false;
+            console.log("🔇 [useSpeech] Browser TTS Cooldown complete.");
+        }, 200);
+    };
 
-    const pauseListening = useCallback(() => {
-        if (shouldListenRef.current && isListening) {
-            try {
-                recognitionRef.current?.stop();
-            } catch (e) { }
-        }
-    }, [isListening]);
+    setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+    }, 100);
+}, []);
 
-    const resumeListening = useCallback(() => {
-        if (shouldListenRef.current && !isListening) {
-            try {
-                recognitionRef.current?.start();
-            } catch (e) { }
-        }
-    }, [isListening]);
+const pauseListening = useCallback(() => {
+    if (shouldListenRef.current && isListening) {
+        try {
+            recognitionRef.current?.stop();
+        } catch (e) { }
+    }
+}, [isListening]);
 
-    return { isListening, toggleListening, speak, unlockAudio, pauseListening, resumeListening, reinitialize };
+const resumeListening = useCallback(() => {
+    if (shouldListenRef.current && !isListening) {
+        try {
+            recognitionRef.current?.start();
+        } catch (e) { }
+    }
+}, [isListening]);
+
+return { isListening, toggleListening, speak, unlockAudio, pauseListening, resumeListening, reinitialize };
 };

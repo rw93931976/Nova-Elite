@@ -28,7 +28,9 @@ function App() {
         toggleHalt,
         handleHardRefresh,
         hasNewArchMsg,
-        resetArchAlert
+        resetArchAlert,
+        unlockAudio,
+        version
     } = nova;
 
     const [currentView, setCurrentView] = useState<"home" | "features" | "autonomy" | "manifest" | "chat" | "inventory" | "settings">("home");
@@ -118,8 +120,8 @@ function App() {
                 );
             default:
                 return (
-                    <div className="flex flex-col items-center justify-center min-h-[65vh] py-8">
-                        <div className="relative flex justify-center mb-16">
+                    <div className="flex flex-col items-center justify-center min-h-[50vh] py-4">
+                        <div className="relative flex justify-center mb-12">
                             <div className={`absolute inset-0 bg-[#0BF9EA]/20 blur-[80px] rounded-full pointer-events-none transition-all duration-1000 ${isListening ? "scale-150 animate-pulse" : "scale-75"}`}></div>
                             <button
                                 onClick={() => {
@@ -134,22 +136,22 @@ function App() {
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-6 w-full">
-                            <div className="sovereign-card flex flex-col items-center justify-center p-6 text-center">
-                                <span className="text-[11px] font-black uppercase tracking-widest mb-3">System Halt</span>
-                                <button
-                                    onClick={toggleHalt}
-                                    className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all ${isHalted ? "bg-[#121212] text-[#0BF9EA] shadow-xl" : "bg-black/10 border-2 border-[#121212]/20"
-                                        }`}
-                                >
-                                    <Shield size={28} />
-                                </button>
-                            </div>
-                            <div className="sovereign-card flex flex-col items-center justify-center p-6 text-center">
-                                <span className="text-[11px] font-black uppercase tracking-widest mb-3">Elite Status</span>
-                                <div className="w-16 h-16 bg-[#121212]/10 rounded-2xl flex items-center justify-center border-2 border-[#121212]/10">
-                                    <CheckCircle2 size={36} className="text-[#121212]" />
+                        <div className="grid grid-cols-1 gap-6 w-full max-w-[280px]">
+                            <div
+                                onClick={() => setCurrentView("inventory")}
+                                className="sovereign-card group flex flex-col items-center justify-center p-8 text-center mb-0 after:hidden cursor-pointer hover:scale-105 transition-all relative overflow-hidden active:scale-95"
+                            >
+                                {/* 🛡️ LEVEL BADGE */}
+                                <div className="absolute top-2 right-2 bg-[#121212] border border-[#0BF9EA]/30 px-2 py-0.5 rounded-full">
+                                    <span className="text-[8px] font-black tracking-tighter text-[#0BF9EA]">LEVEL 6</span>
                                 </div>
+
+                                <span className="text-[11px] font-black uppercase tracking-widest mb-4 group-hover:text-[#0BF9EA] transition-colors">Elite Status</span>
+                                <div className="w-20 h-20 bg-[#121212]/10 rounded-2xl flex items-center justify-center border-2 border-[#121212]/10 relative">
+                                    <div className="absolute inset-0 bg-[#0BF9EA]/5 rounded-2xl animate-pulse"></div>
+                                    <CheckCircle2 size={42} className="text-[#121212] relative z-10" />
+                                </div>
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#121212]/40 mt-4">Tap to View Inventory</span>
                             </div>
                         </div>
                     </div>
@@ -158,16 +160,24 @@ function App() {
     };
 
     return (
-        <div className="min-h-screen bg-[#121212] flex flex-col items-center">
-            <div className="main-content">
-                <header className="flex justify-between items-center mb-10 pt-6 px-4">
+        <div className="h-[100dvh] bg-[#121212] flex flex-col items-center overflow-hidden">
+            <div className="main-content h-full flex flex-col overflow-hidden">
+                <header className="flex justify-between items-center mb-6 pt-4 px-2">
                     <div className="flex flex-col">
                         <h1 className="text-4xl font-black italic tracking-tighter text-[#0BF9EA] uppercase drop-shadow-[0_0_25px_rgba(11,249,234,0.6)]">Nova Sovereign</h1>
                         <span className="text-[10px] font-black text-[#0BF9EA]/60 tracking-[0.6em] uppercase mt-1">Elite {nova.version}</span>
                     </div>
+                    <button
+                        onClick={toggleHalt}
+                        className={`p-3 rounded-xl transition-all border-2 ${isHalted
+                            ? "bg-[#0BF9EA] text-[#121212] border-[#0BF9EA] animate-pulse shadow-[0_0_15px_rgba(11,249,234,0.8)]"
+                            : "bg-[#121212]/40 text-[#0BF9EA]/60 border-[#0BF9EA]/20"}`}
+                    >
+                        <Shield size={24} />
+                    </button>
                 </header>
 
-                <main>
+                <main className="flex-1 overflow-hidden relative">
                     {renderContent()}
                 </main>
 

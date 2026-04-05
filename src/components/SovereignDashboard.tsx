@@ -87,8 +87,8 @@ export const SovereignDashboard: React.FC<SovereignDashboardProps> = ({ status, 
                 <div className="glass-card p-4 flex items-center gap-4 bg-white/5 border-white/5">
                     <Shield className="text-amber-500/50" size={20} />
                     <div>
-                        <span className="block text-[10px] text-white/30 uppercase tracking-widest">Wharton Compliance</span>
-                        <span className="text-xs font-bold uppercase text-white/80">{status.whartonCompliance}% Audit Pass</span>
+                        <span className="block text-[10px] text-white/30 uppercase tracking-widest">Sovereign Alignment</span>
+                        <span className="text-xs font-bold uppercase text-white/80">{status.whartonCompliance}% Tactical Pass</span>
                     </div>
                 </div>
             </div>

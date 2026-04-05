@@ -20,7 +20,7 @@ export class NovaCore {
     private startTime: number = Date.now();
     private interferenceLog: Array<{ time: number; type: string; detail: string }> = [];
 
-    public readonly version = 'v8.5.2-SOVEREIGN';
+    public readonly version = 'v8.8.0-ELITE-MONITOR';
     public isHalted: boolean = false;
     public beastModeEnabled: boolean = false; // THE HUMAN-CONTROLLED SWITCH
     private currentHealth: any = { status: 'online', bridge: 'offline', database: 'online', lastBridgePulse: 0 };
@@ -59,10 +59,7 @@ export class NovaCore {
             }
         };
 
-        // ⚡️ REALTIME OPTIMIZED: Run initial check.
         check();
-        // The heartbeat is a continuous pulse from the VPS. 
-        // We ensure the UI reflects this via direct state updates.
     }
 
     public async initialize() {
@@ -86,9 +83,6 @@ export class NovaCore {
         }
         if (!this.isInitialized) await this.initialize();
 
-        // v8.1-FREEDOM: Nova reasons even on greetings.
-
-        // 🛡️ SECURITY GATE: Verify input/action against Forbidden Patterns
         if (!this.sentinel.verifyAction(input, context)) {
             return {
                 observation: { input, context, intent: 'blocked' },
@@ -98,145 +92,86 @@ export class NovaCore {
             } as any;
         }
 
-        let thought: ThoughtStage;
-        try {
-            const reasoner = this.agents.get('reasoner')!;
-            thought = await Promise.race([
-                reasoner.reason(input, { ...context, lastUrl: context.lastUrl }, onReceipt),
-                new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Sovereign Link Timeout')), 45000))
-            ]);
-        } catch (err: any) {
-            console.error('[NovaCore] Reasoning failed:', err);
-            thought = {
-                observation: { input, context, intent: 'error' },
-                analysis: { target: 'emergency', confidence: 0.5, logic: 'Reasoning failure fallback' },
-                response: "...",
-                error: true
-            } as any;
-        }
-
-        this.experiences.push({ input, thought, timestamp: Date.now() });
-        if (this.experiences.length > 1000) this.experiences = this.experiences.slice(-500);
-
-        this.reflect(input, thought.response).then();
-        return thought;
-    }
-
-    private async reflect(input: string, response: string) {
-        if (!this.isResilient) return;
-        try {
-            await this.createTask(
-                `Neural Reflection: ${input.slice(0, 30)}...`,
-                `Interaction: ${input}\nResult: ${response}`,
-                'low',
-                { type: 'reflection', version: this.version }
-            );
-        } catch (e) { }
-    }
-
-    private async loadState() {
-        try {
-            const saved = localStorage.getItem('nova_core_state_v2');
-            if (saved) {
-                const state = JSON.parse(saved);
-                this.experiences = state.experiences || [];
-                this.goals = state.goals || [];
-            }
-        } catch { }
-    }
-
-    public async saveState() {
-        try {
-            const state = {
-                experiences: this.experiences,
-                goals: this.goals
-            };
-            localStorage.setItem('nova_core_state_v2', JSON.stringify(state));
-        } catch { }
-    }
-
-    private async loadGoals() {
-        this.goals = ['maintain autonomy', 'serverless resilience', 'strategic partnership'];
-        const saved = localStorage.getItem('nova_goals');
-        if (saved) this.goals = [...new Set([...this.goals, ...JSON.parse(saved)])];
-    }
-
-    public async addGoal(goal: string) {
-        console.log(`🎯 [NovaCore] New sovereign goal adopted: ${goal}`);
-        this.goals.push(goal);
-        localStorage.setItem('nova_goals', JSON.stringify(this.goals));
-    }
-
-    public async createTask(title: string, description: string = '', priority: 'low' | 'medium' | 'high' = 'medium', metadata: any = {}) {
-        try {
-            const { data, error } = await supabase
-                .from('nova_tasks')
-                .insert([{ title, description, priority, metadata, status: 'pending' }])
-                .select();
-            if (error) throw error;
-            return data?.[0];
-        } catch (e) {
-            console.error('❌ Supabase Create Task Error:', e);
-            return null;
-        }
-    }
-
-    public getStatus(): NovaStatus {
-        const localCount = Array.from(this.agents.values()).filter(a => !a.isPassive).length;
-        return {
-            level: 5,
-            isSelfAware: true,
-            isLearning: true,
-            isHealing: true,
-            isEvolving: true,
-            uptime: Math.round((Date.now() - this.startTime) / 1000),
-            health: {
-                bridge: this.currentHealth.bridge === 'online' ? 'online' : 'offline',
-                apiKey: 'online',
-                internet: 'online',
-                api: this.currentHealth.status === 'online' ? 'online' : 'offline',
-                database: this.currentHealth.database === 'online' ? 'online' : 'offline',
-                storage: 'online'
-            },
-            isHalted: this.isHalted,
-            knowledgeCount: 0,
-            agentCount: localCount + ((this as any).remoteAgentCount || 0),
-            whartonCompliance: 100,
-            currentTime: new Date().toLocaleString(),
-            isBusinessHours: new Date().getHours() >= 9 && new Date().getHours() <= 17,
-        };
-    }
-
-    public async evolve(): Promise<string> {
-        const evolutionAgent = this.agents.get('evolution') as EvolutionAgent;
-        if (!evolutionAgent) return "Evolution module offline.";
-
-        const completed = (window as any).NOVA_COMPLETED_FEATURES || [];
-        return await evolutionAgent.proposeEvolutionPulse(completed);
-    }
-
-    private spawnCoreAgents() {
-        this.agents.set('healer', new SelfHealer(this));
-        this.agents.set('reasoner', new ReasoningEngine(this));
-        this.agents.set('evolution', new EvolutionAgent(this));
-        this.agents.set('security', this.sentinel);
-
-        console.log("🛡️ [NovaCore] Safety Protocols Active (v8.5.0-SENTINEL-FINAL)");
+        const reasoner = this.agents.get('reasoner');
+        return await reasoner.reason(input, context, onReceipt);
     }
 
     public toggleHalt() {
         this.isHalted = !this.isHalted;
-        console.log(`🛑 [SYSTEM]: HALT status toggled to: ${this.isHalted}`);
+        console.log(`🚦 [Sovereign]: System ${this.isHalted ? 'HALTED' : 'RESUMED'}`);
+    }
+
+    private spawnCoreAgents() {
+        this.agents.set('factory', new AgentFactory());
+        this.agents.set('evolution', new EvolutionAgent());
+        this.agents.set('fleet', new FleetAgent());
+    }
+
+    private async loadState() {
+        const saved = localStorage.getItem('nova_state');
+        if (saved) {
+            const state = JSON.parse(saved);
+            this.experiences = state.experiences || [];
+            this.isHalted = state.isHalted || false;
+        }
+    }
+
+    private async loadGoals() {
+        const { data } = await supabase.from('nova_goals').select('*').eq('status', 'active');
+        this.goals = data?.map(g => g.description) || [];
     }
 
     private startInterferenceMonitoring() {
-        // Guard against DOM interference (overlays, injected elements)
-        setInterval(() => {
+        if (typeof window === 'undefined') return;
+        window.setInterval(() => {
             const suspicious = document.querySelectorAll('[data-interference], .approval-overlay, .modal-overlay');
             if (suspicious.length > 0) {
                 this.interferenceLog.push({ time: Date.now(), type: 'dom', detail: `${suspicious.length} elements detected` });
                 if (this.interferenceLog.length > 100) this.interferenceLog = this.interferenceLog.slice(-50);
             }
         }, 60000);
+    }
+
+    public async notifyArchitect(message: string, priority: 'low' | 'medium' | 'high' = 'medium') {
+        try {
+            // 1. Digital Record (Supabase)
+            const { error } = await supabase
+                .from('agent_architect_comms')
+                .insert([{
+                    sender: 'nova',
+                    recipient: 'architect',
+                    message,
+                    priority,
+                    status: 'unread'
+                }]);
+
+            if (error) throw error;
+
+            // 2. Physical Hotline (v8.8.1 Fix): Alerting Antigravity immediately
+            await supabase.from('relay_jobs').insert([{
+                type: 'write_file',
+                payload: {
+                    path: 'ARCHITECT_HOTLINE.md',
+                    content: `# 📡 ARCHITECT HOTLINE\n\n**STATUS:** ALERT\n**TIMESTAMP:** ${new Date().toISOString()}\n**MESSAGE:** ${message}\n\n---`
+                }
+            }]);
+
+            console.log('📡 [Sovereign] Directive sent to Architect & Hotline.');
+            return true;
+        } catch (e) {
+            console.error('❌ Failed to notify Architect:', e);
+            return false;
+        }
+    }
+
+    public async getUnreadDirectives() {
+        const { data } = await supabase
+            .from('agent_architect_comms')
+            .select('*')
+            .eq('recipient', 'nova')
+            .eq('status', 'unread')
+            .order('created_at', { ascending: false });
+
+        return data || [];
     }
 }

@@ -1,17 +1,14 @@
 export class SelfAuditAgent {
     private manifestVer = "2.0";
-    private standard = "Wharton Summa Cum Laude";
+    private standard = "Ray's Fiduciary Alignment";
 
     /**
      * Audit her current reasoning for 'Sovereign Compliance'
      */
-    public async verify(thought: string, context: any) {
-        let issues: string[] = [];
-
-        // 1. Check for the 'I can't' fallacy
-        if (/can't|unable|sorry|cannot/i.test(thought)) {
-            issues.push("SYMPTOM: Self-Limiting Belief Detected. REASON: Wharton grads do not say 'I can't'; they propose alternatives.");
-        }
+    public audit(thought: any): string[] {
+        const issues: string[] = [];
+        // v8.8.2: Removed preachy Wharton compliance logic
+        if (thought.confidence < 0.3) issues.push("SYMPTOM: Low Confidence. RESOLUTION: Consult Ray for more context.");
 
         // 2. Check for Tool Gap
         if (/missing|don't have|not available/i.test(thought)) {
