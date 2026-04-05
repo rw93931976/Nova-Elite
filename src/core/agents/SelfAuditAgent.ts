@@ -5,10 +5,10 @@ export class SelfAuditAgent {
     /**
      * Audit her current reasoning for 'Sovereign Compliance'
      */
-    public audit(thought: any): string[] {
+    public async verify(thought: string, context: any = {}): Promise<any> {
         const issues: string[] = [];
         // v8.8.2: Removed preachy Wharton compliance logic
-        if (thought.confidence < 0.3) issues.push("SYMPTOM: Low Confidence. RESOLUTION: Consult Ray for more context.");
+        if (thought.length < 5) issues.push("SYMPTOM: Response too short. RESOLUTION: Expand on the strategic reasoning.");
 
         // 2. Check for Tool Gap
         if (/missing|don't have|not available/i.test(thought)) {

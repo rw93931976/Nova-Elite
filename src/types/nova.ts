@@ -29,7 +29,7 @@ export interface NovaStatus {
     };
     knowledgeCount: number;
     agentCount: number;
-    whartonCompliance: number;
+    sovereignAlignment: number;
     currentTime?: string;
     isBusinessHours?: boolean;
 }
