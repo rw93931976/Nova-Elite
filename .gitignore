@@ -7,9 +7,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Architect & Agent Meta
+Architect_Notes/
+*.apk
+node_modules/
+dist/
+dist-ssr/
 *.local
 
 # Editor directories and files
