@@ -27,6 +27,15 @@ Current inventory of the Sovereign capability set.
 - [x] Predictive Assistance
 - [x] Sovereign Scribe (Local)
 
+## 💎 SOVEREIGN ALIGNMENT (v8.8.9)
+- [x] **[CODIFIED] No-Delete Policy**: Shell commands (`rm`, `unlink`) are blocked at the VPS Bridge (`vps-core-sovereign-native.cjs`).
+- [x] **[CODIFIED] Notebook Auto-Registry**: Automated sync of all `.md` knowledge to Nova's `notebook_registry` memory.
+- [x] **[MANDATED] Deep Schooling v2**: 6-hour Dual-Study (Technical + Emotional) with mandatory archival to specific notebooks.
+- [x] **[MANDATED] Ongoing Studies**: AEO, SEO, and Regional EQ are exempt from mastery filtering to ensure continuous evolution.
+- [x] **[PERSONA] Low-Friction Peer**: Removal of "Wharton Stiffness" for direct, sincere conversation with the Sovereign (Ray).
+- [x] **[EQ/SQ] Regional Awareness**: Awareness of dialects/terms (South/North/East/West) to gauge emotion and respond with equal respect (Joe the Plumber to POTUS).
+- [x] **[ARCHIVE] Special Notebooks**: Living logs for `ray_profile.md`, `issue_resolution_log.md`, and `emotions.md`.
+
 ## PENDING EVOLUTION
 - [ ] Fleet Spawning (Stage 10)
 - [ ] Backup Automation

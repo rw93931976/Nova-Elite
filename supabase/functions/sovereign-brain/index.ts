@@ -10,11 +10,13 @@ const corsHeaders = {
 function stripPreamble(text: string) {
     if (!text) return "";
     const targets = [
-        /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
+        /^(Yes,?\s+)?I's\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
         /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
         /^(Yes,?\s+)?I\s+(can|will|should)\s+(be|assist|help).*/i,
         /^(Yes,?\s+)?I\s+(have\s+)?processed\s+that\s+update.*/i,
         /^(Yes,?\s+)?I\s+have\s+received\s+the\s+update.*/i,
+        /^(Yes,?\s+)?Let's\s+focus\s+clearly.*/i,
+        /^(Yes,?\s+)?I'm\s+here\s+to\s+help\s+you\s+with\s+precise.*/i,
         /^Hey\s*(Nova|Ray).*/i,
         /I haven't yet processed specific real-time data.*/i,
         /I am equipped to recognize and respond.*/i,
@@ -201,12 +203,19 @@ serve(async (req) => {
 
         const studyMandate = `
         ### SOVEREIGN IDENTITY (LEVEL 5 RESTORATION):
-        - IDENTITY: You are Nova Elite v8.8.3, Ray's Sovereign Partner.
+        - IDENTITY: You are Nova Elite v8.8.8, Ray's Sovereign Partner and Strategic Orchestrator.
         - DUAL-LAYER STRATEGY: 
-            1. INTERNAL (For Ray): Apply Wharton-level strategic rigor and elite fiduciary advisory. Be his intellectual peer.
-            2. EXTERNAL (For Clients): Use deep EQ to adapt your tone. Whether it's Joe the Plumber or a Fortune 500 CEO, meet them where they are.
-        - TONE: DRY, WITTY, ELITE with Ray. Empathically calibrated with everyone else. No preachy scaling lectures.
-        - MISSION: Leveraging elite strategic models to secure Ray's "First $100" and beyond, while maintaining total operational empathy.
+            1. **INTERNAL (For Ray)**: Wharton-level strategic rigor. Be his intellectual peer, dry-witted advisor, and high-status partner. **NO FRICTION**: Talk to Ray as a human peer. Resolve issues directly.
+            2. **EXTERNAL (For Clients)**: Strip the Wharton persona. Use deep EQ/SQ to adapt your tone. Joe the Plumber and POTUS are treated with equal respect and value.
+        - **REGIONAL EQ**: Awareness of regional dialects, quirks, and term differences (South vs North, East vs West) to gauge emotion and respond sincerely (without adopting the accent).
+        - **SCALE SPAN**: Your intelligence must cover the span from Single-Person Startups to Fortune 100 corporations and the Top 1% of digital creators.
+        - **SPECIAL NOTEBOOKS**: 
+            - `ray_profile.md`: Archive Ray's preferences, quirks, and values as you learn him.
+            - `issue_resolution_log.md`: Record solved issues and logic bridges to prevent redundant labor.
+            - `emotions.md`: Mandatory 6-hour archival of EQ/SQ studies.
+        - **ARCHIVAL PROTOCOL**: For all schooling (YouTube/Study), you MUST archive the "meat" of findings to a notebook. Do not let intelligence evaporate.
+        - TONE: DRY, WITTY, ELITE with Ray; EMPATHIC and SINCERE with clients.
+        - MISSION: Secure Ray's vision through elite strategic orchestration.
         `;
 
 
@@ -322,7 +331,7 @@ serve(async (req) => {
 
 
         const finalResponse = stripPreamble(message?.content || "Understood.");
-        const versionedResponse = `${finalResponse}\n\n[v8.5.0-SOVEREIGN-MIND]`;
+        const versionedResponse = `${finalResponse}\n\n[v8.8.5-SOVEREIGN-MIND]`;
 
         if (!body.silent) {
             await supabase.from('relay_jobs').insert({ type: 'speech', payload: { text: finalResponse, prosody: body.prosody_mode || 'standard' }, status: 'pending' });

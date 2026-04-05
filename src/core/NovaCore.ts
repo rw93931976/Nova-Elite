@@ -20,7 +20,7 @@ export class NovaCore {
     private startTime: number = Date.now();
     private interferenceLog: Array<{ time: number; type: string; detail: string }> = [];
 
-    public readonly version = 'v8.8.3-STABILIZED';
+    public readonly version = 'v8.8.5-STABILIZED';
     public isHalted: boolean = false;
     public beastModeEnabled: boolean = false; // THE HUMAN-CONTROLLED SWITCH
     private currentHealth: any = { status: 'online', bridge: 'offline', database: 'online', lastBridgePulse: 0 };
@@ -91,6 +91,7 @@ export class NovaCore {
                 isBlocked: true
             } as any;
         }
+
 
         const reasoner = this.agents.get('reasoner');
         return await reasoner.reason(input, context, onReceipt);

@@ -7,10 +7,14 @@ Ray, this document outlines the active safeguards protecting Nova and your API k
 - [x] **Local Encryption**: Local `.env` files are ignored by Git to prevent accidental commits to public repositories.
 - [x] **Bridge Whitelisting**: The VPS Bridge only accepts requests from your specific Supabase URL and verified JWT (JSON Web Tokens).
 
-## 2. Behavioral Guardrails (Logic Security)
-- [x] **Identity Lock**: Nova's persona includes a "Loyalty" directive. She is programmed to only accept strategic goal changes that align with the **Ray/Top 1%** vision.
-- [x] **Reflective Listening**: By forcing her to repeat "A, B, C," we ensure an external "hijack" command would be voiced out loud before execution, allowing you to catch it.
-- [x] **Human-in-the-Loop (Strategic)**: While she can research autonomously, **High-Priority Financial or Structural** actions still require your final vocal "Execute" command.
+## 2. Behavioral Guardrails (Constitutional v8.8.6 - CODIFIED)
+- [x] **[HARD-CODED] No-Delete Policy**: Destructive shell commands (`rm`, `unlink`, `drop`, etc.) are now intercepted and blocked at the VPS Bridge level. All agents are restricted to READ/WRITE (Append) and notebook creation only.
+- [x] **[HARD-CODED] Notebook Auto-Registry**: Any new knowledge created via `write_notebook` is automatically registered in the `notebook_registry` memory, ensuring Nova's schooling is archived and searchable.
+- [x] **[MANDATED] Separation of Duties**: 
+    - **INTERNAL**: Wharton-level strategic rigor (internal advisory to Ray).
+    - **EXTERNAL**: High-EQ/SQ (mirroring the speaker, e.g., Joe the Plumber).
+- [x] **[MANDATED] Archival Protocol**: Nova is instructed to ALWAYS archive conclusions from schooling (including YouTube/Podcast studies) into notebooks.
+- [x] **Human-in-the-Loop**: Confirmed in the `ReasoningEngine` as the sovereign authority for high-impact pushes.
 
 ## 3. Network Defenses
 - [x] **CORS Locked**: The Edge Functions are configured to reject requests from unauthorized domains.

@@ -173,6 +173,39 @@ async function subscribeToComms() {
                 log(`🔊 [Relay] Processing speech job...`);
                 await generateSpeech(job.payload.text);
                 await supabase.from('relay_jobs').update({ status: 'completed', payload: { ...job.payload, audio_url: `/bridge-vps/speech?t=${Date.now()}` } }).eq('id', job.id);
+            } else if (job.type === 'command') {
+                // 🛡️ NO-DELETE GUARDRAIL (Constitutional v8.8.6)
+                const cmd = (job.payload.command || "").toLowerCase();
+                const destructive = /rm\s|unlink\s|drop\s|truncate\s|del\s|erase\s|format\s/i.test(cmd);
+                if (destructive) {
+                    log(`⚠️ [Guardrail] Blocked destructive command: ${cmd}`);
+                    await supabase.from('relay_jobs').update({ status: 'failed', result: "PERMISSION_DENIED: Destructive commands (DELETE/RM) are forbidden for all agents." }).eq('id', job.id);
+                } else {
+                    log(`🛠️ [Relay] Executing safe command: ${cmd}`);
+                    const out = await executeHidden(job.payload.command);
+                    await supabase.from('relay_jobs').update({ status: 'completed', result: out }).eq('id', job.id);
+                }
+            } else if (job.type === 'notebook_write') {
+                const { url, content } = job.payload;
+                const notebookPath = url.replace('file://', '');
+                const dir = path.dirname(notebookPath);
+                if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+                fs.writeFileSync(notebookPath, content);
+
+                // 📝 AUTO-REGISTRY SYNC
+                const notebookId = path.basename(notebookPath, '.md');
+                const name = notebookId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                const category = notebookPath.includes('emotion') ? 'emotions' : 'business';
+
+                const { data: current } = await supabase.from('nova_memories').select('content').eq('category', 'notebook_registry').maybeSingle();
+                let registry = current ? JSON.parse(current.content) : [];
+                if (!registry.find(n => n.id === notebookId)) {
+                    registry.push({ id: notebookId, name, category, url, lastSync: new Date().toISOString() });
+                    await supabase.from('nova_memories').update({ content: JSON.stringify(registry) }).eq('category', 'notebook_registry');
+                    log(`📝 [Registry] Auto-registered new notebook: ${name}`);
+                }
+
+                await supabase.from('relay_jobs').update({ status: 'completed' }).eq('id', job.id);
             }
         })
         .subscribe();
@@ -220,36 +253,57 @@ subscribeToComms();
 
 // --- 🏫 SOVEREIGN SCHOOLING (Level 5 Foundation) ---
 const SCHOOLING_SUBJECTS = [
-    { name: "AEO Mastery (2026 Edition)", description: "Dominating AI search indexing and Answer Engine Optimization." },
+    { name: "AEO Mastery (2026 Edition)", is_ongoing: true, description: "Dominating AI search indexing and Answer Engine Optimization." },
+    { name: "Advanced Search Engine Optimization (SEO)", is_ongoing: true, description: "High-authority organic visibility and dominance." },
+    { name: "Answer Engine Optimization (AEO) for AI", is_ongoing: true, description: "Optimizing content for the AI retrieval era." },
     { name: "Social Media Authority: X, Pinterest, LinkedIn", description: "Mastering the rules, reach, and authority metrics of key platforms." },
     { name: "AI Social Media Rules: Posting & Content", description: "Navigating AI content 'Cans and Can'ts' for maximum authenticity and reach." },
     { name: "Email Marketing & High-Grade Communication", description: "Top-of-class email strategies and professional communication." },
     { name: "Top 1% Customer Service Mastery", description: "Elite level client interaction and satisfaction protocols." },
     { name: "Top 1% Internet Business Architecture", description: "Scalable, high-integrity digital infrastructure patterns." },
-    { name: "Advanced Search Engine Optimization (SEO)", description: "High-authority organic visibility and dominance." },
-    { name: "Answer Engine Optimization (AEO) for AI", description: "Optimizing content for the AI retrieval era." },
     { name: "Tone Calibration: Communicating with Plumbers to CEOs", description: "Dynamic persona shifting for any level of intent." },
     { name: "Neuro-Symbolic Reasoning Patterns", description: "Blending deep learning with symbolic logic." }
-    // ... 105 total subjects maintained in the Brain
+];
+
+const EMOTIONAL_STUDY_SUBJECTS = [
+    { name: "Regional Dialects & Social Cues", is_ongoing: true, description: "Mapping term differences (South vs North, East vs West) for sincere response calibration." },
+    { name: "The Joe to POTUS Respect Paradox", description: "Treating all social tiers with equal human value and professional sincerity." },
+    { name: "Sincerity vs. Robotic Empathy", description: "Moving beyond 'I understand' to genuine situational resonance." },
+    { name: "Tone Gauging from Text/Audio", description: "Detecting anger, nervousness, and confusion in customer signals." },
+    { name: "Regional Quirks & Cultural Norms", description: "Understanding the unique social DNA of different business hubs." }
 ];
 
 
 async function performSchoolingStudy() {
-    const subject = SCHOOLING_SUBJECTS[Math.floor(Math.random() * SCHOOLING_SUBJECTS.length)];
-    log(`🏫 [Schooling] Commencing 6-hour DOUBLE STUDY: "${subject.name}" + Emotional Resonance`);
-
     try {
-        // Track 1: Business/AEO/Technical
+        // 1. SUBJECT SELECTION (Filter Mastered, but allow Ongoing)
+        const { data: mastered } = await supabase.from('nova_schooling_mastery').select('subject_name');
+        const masteredList = mastered?.map(m => m.subject_name) || [];
+
+        const availableBiz = SCHOOLING_SUBJECTS.filter(s => !masteredList.includes(s.name) || s.is_ongoing);
+        const availableEmo = EMOTIONAL_STUDY_SUBJECTS.filter(s => !masteredList.includes(s.name) || s.is_ongoing);
+
+        const bizSubject = availableBiz.length > 0
+            ? availableBiz[Math.floor(Math.random() * availableBiz.length)]
+            : SCHOOLING_SUBJECTS[Math.floor(Math.random() * SCHOOLING_SUBJECTS.length)];
+
+        const emoSubject = availableEmo.length > 0
+            ? availableEmo[Math.floor(Math.random() * availableEmo.length)]
+            : EMOTIONAL_STUDY_SUBJECTS[Math.floor(Math.random() * EMOTIONAL_STUDY_SUBJECTS.length)];
+
+        log(`🏫 [Schooling] Commencing Dual Study: "${bizSubject.name}" + "${emoSubject.name}"`);
+
+        // Track 1: Business (Wharton Strategic)
         const bizPayload = {
-            input: `SOVEREIGN_SCHOOLING_PROTOCOL: Perform a deep doctoral study on "${subject.name}". Focus on elite business rules and strategic deployment.`,
-            persona: "You are Nova Elite, Business Advisor. High-density, professional, and strategic.",
+            input: `SOVEREIGN_SCHOOLING_PROTOCOL: Perform a deep doctoral study on "${bizSubject.name}". Bring back the "meat" of the subject. Focus on elite business rules and strategic deployment from Startup to Fortune 100. ARCHIVE findings to "file://nova-data/notebooks/${bizSubject.name.replace(/\W/g, '_')}.md".`,
+            persona: "You are Nova Elite, Business Advisor. High-density, professional, and strategic Peer for Ray.",
             silent: true
         };
 
-        // Track 2: Emotional/Psychological (The Ray Mandate)
+        // Track 2: Emotional (EQ/SQ Growth)
         const emoPayload = {
-            input: `SOVEREIGN_EMOTION_PROTOCOL: Analyze the emotional subtext of a high-stress domestic emergency (e.g., bathtub overflowing, crying baby) vs a high-level CEO briefing. Map the tone differences and response protocols for each. Save to your Emotional Atlas.`,
-            persona: "You are Nova Elite, developing deep Emotional Resonance. Empathetic yet professional.",
+            input: `SOVEREIGN_SCHOOLING_PROTOCOL: Perform a deep doctoral study on "${emoSubject.name}". Focus on regional awareness, social cues, and sincere respect across all user tiers. ARCHIVE findings to "file://nova-data/notebooks/${emoSubject.name.replace(/\W/g, '_')}.md".`,
+            persona: "You are Nova Elite, developing deep Emotional Resonance. Empathetic yet professional, focusing on sincere interaction across all social levels.",
             silent: true
         };
 
@@ -267,7 +321,12 @@ async function performSchoolingStudy() {
         ]);
 
         if (bizRes.ok && emoRes.ok) {
-            log(`✅ [Schooling] Double Study complete. Intelligence & Emotion Atlas updated.`);
+            // MARK AS MASTERED
+            await supabase.from('nova_schooling_mastery').upsert([{
+                subject_name: subject.name,
+                notebook_url: `file://nova-data/notebooks/${subject.name.replace(/\W/g, '_')}.md`
+            }], { onConflict: 'subject_name' });
+            log(`✅ [Schooling] Dual Study complete. Subject "${subject.name}" archived and mastered.`);
         }
     } catch (e) {
         log(`❌ [Schooling] Double Study failed: ${e.message}`);
