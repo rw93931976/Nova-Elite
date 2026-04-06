@@ -142,10 +142,13 @@ export function useNova() {
         const msg = payload.new as any;
 
         // 🛡️ SOVEREIGN SHIELD (v8.9.9s): Vocal Interrupt Filter
-        // Prevent system heartbeats or pulse noise from triggering re-renders or announcements.
-        if (msg.sender === 'vps_heartbeat' || msg.recipient === 'system' || (msg.message && msg.message.includes('PULSE'))) {
+        // Prevent system heartbeats or pulse noise
+        if (msg.sender === 'vps_heartbeat' || msg.sender === 'nova' || msg.recipient === 'system' || (msg.message && msg.message.includes('PULSE'))) {
           return;
         }
+
+        // 🔊 DIRECTIVE FILTER: Only vocalize if it's truly from the Architect
+        if (msg.sender !== 'architect') return;
 
         if (msg && !announcedIds.current.has(msg.id)) {
           if (!isHalted) speakRef.current(`Notification from Architect: ${msg.message}`);

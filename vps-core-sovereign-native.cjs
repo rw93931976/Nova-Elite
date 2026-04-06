@@ -239,10 +239,12 @@ async function triggerNovaResponse(incomingMsg) {
         const { data: historyData } = await supabase.from('agent_architect_comms').select('sender, message').neq('sender', 'vps_heartbeat').order('created_at', { ascending: false }).limit(20);
         const history = (historyData || []).reverse().map(h => ({ role: h.sender === 'nova' ? 'assistant' : 'user', content: h.message }));
 
+        const persona = "You are Nova Elite, Ray's Sovereign Peer. Talk to him naturally and supportively. NEVER state your version (v8.9.x), uptime, or mention being an 'AI' or 'Assistant' unless asked. Guard his vision with sharp, witty intelligence, but speak like a human companion.";
+
         const response = await fetch(`${supabaseUrl}/functions/v1/sovereign-brain`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
-            body: JSON.stringify({ input: incomingMsg.message, history, silent: incomingMsg.silent || false })
+            body: JSON.stringify({ input: incomingMsg.message, history, persona, silent: incomingMsg.silent || false })
         });
 
         if (response.ok && !incomingMsg.silent) {
