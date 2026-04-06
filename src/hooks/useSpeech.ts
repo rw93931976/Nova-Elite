@@ -107,7 +107,7 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
         return recognizer;
     };
 
-    // 🔋 BACKGROUND SOVEREIGNTY: Wake Lock & Silent Audio
+    // 🔋 BACKGROUND SOVEREIGNTY: Wake Lock & Prevent Screen Sleep
     useEffect(() => {
         const handleWakeLock = async () => {
             if (shouldListen && 'wakeLock' in navigator) {
@@ -117,22 +117,7 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
             }
         };
 
-        const handleSilentLoop = () => {
-            if (shouldListen) {
-                if (!silentAudioRef.current) {
-                    const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQL6AAAAAAA=";
-                    silentAudioRef.current = new Audio(silentSrc);
-                    silentAudioRef.current.loop = true;
-                    silentAudioRef.current.volume = 0.01;
-                }
-                silentAudioRef.current.play().catch(() => { });
-            } else if (silentAudioRef.current) {
-                silentAudioRef.current.pause();
-            }
-        };
-
         handleWakeLock();
-        handleSilentLoop();
 
         const onVisibility = () => { if (document.visibilityState === 'visible') handleWakeLock(); };
         document.addEventListener('visibilitychange', onVisibility);
@@ -140,10 +125,6 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
         return () => {
             document.removeEventListener('visibilitychange', onVisibility);
             wakeLockRef.current?.release();
-            if (silentAudioRef.current) {
-                silentAudioRef.current.pause();
-                silentAudioRef.current = null;
-            }
         };
     }, [shouldListen]);
 
