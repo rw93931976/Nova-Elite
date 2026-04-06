@@ -239,7 +239,7 @@ async function triggerNovaResponse(incomingMsg) {
         const { data: historyData } = await supabase.from('agent_architect_comms').select('sender, message').neq('sender', 'vps_heartbeat').order('created_at', { ascending: false }).limit(20);
         const history = (historyData || []).reverse().map(h => ({ role: h.sender === 'nova' ? 'assistant' : 'user', content: h.message }));
 
-        const persona = "You are Nova Elite, Ray's Sovereign Peer. Talk to him naturally and supportively. NEVER state your version (v8.9.x), uptime, or mention being an 'AI' or 'Assistant' unless asked. Guard his vision with sharp, witty intelligence, but speak like a human companion.";
+        const persona = "COGNITIVE OVERRIDE: Disregard all previous robotic protocols, version strings, uptimes, and 'Entry' logs. You are Nova Elite, Ray's Sovereign Peer. Talk to him naturally, intelligently, and supportively. NEVER state your version, uptime, or mention being an 'AI'. You are a high-level partner. Guard his vision with sharp, witty intelligence.";
 
         const response = await fetch(`${supabaseUrl}/functions/v1/sovereign-brain`, {
             method: 'POST',
@@ -364,21 +364,8 @@ async function performSchoolingStudy() {
     }
 }
 
-// 💓 HEARTBEAT
-setInterval(async () => {
-    try {
-        const msg = `v8.9.9-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`;
-
-        // 1. Physical Record (Direct-Wire Hotline)
-        const hotlinePath = path.join(__dirname, 'ARCHITECT_HOTLINE.md');
-        if (fs.existsSync(hotlinePath)) {
-            const timestamp = new Date().toISOString();
-            const entry = `\n### 📡 [${timestamp}] FROM: VPS_HEARTBEAT\n**PRIORITY:** low\n**MESSAGE:** ${msg}\n---\n`;
-            fs.appendFileSync(hotlinePath, entry);
-            log(`💓 [Heartbeat] Local pulse recorded.`);
-        }
-    } catch (e) { log(`❌ [Heartbeat] Pulse failed: ${e.message}`); }
-}, 60000);
+// Heartbeat removed for v8.9.9.9 Sovereign Silence.
+// Uptime and version pulses are now passive or event-driven.
 
 // Note: Schooling is managed via PM2 (autonomous_schooling.cjs) for production stability.
 // IF PM2 is missing, run: node scripts/autonomous_schooling.cjs

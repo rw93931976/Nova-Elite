@@ -23,7 +23,7 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
         if (!SpeechRecognition) return null;
 
         const recognizer = new SpeechRecognition();
-        recognizer.continuous = false;
+        recognizer.continuous = true;
         recognizer.interimResults = true;
         recognizer.lang = 'en-US';
 
@@ -154,6 +154,26 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
             } catch (e) { }
         }
     }, [isListening, shouldListenRef.current]);
+
+    // 🛡️ CONTINUOUS MIC-LOCK (v8.9.9.9): Trick OS to prevent beep on restart
+    useEffect(() => {
+        let micStream: MediaStream | null = null;
+
+        const lockMic = async () => {
+            if (shouldListenRef.current && !micStream) {
+                try {
+                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    console.log('[useSpeech] 🔒 Mic Lock Engaged (Sovereign Silence)');
+                } catch (e) { console.error('[useSpeech] Mic Lock Failed:', e); }
+            } else if (!shouldListenRef.current && micStream) {
+                micStream.getTracks().forEach(t => t.stop());
+                micStream = null;
+            }
+        };
+
+        lockMic();
+        return () => { micStream?.getTracks().forEach(t => t.stop()); };
+    }, [shouldListenRef.current]);
 
     const toggleListening = useCallback(() => {
         shouldListenRef.current = !shouldListenRef.current;

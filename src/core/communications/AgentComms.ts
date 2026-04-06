@@ -38,13 +38,13 @@ export class AgentComms {
       // Listen for ALL messages (direct + broadcasts)
       this.channel = supabase
         .channel('agent_coordination')
-        .on('postgres_changes', 
-          { 
-            event: 'INSERT', 
-            schema: 'public', 
+        .on('postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
             table: 'agent_architect_comms'
             // REMOVED filter to receive ALL messages
-          }, 
+          },
           (payload: any) => {
             const message = payload.new as AgentMessage;
             this.broadcastMessage(message);
@@ -60,7 +60,7 @@ export class AgentComms {
 
   async sendMessage(
     sender: AgentMessage['sender'],
-    recipient: AgentMessage['recipient'], 
+    recipient: AgentMessage['recipient'],
     message: string,
     command?: string,
     priority: AgentMessage['priority'] = 'medium',
@@ -213,13 +213,6 @@ export class AgentComms {
         .order('created_at', { ascending: false })
         .limit(1);
 
-      const { data: vpsHeartbeat } = await supabase
-        .from('agent_architect_comms')
-        .select('created_at, message')
-        .eq('sender', 'vps_heartbeat')
-        .order('created_at', { ascending: false })
-        .limit(1);
-
       return {
         nova: {
           lastSeen: novaMessages?.[0]?.created_at,
@@ -237,9 +230,7 @@ export class AgentComms {
           status: antigravityMessages?.[0] ? 'active' : 'offline'
         },
         vps: {
-          lastSeen: vpsHeartbeat?.[0]?.created_at,
-          lastHeartbeat: vpsHeartbeat?.[0]?.message,
-          status: vpsHeartbeat?.[0] ? 'online' : 'offline'
+          status: 'online' // Passive online (Sovereign Silence)
         }
       };
     } catch (e) {

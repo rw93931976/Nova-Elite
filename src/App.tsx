@@ -36,7 +36,6 @@ function App() {
 
     const [currentView, setCurrentView] = useState<"home" | "features" | "autonomy" | "manifest" | "chat" | "inventory" | "settings">("home");
     const [gain, setGain] = useState(30);
-    const [directMsg, setDirectMsg] = useState("");
 
     useEffect(() => {
         if (currentView === "chat") {
@@ -162,34 +161,6 @@ function App() {
                                     <CheckCircle2 size={42} className="text-[#121212] relative z-10" />
                                 </div>
                                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#121212]/40 mt-4">Tap to View Inventory</span>
-                            </div>
-
-                            {/* 🛸 DIRECT ARCHITECT WIRE (v8.9.9s) */}
-                            <div className="bg-[#121212] border-2 border-[#0BF9EA]/20 rounded-3xl p-6 mt-8 shadow-[0_15px_40px_rgba(0,0,0,0.5)]">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <Shield className="text-[#0BF9EA] animate-pulse" size={20} />
-                                    <h3 className="text-[11px] font-black uppercase tracking-widest text-[#0BF9EA]">Direct Architect Wire</h3>
-                                </div>
-                                <textarea
-                                    value={directMsg}
-                                    onChange={(e) => setDirectMsg(e.target.value)}
-                                    placeholder="Message Antigravity directly..."
-                                    className="w-full bg-[#121212]/40 border border-white/10 rounded-2xl p-4 text-sm text-white placeholder:text-white/20 focus:border-[#0BF9EA]/50 focus:outline-none min-h-[100px] mb-4 no-scrollbar"
-                                />
-                                <button
-                                    onClick={async () => {
-                                        if (!directMsg.trim()) return;
-                                        const success = await nova.notifyArchitect(directMsg);
-                                        if (success) {
-                                            setDirectMsg("");
-                                            alert("🛸 Transmitted to Antigravity.");
-                                        }
-                                    }}
-                                    className="w-full bg-[#0BF9EA] text-[#121212] font-black py-4 rounded-2xl uppercase tracking-widest text-xs active:scale-95 transition-all shadow-[0_0_20px_rgba(11,249,234,0.4)]"
-                                >
-                                    Sovereign Transmit
-                                </button>
-                                <p className="text-[8px] text-white/20 uppercase tracking-widest text-center mt-3">Bypasses Nova Brain Loops</p>
                             </div>
                         </div>
                     </div>
