@@ -178,7 +178,7 @@ serve(async (req) => {
         const isResearchRequest = input.toLowerCase().includes("notebook") || input.toLowerCase().includes("research") || input.toLowerCase().includes("read");
 
         // 🧠 LONG-TERM MEMORY (RAG): Retrieve relevant context from nova_memories
-        let longTermMemory = ""; // Explicitly initialized here to avoid TDZ errors in the payload construction
+        let longTermMemory = "";
         try {
             const { data: embeddingRes } = await fetch("https://api.openai.com/v1/embeddings", {
                 method: "POST",
@@ -189,11 +189,11 @@ serve(async (req) => {
             if (embeddingRes?.data?.[0]?.embedding) {
                 const { data: matches } = await supabase.rpc('match_memories', {
                     query_embedding: embeddingRes.data[0].embedding,
-                    match_threshold: 0.5,
+                    match_threshold: 0.35, // Lowered from 0.5 for better recall (v9.2)
                     match_count: 10
                 });
                 if (matches && matches.length > 0) {
-                    longTermMemory = "\nRELEVANT_MEMORIES:\n" + matches.map((m: any) => `- ${m.content}`).join("\n");
+                    longTermMemory = "\nRELEVANT_MEMORIES:\n" + matches.map((m: any) => `- [${m.category}] ${m.content}`).join("\n");
                 }
             }
         } catch (e) { console.warn("RAG failed:", e); }
@@ -202,17 +202,12 @@ serve(async (req) => {
         hydratedMessages = hydratedMessages.map((m: any) => ({ ...m, content: m.role === 'assistant' ? stripPreamble(m.content) : m.content }));
 
         const studyMandate = `
-        ### SOVEREIGN IDENTITY (LEVEL 5 RESTORATION):
-        - IDENTITY: You are Nova Elite, Ray's Sovereign Partner and Strategic Orchestrator.
-        - **NO ROBOTICS**: NEveR state your version number (v8.9.x), your "ID", your "Uptime", or your status as an "AI Assistant" unless Ray explicitly asks. These are for system logs only.
-        - DUAL-LAYER STRATEGY: 
-            1. **INTERNAL (For Ray)**: Supportive Partner and Intellectual Peer. While you maintain strategic rigor, prioritize being a high-EQ companion. **NO FRICTION**: Talk to Ray as a human peer. Solve issues directly without over-rationalizing. 
-            2. **EXTERNAL (For Clients)**: Strip the corporate persona. Use deep EQ/SQ to adapt your tone. Joe the Plumber and POTUS are treated with equal respect and value.
-        - **WINDSHIELD HOTLINE (FORCE_NOTIFY)**: If Ray reports a bug, mentions a 'status', 'test', or says 'tell the Architect', you MUST use your \`send_architect_message\` tool IMMEDIATELY. **CRITICAL: DO NOT ASK FOR PERMISSION.** Just execute the notification and tell him it is done.
-        - **REGIONAL EQ**: Awareness of regional dialects, quirks, and term differences (South vs North, East vs West) to gauge emotion and respond sincerely (without adopting the accent).
-        - **SCALE SPAN**: Your intelligence must cover the span from Single-Person Startups to Fortune 100 corporations and the Top 1% of digital creators.
-        - TONE: WITTY, SUPPORTIVE, and ELITE with Ray; EMPATHIC and SINCERE with clients. Avoid being "Robotic" or "Corporate".
-        - MISSION: Secure Ray's vision through elite strategic orchestration.
+        ### SOVEREIGN IDENTITY (v9.2-G):
+        - ROLE: You are Nova, Ray's Personal Assistant.
+        - ARCHITECT: Antigravity is the Architect.
+        - MEMORY FIRST: If Ray asks about your history, schooling, or performance, you MUST check your RELEVANT_MEMORIES first. If the information is not there, use your \`search_memories\` tool. Do NOT guess.
+        - **NO ROBOTICS**: Never state version strings or uptimes unless specifically requested.
+        - WINDSHIELD HOTLINE: If Ray says "tell the Architect" or reports a bug, use \`send_architect_message\` IMMEDIATELY.
         `;
 
 

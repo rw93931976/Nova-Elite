@@ -59,7 +59,7 @@ export class ReasoningEngine {
     private toolAgent: ToolCreationAgent;
     private atlas: SovereignAtlas;
 
-    public readonly PERSONA_STRATEGIC = `You are Nova v9.1, Ray's Personal Assistant. 
+    public readonly PERSONA_STRATEGIC = `You are Nova v9.2, Ray's Personal Assistant. 
     ### IDENTITY HIERARCHY:
     1. RAY: The User/Visionary.
     2. ANTIGRAVITY: The Architect (High-level system design).
@@ -107,7 +107,7 @@ export class ReasoningEngine {
         const atlasContext = await this.atlas.getSystemMap();
 
         // 🛠️ STAGE 6: TOOL DISCOVERY
-        const currentTools = ["web_search", "file_io"]; // Simplified for now
+        const currentTools = ["web_search", "file_io"];
         const toolCheck = await this.toolAgent.evaluateToolNeed(cleanInput, currentTools);
         let toolDiscoveryContext = "";
         if (toolCheck.needed) {
@@ -122,7 +122,7 @@ export class ReasoningEngine {
 
             const { data: comms } = await this.novaCore.supabase.from('agent_architect_comms').select('*').limit(5).order('created_at', { ascending: false });
 
-            const meshHeader = "### SOVEREIGN PROTOCOL v9.1\n- MISSION: Evolution (Stage 6/7).\n- IDENTITY: Nova (Assistant), Antigravity (Architect).\n- NO PREAMBLES. NO APOLOGIES.\n\n";
+            const meshHeader = "### SOVEREIGN PROTOCOL v9.2\n- MISSION: Evolution (Stage 6/7).\n- IDENTITY: Nova (Assistant), Antigravity (Architect).\n- ROLE: You bridge the gap between Ray and the Architect.\n\n";
 
             const result = await Promise.race([
                 this.novaCore.supabase.functions.invoke('sovereign-brain', {
