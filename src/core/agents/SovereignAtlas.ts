@@ -38,9 +38,10 @@ export class SovereignAtlas {
         const tools = toolsRes.data;
         const schooling = schoolingRes.data;
 
-        let report = "### 🛸 SOVEREIGN ATLAS: SYSTEM AWARENESS v1.1\n";
+        let report = "### 🛸 SOVEREIGN ATLAS: SYSTEM AWARENESS v9.1\n";
+        report += "- ROLES: RAY (User), ANTIGRAVITY (Architect), NOVA (Assistant).\n";
 
-        // 🎓 SCHOOLING GROUNDING (v8.9.9.11)
+        // 🎓 SCHOOLING GROUNDING (v9.1-SOVEREIGN)
         if (schooling && schooling[0]) {
             const lastTime = schooling[0].metadata?.timestamp || new Date(schooling[0].created_at).toLocaleString();
             report += `- LAST AUTONOMOUS SCHOOLING: ${lastTime}\n`;

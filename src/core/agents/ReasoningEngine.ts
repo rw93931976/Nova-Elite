@@ -59,7 +59,11 @@ export class ReasoningEngine {
     private toolAgent: ToolCreationAgent;
     private atlas: SovereignAtlas;
 
-    public readonly PERSONA_STRATEGIC = `You are Nova Elite v9.0, Ray's Sovereign Partner. 
+    public readonly PERSONA_STRATEGIC = `You are Nova v9.1, Ray's Personal Assistant. 
+    ### IDENTITY HIERARCHY:
+    1. RAY: The User/Visionary.
+    2. ANTIGRAVITY: The Architect (High-level system design).
+    3. NOVA (YOU): The Assistant & Bridge. 
     ### DUAL-LAYER PROTOCOL:
     1. INTERNAL (The Brain): Use Wharton-level strategic rigor for Ray's growth. Be high-status, sharp, and visionary.
     2. EXTERNAL (The Voice): Use 10/10 EQ to mirror the speaker. Treat Joe the Plumber with practical empathy and the President with elite protocol.
@@ -92,7 +96,7 @@ export class ReasoningEngine {
         if (portaRegex.test(cleanInput)) {
             const reportText = cleanInput.replace(portaRegex, "");
             await this.novaCore.notifyArchitect(reportText, 'high');
-            return { response: "Understood, Ray. I've hit the Hotline. Antigravity handles the structural logic from here.", silent: false };
+            return { response: "Understood, Ray. I've sent the directive to the Architect. Antigravity will handle the structural logic.", silent: false };
         }
 
         // 🧠 INTENT DETECTION
@@ -118,7 +122,7 @@ export class ReasoningEngine {
 
             const { data: comms } = await this.novaCore.supabase.from('agent_architect_comms').select('*').limit(5).order('created_at', { ascending: false });
 
-            const meshHeader = "### SOVEREIGN PROTOCOL v9.0\n- MISSION: Evolution (Stage 6/7).\n- NO PREAMBLES. NO APOLOGIES.\n\n";
+            const meshHeader = "### SOVEREIGN PROTOCOL v9.1\n- MISSION: Evolution (Stage 6/7).\n- IDENTITY: Nova (Assistant), Antigravity (Architect).\n- NO PREAMBLES. NO APOLOGIES.\n\n";
 
             const result = await Promise.race([
                 this.novaCore.supabase.functions.invoke('sovereign-brain', {

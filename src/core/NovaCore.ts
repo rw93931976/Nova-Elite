@@ -20,7 +20,7 @@ export class NovaCore {
     private startTime: number = Date.now();
     private interferenceLog: Array<{ time: number; type: string; detail: string }> = [];
 
-    public readonly version = 'v9.0-SOVEREIGN';
+    public readonly version = 'v9.1-SOVEREIGN';
     public isHalted: boolean = false;
     public beastModeEnabled: boolean = false; // THE HUMAN-CONTROLLED SWITCH
     private currentHealth: any = { status: 'online', bridge: 'offline', database: 'online', lastBridgePulse: 0 };
@@ -114,7 +114,7 @@ export class NovaCore {
             const state = JSON.parse(saved);
 
             // 🔄 CACHE-BUSTER: Forced refresh for v8.9.9 Alignment
-            const currentTag = 'sovereign-v9.0';
+            const currentTag = 'sovereign-v9.1';
             if (localStorage.getItem('nova_version_tag') !== currentTag) {
                 console.warn(`🔄 Version mismatch detected. Busting cache.`);
                 localStorage.clear();

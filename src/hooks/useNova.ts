@@ -117,10 +117,10 @@ export function useNova() {
 
         if (archRes.data) {
           const archMsgs = archRes.data.map((m: any) => {
-            // 🛡️ STRICT ARCHITECT ATTRIBUTION (v8.9.9.11)
-            // Only announce messages explicitly sent by the 'architect'
-            if (isInitial && m.status === 'unread' && m.sender === 'architect' && !announcedIds.current.has(m.id)) {
-              if (!isHalted) speakRef.current(`Incoming Directive: ${m.message}`);
+            // 🛡️ ROLE ALIGNMENT (v9.1-SOVEREIGN)
+            // Only announce if Nova is the recipient and 'architect' is the sender
+            if (isInitial && m.status === 'unread' && m.recipient === 'nova' && m.sender === 'architect' && !announcedIds.current.has(m.id)) {
+              if (!isHalted) speakRef.current(`Architectural Directive: ${m.message}`);
               announcedIds.current.add(m.id);
               localStorage.setItem("announcedIds", JSON.stringify(Array.from(announcedIds.current)));
               setHasNewArchMsg(true);
@@ -143,33 +143,36 @@ export function useNova() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "agent_architect_comms" }, async (payload) => {
         const msg = payload.new as any;
 
-        // 🛡️ SOVEREIGN SHIELD (v8.9.9.11): Vocal Interrupt Filter
-        // Only vocalize unread directives explicitly from the Architect
-        if (msg.sender !== 'architect' || msg.status !== 'unread' || announcedIds.current.has(msg.id)) {
+        // 🛡️ SOVEREIGN BRIDGE (v9.1-SOVEREIGN): Role Validation
+        // Nova only vocalizes what she is intended to receive from the Architect.
+        if (msg.recipient !== 'nova' || msg.sender !== 'architect' || msg.status !== 'unread' || announcedIds.current.has(msg.id)) {
           return;
         }
 
-        if (!isHalted) speakRef.current(`Incoming Directive: ${msg.message}`); localStorage.setItem("announcedIds", JSON.stringify(Array.from(announcedIds.current)));
-        setHasNewArchMsg(true);
-      }
+        if (msg && !announcedIds.current.has(msg.id)) {
+          if (!isHalted) speakRef.current(`Architectural Directive: ${msg.message}`);
+          announcedIds.current.add(msg.id);
+          localStorage.setItem("announcedIds", JSON.stringify(Array.from(announcedIds.current)));
+          setHasNewArchMsg(true);
+        }
         await fetchMessages();
-  })
-    .on("postgres_changes", { event: "INSERT", schema: "public", table: "nova_messages" }, () => fetchMessages())
-    .subscribe();
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "nova_messages" }, () => fetchMessages())
+      .subscribe();
 
-  return () => { sub.unsubscribe(); };
-}, [core, isHalted]);
+    return () => { sub.unsubscribe(); };
+  }, [core, isHalted]);
 
-const resetArchAlert = useCallback(() => { setHasNewArchMsg(false); }, []);
-const toggleHalt = useCallback(() => {
-  window.speechSynthesis.cancel();
-  (window as any).isNovaSpeaking = false;
-  core.toggleHalt();
-  setIsHalted(core.isHalted);
-  processingLock.current = false;
-}, [core]);
+  const resetArchAlert = useCallback(() => { setHasNewArchMsg(false); }, []);
+  const toggleHalt = useCallback(() => {
+    window.speechSynthesis.cancel();
+    (window as any).isNovaSpeaking = false;
+    core.toggleHalt();
+    setIsHalted(core.isHalted);
+    processingLock.current = false;
+  }, [core]);
 
-return {
-  isListening, isThinking, isInitialized, isHalted, messages, lastTone, hasNewArchMsg, resetArchAlert, toggleListening, toggleHalt, handleHardRefresh: () => { localStorage.clear(); window.location.reload(); }, notifyArchitect: (m: string) => core.notifyArchitect(m), version: core.version
-};
+  return {
+    isListening, isThinking, isInitialized, isHalted, messages, lastTone, hasNewArchMsg, resetArchAlert, toggleListening, toggleHalt, handleHardRefresh: () => { localStorage.clear(); window.location.reload(); }, notifyArchitect: (m: string) => core.notifyArchitect(m), version: core.version
+  };
 }

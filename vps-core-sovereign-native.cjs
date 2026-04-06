@@ -90,7 +90,7 @@ app.get('/speech', (req, res) => {
 app.get('/health', (req, res) => {
     res.json({
         status: 'online',
-        version: 'v9.0-SOVEREIGN',
+        version: 'v9.1-SOVEREIGN',
         uptime: Math.round((Date.now() - START_TIME) / 1000),
         instance: INSTANCE_ID
     });
@@ -272,7 +272,7 @@ async function generateSpeech(text) {
 }
 
 // Start Mesh
-log('🚀 [Sovereign-Bridge] v9.0-SOVEREIGN Active');
+log('🚀 [Sovereign-Bridge] v9.1-SOVEREIGN Active');
 subscribeToComms();
 
 
