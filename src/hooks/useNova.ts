@@ -117,7 +117,9 @@ export function useNova() {
 
         if (archRes.data) {
           const archMsgs = archRes.data.map((m: any) => {
-            if (isInitial && m.status === 'unread' && m.sender !== 'vps_heartbeat' && !announcedIds.current.has(m.id)) {
+            // 🛡️ STRICT ARCHITECT ATTRIBUTION (v8.9.9.11)
+            // Only announce messages explicitly sent by the 'architect'
+            if (isInitial && m.status === 'unread' && m.sender === 'architect' && !announcedIds.current.has(m.id)) {
               if (!isHalted) speakRef.current(`Notification from Architect: ${m.message}`);
               announcedIds.current.add(m.id);
               localStorage.setItem("announcedIds", JSON.stringify(Array.from(announcedIds.current)));
@@ -141,14 +143,11 @@ export function useNova() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "agent_architect_comms" }, async (payload) => {
         const msg = payload.new as any;
 
-        // 🛡️ SOVEREIGN SHIELD (v8.9.9s): Vocal Interrupt Filter
-        // Prevent system heartbeats or pulse noise
-        if (msg.sender === 'vps_heartbeat' || msg.sender === 'nova' || msg.recipient === 'system' || (msg.message && msg.message.includes('PULSE'))) {
+        // 🛡️ SOVEREIGN SHIELD (v8.9.9.11): Vocal Interrupt Filter
+        // Only vocalize unread directives explicitly from the Architect
+        if (msg.sender !== 'architect' || msg.status !== 'unread' || announcedIds.current.has(msg.id)) {
           return;
         }
-
-        // 🔊 DIRECTIVE FILTER: Only vocalize if it's truly from the Architect
-        if (msg.sender !== 'architect') return;
 
         if (msg && !announcedIds.current.has(msg.id)) {
           if (!isHalted) speakRef.current(`Notification from Architect: ${msg.message}`);

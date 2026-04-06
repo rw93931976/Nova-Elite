@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
  */
 export const useSpeech = (onResult: (text: string) => void, options?: { onBargeIn?: () => void }) => {
     const [isListening, setIsListening] = useState(false);
+    const [shouldListen, setShouldListen] = useState(false);
     const recognitionRef = useRef<any>(null);
     const isSpeakingRef = useRef(false);
     const shouldListenRef = useRef(false);
@@ -13,6 +14,9 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
     const onResultRef = useRef(onResult);
     const wakeLockRef = useRef<any>(null);
     const silentAudioRef = useRef<HTMLAudioElement | null>(null);
+
+    // Sync ref for non-reactive access
+    useEffect(() => { shouldListenRef.current = shouldListen; }, [shouldListen]);
 
     useEffect(() => {
         onResultRef.current = onResult;
@@ -106,15 +110,15 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
     // 🔋 BACKGROUND SOVEREIGNTY: Wake Lock & Silent Audio
     useEffect(() => {
         const handleWakeLock = async () => {
-            if (shouldListenRef.current && 'wakeLock' in navigator) {
+            if (shouldListen && 'wakeLock' in navigator) {
                 try { wakeLockRef.current = await (navigator as any).wakeLock.request('screen'); } catch (e) { }
-            } else if (!shouldListenRef.current && wakeLockRef.current) {
+            } else if (!shouldListen && wakeLockRef.current) {
                 wakeLockRef.current.release().then(() => { wakeLockRef.current = null; });
             }
         };
 
         const handleSilentLoop = () => {
-            if (shouldListenRef.current) {
+            if (shouldListen) {
                 if (!silentAudioRef.current) {
                     const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQL6AAAAAAA=";
                     silentAudioRef.current = new Audio(silentSrc);
@@ -141,52 +145,56 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
                 silentAudioRef.current = null;
             }
         };
-    }, [shouldListenRef.current]);
+    }, [shouldListen]);
 
     // 🔬 STT PULSE (v8.9.9.6): Silenced Brute-Force
-    // Removed setInterval pulse to stop browser beep spam. 
-    // Restarts are now managed via the onend event for a silent, natural flow.
     useEffect(() => {
-        if (shouldListenRef.current && !isListening && !isSpeakingRef.current) {
+        if (shouldListen && !isListening && !isSpeakingRef.current) {
             try {
                 if (!recognitionRef.current) recognitionRef.current = initRecognition();
                 recognitionRef.current.start();
             } catch (e) { }
         }
-    }, [isListening, shouldListenRef.current]);
+    }, [isListening, shouldListen]);
 
-    // 🛡️ CONTINUOUS MIC-LOCK (v8.9.9.9): Trick OS to prevent beep on restart
+    // 🛡️ REACTIVE MIC-LOCK (v8.9.9.11): Persistent stream to prevent beep
     const micStreamRef = useRef<MediaStream | null>(null);
 
     useEffect(() => {
         const lockMic = async () => {
-            if (shouldListenRef.current && !micStreamRef.current) {
+            if (shouldListen && !micStreamRef.current) {
                 try {
                     micStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
                     console.log('[useSpeech] 🔒 Mic Lock Engaged (Sovereign Silence)');
                 } catch (e) { console.error('[useSpeech] Mic Lock Failed:', e); }
-            } else if (!shouldListenRef.current && micStreamRef.current) {
+            } else if (!shouldListen && micStreamRef.current) {
                 micStreamRef.current.getTracks().forEach(t => t.stop());
                 micStreamRef.current = null;
+                console.log('[useSpeech] 🔓 Mic Lock Released');
             }
         };
 
         lockMic();
-        return () => {
-            micStreamRef.current?.getTracks().forEach(t => t.stop());
-            micStreamRef.current = null;
-        };
-    }, [shouldListenRef.current]);
+    }, [shouldListen]);
 
     const toggleListening = useCallback(() => {
-        shouldListenRef.current = !shouldListenRef.current;
-        if (shouldListenRef.current) {
+        const nextState = !shouldListenRef.current;
+        setShouldListen(nextState);
+
+        if (nextState) {
             if (!recognitionRef.current) recognitionRef.current = initRecognition();
-            try { recognitionRef.current.start(); } catch (e) { }
+            try {
+                // Hard reset speech if starting to listen
+                window.speechSynthesis.cancel();
+                (window as any).isNovaSpeaking = false;
+                isSpeakingRef.current = false;
+                recognitionRef.current.start();
+            } catch (e) { }
         } else {
             try { recognitionRef.current?.stop(); } catch (e) { }
         }
-    }, []);
+    }, [initRecognition]);
+
 
     const speak = useCallback((text: string, vol = 0.5, pitch = 1.0, rate = 0.95) => {
         const synth = window.speechSynthesis;

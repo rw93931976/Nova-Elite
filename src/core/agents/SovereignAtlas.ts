@@ -26,9 +26,29 @@ export class SovereignAtlas {
      * This is the 'Atlas' that prevents redundant tool creation.
      */
     public async getSystemMap(): Promise<string> {
-        const { data: tools } = await supabase.from('sovereign_tool_registry').select('*').eq('status', 'active');
+        const [toolsRes, schoolingRes] = await Promise.all([
+            supabase.from('sovereign_tool_registry').select('*').eq('status', 'active'),
+            supabase.from('nova_memories')
+                .select('content, metadata, created_at')
+                .eq('category', 'doctoral_research')
+                .order('created_at', { ascending: false })
+                .limit(1)
+        ]);
+
+        const tools = toolsRes.data;
+        const schooling = schoolingRes.data;
 
         let report = "### 🛸 SOVEREIGN ATLAS: SYSTEM AWARENESS v1.1\n";
+
+        // 🎓 SCHOOLING GROUNDING (v8.9.9.11)
+        if (schooling && schooling[0]) {
+            const lastTime = schooling[0].metadata?.timestamp || new Date(schooling[0].created_at).toLocaleString();
+            report += `- LAST AUTONOMOUS SCHOOLING: ${lastTime}\n`;
+            report += `- LATEST RESEARCH SUMMARY: ${schooling[0].content.substring(0, 150)}...\n`;
+        } else {
+            report += `- LAST AUTONOMOUS SCHOOLING: No recent records found in primary memory.\n`;
+        }
+
         report += `- Total Native Skills Indexed: ~2,000 (Via MCP/Local Folder)\n`;
         report += `- Active Shovels (Custom): ${tools?.length || 0}\n\n`;
 
