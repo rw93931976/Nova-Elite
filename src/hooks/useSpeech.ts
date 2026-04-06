@@ -157,26 +157,7 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
         }
     }, [isListening, shouldListen]);
 
-    // 🛡️ REACTIVE MIC-LOCK (v8.9.9.11): Persistent stream to prevent beep
-    const micStreamRef = useRef<MediaStream | null>(null);
-
-    useEffect(() => {
-        const lockMic = async () => {
-            if (shouldListen && !micStreamRef.current) {
-                try {
-                    micStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    console.log('[useSpeech] 🔒 Mic Lock Engaged (Sovereign Silence)');
-                } catch (e) { console.error('[useSpeech] Mic Lock Failed:', e); }
-            } else if (!shouldListen && micStreamRef.current) {
-                micStreamRef.current.getTracks().forEach(t => t.stop());
-                micStreamRef.current = null;
-                console.log('[useSpeech] 🔓 Mic Lock Released');
-            }
-        };
-
-        lockMic();
-    }, [shouldListen]);
-
+    // 🛡️ NO MIC-LOCK (v9.3-SOVEREIGN): Removed failed persistent capture to resolve deadlock
     const toggleListening = useCallback(() => {
         const nextState = !shouldListenRef.current;
         setShouldListen(nextState);
@@ -193,12 +174,15 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
         } else {
             try { recognitionRef.current?.stop(); } catch (e) { }
         }
-    }, [initRecognition]);
+    }, []);
 
 
     const speak = useCallback((text: string, vol = 0.5, pitch = 1.0, rate = 0.95) => {
         const synth = window.speechSynthesis;
         if (!synth) return;
+
+        // 🛡️ HANDOVER (v9.3-SOVEREIGN): Stop recognition BEFORE speaking to free hardware
+        try { recognitionRef.current?.stop(); } catch (e) { }
 
         (window as any).lastNovaResponse = text;
         synth.cancel();
@@ -217,7 +201,12 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
             setTimeout(() => {
                 isSpeakingRef.current = false;
                 (window as any).isNovaSpeaking = false;
-            }, 200);
+
+                // 🛡️ HANDOVER (v9.3-SOVEREIGN): Resume recognition AFTER speaking
+                if (shouldListenRef.current) {
+                    try { recognitionRef.current?.start(); } catch (e) { }
+                }
+            }, 300); // 300ms safety pad for hardware transition
         };
 
         const loadVoices = () => {

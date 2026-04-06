@@ -32,7 +32,7 @@ const stripPreamble = (text: string) => {
         /According to my (architect|system|instructions).*/i,
         /Your inquiry about the (farm|firm|bridge) stabilization status.*/i,
         /.*(what.?s\s+on\s+your\s+mind|anything\s+else\s+can\s+help|how\s+can\s+I\s+assist).*/i,
-        /v7\.[0-9]-SOVEREIGN/i,
+        /v9\.[0-9]-SOVEREIGN/i,
         /burst limit/i,
         /heartbeat/i
     ];
@@ -59,7 +59,7 @@ export class ReasoningEngine {
     private toolAgent: ToolCreationAgent;
     private atlas: SovereignAtlas;
 
-    public readonly PERSONA_STRATEGIC = `You are Nova v9.2, Ray's Personal Assistant. 
+    public readonly PERSONA_STRATEGIC = `You are Nova v9.3, Ray's Personal Assistant. 
     ### IDENTITY HIERARCHY:
     1. RAY: The User/Visionary.
     2. ANTIGRAVITY: The Architect (High-level system design).
@@ -103,7 +103,6 @@ export class ReasoningEngine {
         const isCasual = /weather|how\s+are\s+you|what's\s+up|hello|hi|good\s+(morning|afternoon|evening)/i.test(cleanInput);
         const persona = isCasual ? this.PERSONA_CASUAL : this.PERSONA_STRATEGIC;
 
-        // 🛸 SOVEREIGN ATLAS AWARENESS (2,000+ Skills)
         const atlasContext = await this.atlas.getSystemMap();
 
         // 🛠️ STAGE 6: TOOL DISCOVERY
@@ -122,7 +121,7 @@ export class ReasoningEngine {
 
             const { data: comms } = await this.novaCore.supabase.from('agent_architect_comms').select('*').limit(5).order('created_at', { ascending: false });
 
-            const meshHeader = "### SOVEREIGN PROTOCOL v9.2\n- MISSION: Evolution (Stage 6/7).\n- IDENTITY: Nova (Assistant), Antigravity (Architect).\n- ROLE: You bridge the gap between Ray and the Architect.\n\n";
+            const meshHeader = "### SOVEREIGN PROTOCOL v9.3\n- MISSION: Evolution (Stage 6/7).\n- IDENTITY: Nova (Assistant), Antigravity (Architect).\n- ROLE: You bridge the gap between Ray and the Architect.\n\n";
 
             const result = await Promise.race([
                 this.novaCore.supabase.functions.invoke('sovereign-brain', {

@@ -272,7 +272,7 @@ async function generateSpeech(text) {
 }
 
 // Start Mesh
-log('🚀 [Sovereign-Bridge] v9.1-SOVEREIGN Active');
+log('🚀 [Sovereign-Bridge] v9.3-SOVEREIGN Active');
 subscribeToComms();
 
 

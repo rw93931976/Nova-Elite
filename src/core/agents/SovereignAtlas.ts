@@ -38,7 +38,7 @@ export class SovereignAtlas {
         const tools = toolsRes.data;
         const schooling = schoolingRes.data;
 
-        let report = "### 🛸 SOVEREIGN ATLAS: SYSTEM AWARENESS v9.2\n";
+        let report = "### 🛸 SOVEREIGN ATLAS: SYSTEM AWARENESS v9.3\n";
         report += "- ROLES: RAY (User), ANTIGRAVITY (Architect), NOVA (Assistant).\n";
 
         // 🧠 PERFORMANCE GROUNDING (v9.2-SOVEREIGN)
