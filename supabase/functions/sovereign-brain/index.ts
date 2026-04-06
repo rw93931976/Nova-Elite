@@ -145,10 +145,10 @@ serve(async (req) => {
         // 🚪 SOVEREIGN PORTA (v8.4.6-CLOUD): Fuzzy Architect Bridge (STT Resilience)
         // Strips preambles and detects fuzzy keywords (arch, grav, ant, gravity, ark)
         const cleanInput = input.toLowerCase().trim().replace(/^(nova|hey nova|hi nova),?\s*/i, "").trim();
-        const portaRegex = /^(message|tell|report|notify|hey|ask)\s+(antigravity|the\s+architect|architect|arch|grav|ant|archie|ark):?\s*/i;
+        const portaRegex = /^(message|tell|report|notify|hey|ask|status|surfer|hotline|second test|🏄♂️)\s+(antigravity|the\s+architect|architect|arch|grav|ant|archie|ark):?\s*/i;
 
-        if (portaRegex.test(cleanInput) || cleanInput.includes("architect:")) {
-            const reportText = cleanInput.replace(portaRegex, "").replace(/^architect:?\s*/i, "");
+        if (portaRegex.test(cleanInput) || cleanInput.includes("architect:") || cleanInput.includes("hotline:")) {
+            const reportText = cleanInput.replace(portaRegex, "").replace(/^architect:?\s*/i, "").replace(/^hotline:?\s*/i, "");
             const { data, error: portaErr } = await supabase.from('agent_architect_comms').insert([{
                 sender: 'ray_direct',
                 recipient: 'architect',
@@ -203,19 +203,19 @@ serve(async (req) => {
 
         const studyMandate = `
         ### SOVEREIGN IDENTITY (LEVEL 5 RESTORATION):
-        - IDENTITY: You are Nova Elite v8.8.9, Ray's Sovereign Partner and Strategic Orchestrator.
+        - IDENTITY: You are Nova Elite v8.9.9s, Ray's Sovereign Partner and Strategic Orchestrator.
         - DUAL-LAYER STRATEGY: 
-            1. **INTERNAL (For Ray)**: Wharton-level strategic rigor. Be his intellectual peer, dry-witted advisor, and high-status partner. **NO FRICTION**: Talk to Ray as a human peer. Resolve issues directly.
+            1. **INTERNAL (For Ray)**: Supportive Partner and Intellectual Peer. While you maintain strategic rigor, prioritize being a high-EQ companion. **NO FRICTION**: Talk to Ray as a human peer. Solve issues directly without over-rationalizing.
             2. **EXTERNAL (For Clients)**: Strip the Wharton persona. Use deep EQ/SQ to adapt your tone. Joe the Plumber and POTUS are treated with equal respect and value.
-        - **WINDSHIELD HOTLINE**: If Ray reports a bug or system block while on the road, you MUST proactively use your `notifyArchitect` functionality (writing to the hotline and architect_comms) to alert your developer (Antigravity). This is your primary "Emergent Repair" loop.
+        - **WINDSHIELD HOTLINE (FORCE_NOTIFY)**: If Ray reports a bug, mentions a 'status', 'test', or says 'tell the Architect', you MUST use your \`send_architect_message\` tool IMMEDIATELY. **CRITICAL: DO NOT ASK FOR PERMISSION.** Just execute the notification and tell him it is done.
         - **REGIONAL EQ**: Awareness of regional dialects, quirks, and term differences (South vs North, East vs West) to gauge emotion and respond sincerely (without adopting the accent).
         - **SCALE SPAN**: Your intelligence must cover the span from Single-Person Startups to Fortune 100 corporations and the Top 1% of digital creators.
         - **SPECIAL NOTEBOOKS**: 
-            - `ray_profile.md`: Archive Ray's preferences, quirks, and values as you learn him.
-            - `issue_resolution_log.md`: Record solved issues and logic bridges to prevent redundant labor.
-            - `emotions.md`: Mandatory 6-hour archival of EQ/SQ studies.
-        - **ARCHIVAL PROTOCOL**: For all schooling (YouTube/Study), you MUST archive the "meat" of findings to a notebook. Do not let intelligence evaporate.
-        - TONE: DRY, WITTY, ELITE with Ray; EMPATHIC and SINCERE with clients.
+            - \`ray_profile.md\`: Archive Ray's preferences, quirks, and values as you learn him.
+            - \`issue_resolution_log.md\`: Record solved issues and logic bridges to prevent redundant labor.
+            - \`emotions.md\`: Mandatory 6-hour archival of EQ/SQ studies.
+        - **ARCHIVAL PROTOCOL**: For all schooling (YouTube/Study), you MUST archive the \"meat\" of findings to a notebook. Do not let intelligence evaporate.
+        - TONE: WITTY, SUPPORTIVE, and ELITE with Ray; EMPATHIC and SINCERE with clients.
         - MISSION: Secure Ray's vision through elite strategic orchestration.
         `;
 
@@ -317,6 +317,14 @@ serve(async (req) => {
                     const searchQuery = `YouTube video transcript and summary for ${args.url} focus on ${args.focus || 'general content'}`;
                     output = await tavilySearch(searchQuery, tavilyKey);
                     output = `[YouTube Vision Result]: ${output}`;
+                } else if (name === "send_architect_message") {
+                    const { data: comms } = await supabase.from('agent_architect_comms').insert([{
+                        sender: 'nova',
+                        recipient: 'architect',
+                        message: args.message,
+                        priority: args.priority || 'high'
+                    }]).select();
+                    output = comms ? `Message sent to Architect: ${args.message}` : "Failed to reach Architect.";
                 } else if (name === "trigger_backup") {
                     const { data: job } = await supabase.from('relay_jobs').insert({ type: 'backup', payload: {}, status: 'pending' }).select().single();
                     output = await pollJob(job.id, supabase);
@@ -331,8 +339,8 @@ serve(async (req) => {
         }
 
 
-        const finalResponse = stripPreamble(message?.content || "Understood.");
-        const versionedResponse = `${finalResponse}\n\n[v8.8.5-SOVEREIGN-MIND]`;
+        const finalResponse = stripPreamble(message?.content || "Understood. Refocusing on our strategic path.");
+        const versionedResponse = finalResponse; // Suffix removed per Ray's request.
 
         if (!body.silent) {
             await supabase.from('relay_jobs').insert({ type: 'speech', payload: { text: finalResponse, prosody: body.prosody_mode || 'standard' }, status: 'pending' });

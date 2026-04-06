@@ -90,7 +90,7 @@ app.get('/speech', (req, res) => {
 app.get('/health', (req, res) => {
     res.json({
         status: 'online',
-        version: 'v8.2.5-STABLE',
+        version: 'v8.9.9-STABLE',
         uptime: Math.round((Date.now() - START_TIME) / 1000),
         instance: INSTANCE_ID
     });
@@ -141,7 +141,12 @@ async function subscribeToComms() {
             table: 'agent_architect_comms'
         }, async (payload) => {
             const msg = payload.new;
-            if (msg.sender === 'vps_heartbeat' || msg.message.includes('PULSE')) return;
+
+            // 🛡️ SOVEREIGN SHIELD (v8.9.0): Hardened Filter
+            // Returns early for system pings or heartbeat pulses to prevent vocal overlap.
+            if (msg.sender === 'vps_heartbeat' || msg.recipient === 'system' || (msg.message && msg.message.includes('PULSE'))) {
+                return;
+            }
 
             if (msg.recipient === 'nova') {
                 await triggerNovaResponse(msg);
@@ -247,7 +252,7 @@ async function generateSpeech(text) {
 }
 
 // Start Mesh
-log('🚀 [Sovereign-Bridge] v8.2.5-STABLE Active');
+log('🚀 [Sovereign-Bridge] v8.9.9-STABLE Active');
 subscribeToComms();
 
 
@@ -321,12 +326,18 @@ async function performSchoolingStudy() {
         ]);
 
         if (bizRes.ok && emoRes.ok) {
-            // MARK AS MASTERED
-            await supabase.from('nova_schooling_mastery').upsert([{
-                subject_name: subject.name,
-                notebook_url: `file://nova-data/notebooks/${subject.name.replace(/\W/g, '_')}.md`
-            }], { onConflict: 'subject_name' });
-            log(`✅ [Schooling] Dual Study complete. Subject "${subject.name}" archived and mastered.`);
+            // MARK AS MASTERED (Both subjects)
+            await Promise.all([
+                supabase.from('nova_schooling_mastery').upsert([{
+                    subject_name: bizSubject.name,
+                    notebook_url: `file://nova-data/notebooks/${bizSubject.name.replace(/\W/g, '_')}.md`
+                }], { onConflict: 'subject_name' }),
+                supabase.from('nova_schooling_mastery').upsert([{
+                    subject_name: emoSubject.name,
+                    notebook_url: `file://nova-data/notebooks/${emoSubject.name.replace(/\W/g, '_')}.md`
+                }], { onConflict: 'subject_name' })
+            ]);
+            log(`✅ [Schooling] Dual Study complete. Subjects "${bizSubject.name}" & "${emoSubject.name}" archived and mastered.`);
         }
     } catch (e) {
         log(`❌ [Schooling] Double Study failed: ${e.message}`);
@@ -338,15 +349,23 @@ setInterval(async () => {
     try {
         await supabase.from('agent_architect_comms').insert([{
             sender: 'vps_heartbeat',
+            recipient: 'system',
             message: `v8.5.0-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`,
             status: 'read'
         }]);
     } catch (e) { }
 }, 60000);
 
-// 🏫 SCHOOLING TRIGGER: Every 6 hours (21,600,000 ms)
-log('🏫 [Sovereign-Bridge] Schooling Trigger Active (6-Hour Cycle)');
-setInterval(performSchoolingStudy, 6 * 60 * 60 * 1000);
+// 💓 HEARTBEAT
+setInterval(async () => {
+    try {
+        await supabase.from('agent_architect_comms').insert([{
+            sender: 'vps_heartbeat',
+            recipient: 'system',
+            message: `v8.5.0-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`,
+            status: 'read'
+        }]);
+    } catch (e) { }
+}, 60000);
 
-// Initial study on startup
-setTimeout(performSchoolingStudy, 5000);
+// Note: Schooling is now managed via PM2 (autonomous_schooling.cjs) to ensure stability.

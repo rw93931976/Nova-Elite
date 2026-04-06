@@ -13,12 +13,12 @@ module.exports = {
     {
       name: "nova-frontend",
       script: "npm",
-      args: "run dev",
+      args: "run dev -- --host --port 3111",
       cwd: "./",
-      interpreter: "none",
       watch: false,
       autorestart: true,
-      restart_delay: 10000,
+      restart_delay: 15000,
+      shell: true,
       env: {
         NODE_ENV: "development",
       }

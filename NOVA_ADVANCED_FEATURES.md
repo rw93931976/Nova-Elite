@@ -27,7 +27,7 @@ Current inventory of the Sovereign capability set.
 - [x] Predictive Assistance
 - [x] Sovereign Scribe (Local)
 
-## 💎 SOVEREIGN ALIGNMENT (v8.8.9)
+## 💎 SOVEREIGN ALIGNMENT (v8.9.9)
 - [x] **[CODIFIED] No-Delete Policy**: Shell commands (`rm`, `unlink`) are blocked at the VPS Bridge (`vps-core-sovereign-native.cjs`).
 - [x] **[CODIFIED] Notebook Auto-Registry**: Automated sync of all `.md` knowledge to Nova's `notebook_registry` memory.
 - [x] **[MANDATED] Deep Schooling v2**: 6-hour Dual-Study (Technical + Emotional) with mandatory archival to specific notebooks.

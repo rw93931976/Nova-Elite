@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
     Mic,
     MessageSquare,
@@ -20,6 +20,7 @@ import Autonomy from "./components/Autonomy";
 
 function App() {
     const nova = useNova();
+    const chatEndRef = useRef<HTMLDivElement>(null);
     const {
         isListening,
         messages,
@@ -53,6 +54,13 @@ function App() {
         }
     }, [currentView, hasNewArchMsg, resetArchAlert]);
 
+    // ✨ UI UX Polish (v8.9.9s): Auto-Scroll
+    useEffect(() => {
+        if (currentView === "chat") {
+            chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages, currentView]);
+
     const renderContent = () => {
         switch (currentView) {
             case "features":
@@ -80,6 +88,7 @@ function App() {
                                     </div>
                                 </div>
                             ))}
+                            <div ref={chatEndRef} />
                         </div>
                     </div>
                 );

@@ -6,9 +6,13 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+build_full_debug.txt
+build_errors.txt
+build_log.txt
 
 # Architect & Agent Meta
-Architect_Notes/
+# Unignored for instruction persistence
+# Architect_Notes/
 *.apk
 node_modules/
 dist/
