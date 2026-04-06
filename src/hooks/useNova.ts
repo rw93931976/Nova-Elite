@@ -64,6 +64,24 @@ export function useNova() {
 
     const normalized = t.trim();
     if (!normalized || isHalted) return;
+
+    // 🛸 DIRECT-WIRE BYPASS (v8.9.9s)
+    // Allows Ray to bypass Nova brain processing on mobile/road by saying 'Hardwire' or 'Direct Wire'.
+    const bypassKeywords = ["hardwire", "direct wire", "message antigravity", "antigravity directive"];
+    const lowercase = normalized.toLowerCase();
+    const trigger = bypassKeywords.find(kw => lowercase.startsWith(kw));
+
+    if (trigger) {
+      const message = normalized.slice(trigger.length).trim();
+      if (message) {
+        console.log(`🛸 [DirectWire] Bypass triggered: "${message}"`);
+        core.notifyArchitect(message, 'high');
+        core.supabase.from("nova_messages").insert([{ role: "user", content: `[DIRECT WIRE]: ${message}` }]);
+        speak("Direct Wire active. Message transmitted to Antigravity.");
+        return;
+      }
+    }
+
     pendingInputRef.current = normalized;
     if (bufferTimerRef.current) clearTimeout(bufferTimerRef.current);
     bufferTimerRef.current = setTimeout(() => {

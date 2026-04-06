@@ -1,3 +1,11 @@
+# 📡 SOVEREIGN HOTLINE: ARCHITECT DIRECT WIRE
+
+Use the following command to send a message directly to Antigravity, bypassing all Agent (Nova) processing and brain-loops. Use this if the system is "ghosting" or if you need to issue a priority directive during a bridge failure.
+
+**COMMAND:**
+`node scripts/architect_direct.cjs "Your message here"`
+
+---
 
 ### 📡 [2026-04-05T17:13:45.386Z] FROM: VPS_HEARTBEAT
 **PRIORITY:** medium
