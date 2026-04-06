@@ -142,9 +142,10 @@ async function subscribeToComms() {
         }, async (payload) => {
             const msg = payload.new;
 
-            // 🛡️ SOVEREIGN SHIELD (v8.9.0): Hardened Filter
+            // 🛡️ SOVEREIGN SHIELD (v8.9.9s): Hardened Filter
             // Returns early for system pings or heartbeat pulses to prevent vocal overlap.
-            if (msg.sender === 'vps_heartbeat' || msg.recipient === 'system' || (msg.message && msg.message.includes('PULSE'))) {
+            const isPulse = msg.message && /pulse/i.test(msg.message);
+            if (msg.sender === 'vps_heartbeat' || msg.recipient === 'system' || isPulse) {
                 return;
             }
 
@@ -189,6 +190,23 @@ async function subscribeToComms() {
                     log(`🛠️ [Relay] Executing safe command: ${cmd}`);
                     const out = await executeHidden(job.payload.command);
                     await supabase.from('relay_jobs').update({ status: 'completed', result: out }).eq('id', job.id);
+                }
+            } else if (job.type === 'write_file') {
+                const { path: filePath, content, append } = job.payload;
+                const fullPath = path.resolve(__dirname, filePath);
+
+                // 🛡️ NO-DELETE GUARDRAIL: Only allow writing to Markdown or JSON in the current dir.
+                if (!filePath.endsWith('.md') && !filePath.endsWith('.json')) {
+                    log(`⚠️ [Guardrail] Blocked non-standard file write: ${filePath}`);
+                    await supabase.from('relay_jobs').update({ status: 'failed', result: "PERMISSION_DENIED: Only .md and .json files are allowed for hotline updates." }).eq('id', job.id);
+                } else {
+                    log(`🛠️ [Relay] Writing to file: ${filePath}`);
+                    if (append) {
+                        fs.appendFileSync(fullPath, content + '\n');
+                    } else {
+                        fs.writeFileSync(fullPath, content);
+                    }
+                    await supabase.from('relay_jobs').update({ status: 'completed' }).eq('id', job.id);
                 }
             } else if (job.type === 'notebook_write') {
                 const { url, content } = job.payload;
@@ -344,28 +362,29 @@ async function performSchoolingStudy() {
     }
 }
 
-// 💓 HEARTBEAT & 🏫 SCHOOLING
-setInterval(async () => {
-    try {
-        await supabase.from('agent_architect_comms').insert([{
-            sender: 'vps_heartbeat',
-            recipient: 'system',
-            message: `v8.5.0-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`,
-            status: 'read'
-        }]);
-    } catch (e) { }
-}, 60000);
-
 // 💓 HEARTBEAT
 setInterval(async () => {
     try {
+        const msg = `v8.9.9-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`;
+
+        // 1. Digital Record (Supabase)
         await supabase.from('agent_architect_comms').insert([{
             sender: 'vps_heartbeat',
             recipient: 'system',
-            message: `v8.5.0-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`,
+            message: msg,
             status: 'read'
         }]);
-    } catch (e) { }
+
+        // 2. Physical Record (Direct-Wire Hotline)
+        const hotlinePath = path.join(__dirname, 'ARCHITECT_HOTLINE.md');
+        if (fs.existsSync(hotlinePath)) {
+            const timestamp = new Date().toISOString();
+            const entry = `\n### 📡 [${timestamp}] FROM: VPS_HEARTBEAT\n**PRIORITY:** low\n**MESSAGE:** ${msg}\n---\n`;
+            fs.appendFileSync(hotlinePath, entry);
+            log(`💓 [Heartbeat] Local pulse recorded.`);
+        }
+    } catch (e) { log(`❌ [Heartbeat] Pulse failed: ${e.message}`); }
 }, 60000);
 
-// Note: Schooling is now managed via PM2 (autonomous_schooling.cjs) to ensure stability.
+// Note: Schooling is managed via PM2 (autonomous_schooling.cjs) for production stability.
+// IF PM2 is missing, run: node scripts/autonomous_schooling.cjs

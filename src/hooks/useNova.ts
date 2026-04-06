@@ -140,7 +140,14 @@ export function useNova() {
       .channel("nova-live-stabilized")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "agent_architect_comms" }, async (payload) => {
         const msg = payload.new as any;
-        if (msg && msg.sender !== 'vps_heartbeat' && !announcedIds.current.has(msg.id)) {
+
+        // 🛡️ SOVEREIGN SHIELD (v8.9.9s): Vocal Interrupt Filter
+        // Prevent system heartbeats or pulse noise from triggering re-renders or announcements.
+        if (msg.sender === 'vps_heartbeat' || msg.recipient === 'system' || (msg.message && msg.message.includes('PULSE'))) {
+          return;
+        }
+
+        if (msg && !announcedIds.current.has(msg.id)) {
           if (!isHalted) speakRef.current(`Notification from Architect: ${msg.message}`);
           announcedIds.current.add(msg.id);
           localStorage.setItem("announcedIds", JSON.stringify(Array.from(announcedIds.current)));

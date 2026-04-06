@@ -143,19 +143,17 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
         };
     }, [shouldListenRef.current]);
 
-    // 🔬 STT PULSE
+    // 🔬 STT PULSE (v8.9.9.6): Silenced Brute-Force
+    // Removed setInterval pulse to stop browser beep spam. 
+    // Restarts are now managed via the onend event for a silent, natural flow.
     useEffect(() => {
-        const pulse = setInterval(() => {
-            const isSpeaking = (window as any).isNovaSpeaking || isSpeakingRef.current;
-            if (shouldListenRef.current && !isListening && !isSpeaking) {
-                try {
-                    if (!recognitionRef.current) recognitionRef.current = initRecognition();
-                    recognitionRef.current.start();
-                } catch (e) { }
-            }
-        }, 5000);
-        return () => clearInterval(pulse);
-    }, [isListening]);
+        if (shouldListenRef.current && !isListening && !isSpeakingRef.current) {
+            try {
+                if (!recognitionRef.current) recognitionRef.current = initRecognition();
+                recognitionRef.current.start();
+            } catch (e) { }
+        }
+    }, [isListening, shouldListenRef.current]);
 
     const toggleListening = useCallback(() => {
         shouldListenRef.current = !shouldListenRef.current;
