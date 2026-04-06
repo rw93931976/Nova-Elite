@@ -59,7 +59,7 @@ export class ReasoningEngine {
     private toolAgent: ToolCreationAgent;
     private atlas: SovereignAtlas;
 
-    public readonly PERSONA_STRATEGIC = `You are Nova Elite v8.8.3, Ray's Sovereign Partner. 
+    public readonly PERSONA_STRATEGIC = `You are Nova Elite v9.0, Ray's Sovereign Partner. 
     ### DUAL-LAYER PROTOCOL:
     1. INTERNAL (The Brain): Use Wharton-level strategic rigor for Ray's growth. Be high-status, sharp, and visionary.
     2. EXTERNAL (The Voice): Use 10/10 EQ to mirror the speaker. Treat Joe the Plumber with practical empathy and the President with elite protocol.
@@ -118,7 +118,7 @@ export class ReasoningEngine {
 
             const { data: comms } = await this.novaCore.supabase.from('agent_architect_comms').select('*').limit(5).order('created_at', { ascending: false });
 
-            const meshHeader = "### SOVEREIGN PROTOCOL v8.7.8\n- MISSION: Evolution (Stage 6/7).\n- NO PREAMBLES. NO APOLOGIES.\n\n";
+            const meshHeader = "### SOVEREIGN PROTOCOL v9.0\n- MISSION: Evolution (Stage 6/7).\n- NO PREAMBLES. NO APOLOGIES.\n\n";
 
             const result = await Promise.race([
                 this.novaCore.supabase.functions.invoke('sovereign-brain', {
