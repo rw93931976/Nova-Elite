@@ -161,16 +161,7 @@ async function pollComms() {
     } catch (e) { }
 }
 
-// HEARTBEAT
-setInterval(async () => {
-    try {
-        await supabase.from('agent_architect_comms').insert({
-            sender: 'vps_heartbeat',
-            message: `v2.6.10-BRIDGE-ACTIVE [Server: Port 3505 HTTPS]`,
-            status: 'read'
-        });
-    } catch (e) { }
-}, 30000);
+// HEARTBEAT REMOVED TO PREVENT ROBOTIC ECHOES
 
 server.listen(3505, '0.0.0.0', () => {
     log('🚀 [Sovereign Hub] HTTPS Bridge active on port 3505');

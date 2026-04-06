@@ -369,15 +369,7 @@ setInterval(async () => {
     try {
         const msg = `v8.9.9-SOVEREIGN-BRIDGE-PULSE [ID: ${INSTANCE_ID}] [Uptime: ${Math.round((Date.now() - START_TIME) / 1000)}s]`;
 
-        // 1. Digital Record (Supabase)
-        await supabase.from('agent_architect_comms').insert([{
-            sender: 'vps_heartbeat',
-            recipient: 'system',
-            message: msg,
-            status: 'read'
-        }]);
-
-        // 2. Physical Record (Direct-Wire Hotline)
+        // 1. Physical Record (Direct-Wire Hotline)
         const hotlinePath = path.join(__dirname, 'ARCHITECT_HOTLINE.md');
         if (fs.existsSync(hotlinePath)) {
             const timestamp = new Date().toISOString();

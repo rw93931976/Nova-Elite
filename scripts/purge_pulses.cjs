@@ -14,9 +14,10 @@ if (fs.existsSync(envPath)) {
 
 const supabase = createClient(env['VITE_SUPABASE_URL'], env['VITE_SUPABASE_ANON_KEY']);
 
-async function check() {
-    const { data, error } = await supabase.from('agent_architect_comms').select('*').order('created_at', { ascending: false }).limit(20);
+async function purge() {
+    console.log("🛸 [Purge] Cleaning VPS_HEARTBEAT noise...");
+    const { data, error } = await supabase.from('agent_architect_comms').delete().eq('sender', 'vps_heartbeat');
     if (error) console.error(error);
-    else console.log(JSON.stringify(data, null, 2));
+    else console.log("✅ [Purge] History is now clean and human-centric.");
 }
-check();
+purge();

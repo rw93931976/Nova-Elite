@@ -284,16 +284,7 @@ async function pollJobs() {
     }
 }
 
-// HEARTBEAT
-setInterval(async () => {
-    try {
-        await supabase.from('agent_architect_comms').insert({
-            sender: 'vps_heartbeat',
-            message: `v2.9-SOVEREIGN-PULSE [Uptime: ${Math.round(process.uptime())}s]`,
-            status: 'read'
-        });
-    } catch { }
-}, 60000);
+// HEARTBEAT REMOVED TO PREVENT ROBOTIC ECHOES
 
 log('🚀 [Relay] Polling active (v2.9 Deep Sensory Fix)...');
 setInterval(pollJobs, 500); // Increased polling speed!
