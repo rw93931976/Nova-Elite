@@ -13,9 +13,8 @@ export class NovaCore {
 
     constructor() {
         this.loadState();
-        // DIRECT MODE: Passing Google AI Key from Environment
-        const apiKey = import.meta.env.VITE_GOOGLE_AI_KEY || "";
-        this.liveEngine = new LiveEngine(apiKey);
+        // SOVEREIGN: LiveEngine is initialized keyless. Key is on VPS.
+        this.liveEngine = new LiveEngine();
     }
 
     async startLiveSession() {

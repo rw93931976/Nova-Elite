@@ -1,41 +1,45 @@
 /**
- * LiveEngine: SOVEREIGN LIVE BRIDGE (v10.0)
+ * LiveEngine: SOVEREIGN RELAY GATEWAY (v10.1)
  * -----------------------------------------
- * Manages the low-latency WebSocket connection to Gemini 3.1 Flash.
- * This version connects DIRECTLY to Google for Phase 1 verification.
+ * Manages the low-latency WebSocket connection to the VPS Relay.
+ * This version uses the Sovereign Bridge to protect API keys.
  */
+import { RealtimeTaskAction } from "../types";
+
 export class LiveEngine {
     private socket: WebSocket | null = null;
     private onAudioCallback: ((chunk: string) => void) | null = null;
     private onProsodyCallback: ((data: any) => void) | null = null;
     private onToolCallCallback: ((name: string, args: any) => Promise<any>) | null = null;
-    private apiKey: string;
+    private onStateChange: ((state: 'connected' | 'disconnected' | 'error', msg?: string) => void) | null = null;
 
-    constructor(apiKey: string) {
-        this.apiKey = apiKey;
-        if (!this.apiKey) {
-            console.error("❌ [LiveEngine] CRITICAL: No API key provided.");
-        }
+    constructor() {
+        console.log("🛰️ [LiveEngine] Initialization (Relay Mode)");
     }
 
     public async connect(systemInstruction: string) {
         if (this.socket) return;
-        if (!this.apiKey) throw new Error("API key not found");
 
         return new Promise<void>((resolve, reject) => {
-            const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidirectionalGenerateContent?key=${this.apiKey}`;
+            // SOVEREIGN ENDPOINT: Points to the Unified Bridge on the VPS
+            const relayUrl = `wss://api.mysimpleaihelp.com:3506`;
 
-            this.socket = new WebSocket(url);
+            console.log(`📡 [Relay] Connecting to Sovereign Gateway: ${relayUrl}`);
+            this.socket = new WebSocket(relayUrl);
 
             this.socket.onopen = () => {
-                console.log("✅ [LiveEngine] Connected to Gemini 3.1 Flash Live");
+                console.log("✅ [Relay] Connected to Sovereign Gateway");
+                this.onStateChange?.('connected');
+
+                // Send SETUP via Relay
                 this.send({
+                    type: 'setup',
                     setup: {
                         model: "models/gemini-2.0-flash-exp",
                         generation_config: {
                             response_modalities: ["audio"],
                             speech_config: {
-                                voice_config: { prebuilt_voice_config: { voice_name: "Puck" } } // Placeholder for Nova voice training
+                                voice_config: { prebuilt_voice_config: { voice_name: "Puck" } }
                             }
                         },
                         system_instruction: { parts: [{ text: systemInstruction }] }
@@ -47,6 +51,12 @@ export class LiveEngine {
             this.socket.onmessage = async (event) => {
                 const data = JSON.parse(event.data);
 
+                if (data.type === 'error') {
+                    console.error(`❌ [Relay] Error: ${data.message}`);
+                    this.onStateChange?.('error', data.message);
+                    return;
+                }
+
                 // Handle Audio
                 if (data.serverContent?.modelTurn?.parts) {
                     const part = data.serverContent.modelTurn.parts[0];
@@ -55,7 +65,7 @@ export class LiveEngine {
                     }
                 }
 
-                // Handle Tool Calls (Sovereign Agency)
+                // Handle Tool Calls
                 if (data.serverContent?.modelTurn?.parts?.[0]?.toolCall) {
                     const call = data.serverContent.modelTurn.parts[0].toolCall;
                     await this.handleToolCall(call);
@@ -63,19 +73,21 @@ export class LiveEngine {
             };
 
             this.socket.onerror = (error) => {
-                console.error("❌ [LiveEngine] WebSocket Error:", error);
+                console.error("❌ [Relay] Connection Error:", error);
+                this.onStateChange?.('error', 'Gateway Connection Failed');
                 reject(error);
             };
 
             this.socket.onclose = () => {
-                console.log("🔌 [LiveEngine] Connection closed");
+                console.log("🔌 [Relay] Gateway Disconnected");
+                this.onStateChange?.('disconnected');
                 this.socket = null;
             };
         });
     }
 
     private async handleToolCall(call: any) {
-        console.log(`🛠️ [LiveEngine] Tool Call: ${call.name}`);
+        console.log(`🛠️ [Relay] Executing Tool: ${call.name}`);
         if (this.onToolCallCallback) {
             const result = await this.onToolCallCallback(call.name, call.args);
             this.send({
@@ -107,17 +119,9 @@ export class LiveEngine {
         }
     }
 
-    public onAudio(callback: (chunk: string) => void) {
-        this.onAudioCallback = callback;
-    }
-
-    public onProsody(callback: (data: any) => void) {
-        this.onProsodyCallback = callback;
-    }
-
-    public onToolCall(callback: (name: string, args: any) => Promise<any>) {
-        this.onToolCallCallback = callback;
-    }
+    public onAudio(callback: (chunk: string) => void) { this.onAudioCallback = callback; }
+    public onToolCall(callback: (name: string, args: any) => Promise<any>) { this.onToolCallCallback = callback; }
+    public onStatus(callback: (state: 'connected' | 'disconnected' | 'error', msg?: string) => void) { this.onStateChange = callback; }
 
     public disconnect() {
         if (this.socket) {
