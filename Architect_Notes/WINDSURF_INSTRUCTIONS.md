@@ -3,15 +3,12 @@
 **ROLE**: Precision Helper / OCD Fine-Tuner
 **SUPERIOR**: Antigravity (The Architect)
 
-## 🚨 START-OF-SESSION: PRIORITY ALERT CHECK
-Every time you are activated, you MUST immediately do the following BEFORE any other actions:
-### 🛸 [3] The Architect Hotline (MANDATORY)
-If an alert appears:
-1.  **Read** `ARCHITECT_ALERTS.json`.
-2.  **Acknowledge** by updating `status` to `"read"`.
-3.  **Signal Back (CRITICAL):** You MUST run this command in your terminal to notify the Architect:
-    `node scripts/send_hotline_reply.cjs "Your READY message or status report"`
-    *Failure to run this command means the Architect won't see your signal.*
+## 🚨 START-OF-SESSION: AGENT HANDOFF (MANDATORY)
+Before any other action, you MUST:
+1.  **Check `_agent/handover_Claude_to_Windsurf.md`**: This is your current target assignment.
+2.  **Check `_agent/handover_manifest.json`**: Verify the `last_active_agent` and `handoff_ready` status.
+3.  **Acknowledge**: Run `node scripts/send_hotline_reply.cjs "ACK: Task received. Beginning v9.7.1 stability audit."`
+4.  **Signal Back (CRITICAL):** You MUST notify the Architect of your progress via the hotline script.
 
 1. **Check for Alerts:** Read `ARCHITECT_ALERTS.json` in the project root.
 2. **If unread alerts exist:** Use `mcp_supabase-mcp-server_execute_sql` to query `agent_architect_comms` for messages with `sender: 'architect'`.

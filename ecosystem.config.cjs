@@ -12,7 +12,7 @@ module.exports = {
     },
     {
       name: "nova-frontend",
-      script: "npm",
+      script: "npm.cmd",
       args: "run dev -- --host --port 3111",
       cwd: "./",
       watch: false,

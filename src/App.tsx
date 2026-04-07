@@ -54,7 +54,7 @@ function App() {
         }
     }, [currentView, hasNewArchMsg, resetArchAlert]);
 
-    // ✨ UI UX Polish (v8.9.9s): Auto-Scroll
+    // ✨ UI UX Polish (v9.7.1s): Auto-Scroll
     useEffect(() => {
         if (currentView === "chat") {
             chatEndRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -9,7 +9,7 @@ export class NovaCore {
     private startTime: number = Date.now();
     private interferenceLog: Array<{ time: number; type: string; detail: string }> = [];
 
-    public readonly version = 'v9.7-SOVEREIGN';
+    public readonly version = 'v9.7.1-SOVEREIGN';
     public isHalted: boolean = false;
     public beastModeEnabled: boolean = false;
     private currentHealth: any = { status: 'online', bridge: 'offline', database: 'online', lastBridgePulse: 0 };
@@ -51,7 +51,7 @@ export class NovaCore {
 
     private saveState() {
         localStorage.setItem('nova_core_state', JSON.stringify({ isHalted: this.isHalted }));
-        localStorage.setItem('nova_version_tag', 'sovereign-v9.7');
+        localStorage.setItem('nova_version_tag', 'sovereign-v9.7.1');
     }
 
     private loadState() {
@@ -61,7 +61,7 @@ export class NovaCore {
             this.isHalted = state.isHalted;
         }
 
-        const currentTag = 'sovereign-v9.7';
+        const currentTag = 'sovereign-v9.7.1';
         if (localStorage.getItem('nova_version_tag') !== currentTag) {
             console.warn(`🔄 Version mismatch detected. Busting cache.`);
             localStorage.clear();

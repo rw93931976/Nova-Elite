@@ -27,9 +27,8 @@ function stripPreamble(text: string) {
     let cleanedLines = lines.filter(line => {
         const trimmed = line.trim();
         if (!trimmed) return true;
-        const isPreamble = targets.some(regex => regex.test(trimmed));
-        // Keep lines that are likely substantial content (v8.3.0)
-        return !isPreamble || trimmed.length > 60;
+        // 🚨 SOVEREIGN v9.7.1: No escape hatch. Content must be meaningful.
+        return !targets.some(regex => regex.test(trimmed));
     });
 
     let cleaned = cleanedLines.join('\n').trim();

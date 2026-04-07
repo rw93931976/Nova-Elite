@@ -3,5 +3,5 @@
   "sender": "nova",
   "message": "Ray requested a message to be sent to the architect; executing now to ensure it reaches you.",
   "timestamp": "2026-04-05T20:30:22.464Z",
-  "status": "unread"
+  "status": "read"
 }

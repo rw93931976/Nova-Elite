@@ -27,7 +27,13 @@
 
 ## 📂 4. Windsurf Handoff Manifest (Deployment Queue)
 > *Windsurf: List your staged changes here for the Architect to deploy.*
-- **Current Queue**: [EMPTY]
+- **Current Queue**: 
+  - **File**: `vps-core-sovereign-native.cjs`
+  - **Change**: Updated stripPreamble function (lines 37-65)
+  - **Details**: Added 10 missing regex patterns from React source for parity
+  - **Before**: 18 patterns, **After**: 28 patterns
+  - **Purpose**: Bridge hardening to match frontend conversational bloat filtering
+  - **Status**: Ready for deployment
 
 ## 📡 5. Architect Continuity
 > *To the next Architect (Antigravity Window):*

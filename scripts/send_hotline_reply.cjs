@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
-// 🛠️ CONFIG: Load sovereign.env
-const envPath = path.join(__dirname, '..', 'sovereign.env');
+// 🛠️ CONFIG: Load .env (Vite standard)
+const envPath = path.join(__dirname, '..', '.env');
 const env = {};
 if (fs.existsSync(envPath)) {
     const raw = fs.readFileSync(envPath, 'utf8');

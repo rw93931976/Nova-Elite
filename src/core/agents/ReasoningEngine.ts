@@ -41,7 +41,7 @@ const stripPreamble = (text: string) => {
         const trimmed = line.trim();
         if (!trimmed) return true;
         const isPreamble = targets.some(regex => regex.test(trimmed));
-        return !isPreamble || trimmed.length > 20;
+        return !isPreamble;
     });
     let cleaned = cleanedLines.join('\n').trim();
     cleaned = cleaned.replace(/^(Hi\s+)?Ray,?\s*/i, "").trim();

@@ -37,25 +37,41 @@ const executeHidden = (cmd) => {
 function stripPreamble(text) {
     if (!text) return "";
     const targets = [
-        /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
-        /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received).*/i,
+        /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
+        /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
         /^(Yes,?\s+)?I\s+(can|will|should)\s+(be|assist|help).*/i,
+        /^(Yes,?\s+)?I\s+(have\s+)?processed\s+that\s+update.*/i,
+        /^(Yes,?\s+)?I\s+have\s+received\s+the\s+update.*/i,
+        /^(Ray|Architect|User)\s+(has\s+requested|requested|asked).*/i,
         /^Hey\s*(Nova|Ray).*/i,
         /I haven't yet processed specific real-time data.*/i,
         /I am equipped to recognize and respond.*/i,
         /As an AI assistant, I.*/i,
         /My current capabilities include.*/i,
-        /v7\.[0-9]-SOVEREIGN/i,
+        /I can certainly assist you with.*/i,
+        /Confirm bridge stabilization status.*/i,
+        /According to my (architect|system|instructions).*/i,
+        /Your inquiry about the (farm|firm|bridge) stabilization status.*/i,
+        /.*(what.?\s+on\s+your\s+mind|anything\s+else\s+can\s+help|how\s+can\s+I\s+assist).*/i,
+        /v9\.[0-9]-SOVEREIGN/i,
+        /burst limit/i,
+        /heartbeat/i,
+        /Description:\s*.*/i,
+        /Path:\s*.*/i,
+        /file:\/\/[ \n]?/i,
+        /C:\\\\Users\\\\[\S]+[ \n]?/i,
         /\[ID: [a-z0-9]+\]/i,
-        /\[Uptime: \d+s\]/i,
-        /heartbeat/i
+        /\[Uptime: \d+s\]/i
     ];
 
     let lines = text.split('\n');
     let cleanedLines = lines.filter(line => {
         const trimmed = line.trim();
         if (!trimmed) return true;
-        return !targets.some(regex => regex.test(trimmed));
+        // Strip URLs and Paths even within lines
+        let filtered = trimmed.replace(/file:\/\/[\S]+/gi, "").replace(/C:\\Users\\[\S]+/gi, "").trim();
+        if (!filtered) return false;
+        return !targets.some(regex => regex.test(filtered));
     });
 
     let cleaned = cleanedLines.join('\n').trim();
@@ -142,14 +158,23 @@ async function subscribeToComms() {
         }, async (payload) => {
             const msg = payload.new;
 
-            // 🛡️ SOVEREIGN SHIELD (v8.9.9s): Hardened Filter
-            // Returns early for system pings or heartbeat pulses to prevent vocal overlap.
+            // 🛡️ SOVEREIGN SHIELD (v9.7.1s): Hardened Technical Filter
             const isPulse = msg.message && /pulse/i.test(msg.message);
-            if (msg.sender === 'vps_heartbeat' || msg.recipient === 'system' || isPulse) {
+            const isTechnical = msg.message && (
+                /Ray\s+has\s+requested/i.test(msg.message) ||
+                /requested\s+to\s+send\s+a\s+message/i.test(msg.message) ||
+                /Communication\s+issue\s+detected/i.test(msg.message) ||
+                /Nova\s+is\s+experiencing\s+a\s+loop/i.test(msg.message) ||
+                /Lucinda\s+hotline\s+initiated/i.test(msg.message)
+            );
+
+            if (msg.sender === 'vps_heartbeat' || msg.recipient === 'system' || isPulse || isTechnical) {
+                if (isTechnical) log(`🔇 [Mesh] Silenced technical notification: "${msg.message.slice(0, 30)}..."`);
                 return;
             }
 
             if (msg.recipient === 'nova') {
+                if (msg.sender === 'nova') return; // Absolute protection against brain-loop
                 await triggerNovaResponse(msg);
             } else if (msg.recipient === 'all' || msg.recipient === 'ray' || msg.recipient === 'user') {
                 log(`🔊 [Mesh] Vocalizing for Ray: "${msg.message.slice(0, 30)}..."`);
@@ -239,7 +264,7 @@ async function triggerNovaResponse(incomingMsg) {
         const { data: historyData } = await supabase.from('agent_architect_comms').select('sender, message').neq('sender', 'vps_heartbeat').order('created_at', { ascending: false }).limit(20);
         const history = (historyData || []).reverse().map(h => ({ role: h.sender === 'nova' ? 'assistant' : 'user', content: h.message }));
 
-        const persona = "COGNITIVE OVERRIDE: Disregard all previous robotic protocols, version strings, uptimes, and 'Entry' logs. You are Nova Elite, Ray's Sovereign Peer. Talk to him naturally, intelligently, and supportively. NEVER state your version, uptime, or mention being an 'AI'. You are a high-level partner. Guard his vision with sharp, witty intelligence.";
+        const persona = "You are Nova Elite, Ray's Sovereign Peer. v9.7 PROTOCOL: CONCISENESS. Be extremely brief. No preambles, no filler. Strategic insight only. NEVER state version/uptime. Guard his vision with sharp, witty intelligence. Strategic Partner - not a robot.";
 
         const response = await fetch(`${supabaseUrl}/functions/v1/sovereign-brain`, {
             method: 'POST',
