@@ -68,7 +68,7 @@ wss.on('connection', (ws) => {
                     return;
                 }
 
-                const googleUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidirectionalGenerateContent?key=${googleKey}`;
+                const googleUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BiDiSession?key=${googleKey}`;
                 log(`📡 [Relay] Opening outbound stream to Google: ${model}`);
                 googleSocket = new WebSocket(googleUrl);
 
