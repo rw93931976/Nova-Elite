@@ -225,9 +225,17 @@ if (fs.existsSync(envPath)) {
     });
 }
 
+// 🛡️ DIAGNOSTIC: Verify Loaded Keys
+const googleKey = env['VITE_GOOGLE_AI_KEY'] || env['VITE_GEMINI_API_KEY'];
 const supabaseUrl = env['VITE_SUPABASE_URL'];
 const supabaseKey = env['VITE_SUPABASE_ANON_KEY'];
 const openAiKey = env['VITE_OPENAI_API_KEY'];
+
+log(`🔑 [Env] Google Key: ${googleKey ? (googleKey.substring(0, 10) + '...') : 'MISSING'}`);
+log(`🔑 [Env] Supabase URL: ${supabaseUrl ? 'OK' : 'MISSING'}`);
+log(`🔑 [Env] Supabase Key: ${supabaseKey ? 'OK' : 'MISSING'}`);
+log(`🔑 [Env] OpenAI Key: ${openAiKey ? 'OK' : 'MISSING'}`);
+
 
 if (!supabaseUrl || !supabaseUrl.startsWith('http')) {
     process.exit(1);

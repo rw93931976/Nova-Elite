@@ -1,120 +1,104 @@
 /**
- * SOVEREIGN LIVE ENGINE v11.0 (Relay Mode)
- * ---------------------------------------
- * A "Thin Client" that connects to the Sovereign Node (VPS) instead of Google.
- * Enforces "Keyless" architecture where credentials never leave the server.
+ * LiveEngine: SOVEREIGN LIVE BRIDGE (v10.0)
+ * -----------------------------------------
+ * Manages the low-latency WebSocket connection to Gemini 3.1 Flash.
+ * This version connects DIRECTLY to Google for Phase 1 verification.
  */
 export class LiveEngine {
     private socket: WebSocket | null = null;
     private onAudioCallback: ((chunk: string) => void) | null = null;
     private onProsodyCallback: ((data: any) => void) | null = null;
     private onToolCallCallback: ((name: string, args: any) => Promise<any>) | null = null;
+    private apiKey: string;
 
-    constructor() {
-        console.log("🌑 [LiveEngine] Sovereign Relay Interface Initialized.");
+    constructor(apiKey: string) {
+        this.apiKey = apiKey;
+        if (!this.apiKey) {
+            console.error("❌ [LiveEngine] CRITICAL: No API key provided.");
+        }
     }
 
-    /**
-     * INITIATE RELAY SESSION
-     * Connects to the VPS Bridge which holds the Gemini Session.
-     */
     public async connect(systemInstruction: string) {
         if (this.socket) return;
+        if (!this.apiKey) throw new Error("API key not found");
 
         return new Promise<void>((resolve, reject) => {
-            try {
-                // RELAY ENDPOINT: Points back to the Sovereign VPS
-                const relayUrl = "wss://api.mysimpleaihelp.com:3506";
-                console.log(`🛰️ [Relay] Handshaking with Sovereign Node: ${relayUrl}`);
+            const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidirectionalGenerateContent?key=${this.apiKey}`;
+            
+            this.socket = new WebSocket(url);
 
-                this.socket = new WebSocket(relayUrl);
-
-                this.socket.onopen = () => {
-                    console.log("✅ [Relay] Secure Pipe Established.");
-                    // Send setup packet to trigger the VPS -> Google connection
-                    this.send({
-                        type: "setup",
-                        setup: {
-                            model: "models/gemini-2.0-flash-exp",
-                            generation_config: {
-                                response_modalities: ["audio"],
-                                system_instruction: systemInstruction
+            this.socket.onopen = () => {
+                console.log("✅ [LiveEngine] Connected to Gemini 3.1 Flash Live");
+                this.send({
+                    setup: {
+                        model: "models/gemini-2.0-flash-exp",
+                        generation_config: {
+                            response_modalities: ["audio"],
+                            speech_config: {
+                                voice_config: { prebuilt_voice_config: { voice_name: "Puck" } } // Placeholder for Nova voice training
                             }
-                        }
-                    });
-                    resolve();
-                };
-
-                this.socket.onmessage = async (event) => {
-                    try {
-                        const data = JSON.parse(event.data);
-
-                        // Handle native setup responses or tool calls
-                        if (data.toolCall) {
-                            await this.handleToolCall(data.toolCall);
-                        } else if (data.serverContent?.modelTurn?.parts) {
-                            const part = data.serverContent.modelTurn.parts[0];
-                            if (part.inlineData) {
-                                this.onAudioCallback?.(part.inlineData.data);
-                            }
-                        }
-                    } catch (e) {
-                        // Binary stream fallback if handled by the relay as fragments
-                        if (event.data instanceof Blob) {
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                                const base64 = (reader.result as string).split(',')[1];
-                                this.onAudioCallback?.(base64);
-                            };
-                            reader.readAsDataURL(event.data);
-                        }
+                        },
+                        system_instruction: { parts: [{ text: systemInstruction }] }
                     }
-                };
+                });
+                resolve();
+            };
 
-                this.socket.onerror = (error) => {
-                    console.error("❌ [Relay] Socket Error:", error);
-                    reject(error);
-                };
+            this.socket.onmessage = async (event) => {
+                const data = JSON.parse(event.data);
+                
+                // Handle Audio
+                if (data.serverContent?.modelTurn?.parts) {
+                    const part = data.serverContent.modelTurn.parts[0];
+                    if (part.inlineData) {
+                        this.onAudioCallback?.(part.inlineData.data);
+                    }
+                }
 
-                this.socket.onclose = () => {
-                    console.log("🔌 [Relay] Session Sealed.");
-                    this.socket = null;
-                };
+                // Handle Tool Calls (Sovereign Agency)
+                if (data.serverContent?.modelTurn?.parts?.[0]?.toolCall) {
+                    const call = data.serverContent.modelTurn.parts[0].toolCall;
+                    await this.handleToolCall(call);
+                }
+            };
 
-            } catch (error) {
+            this.socket.onerror = (error) => {
+                console.error("❌ [LiveEngine] WebSocket Error:", error);
                 reject(error);
-            }
+            };
+
+            this.socket.onclose = () => {
+                console.log("🔌 [LiveEngine] Connection closed");
+                this.socket = null;
+            };
         });
     }
 
     private async handleToolCall(call: any) {
-        console.log(`🛠️ [Relay] Distributed Tool Execution: ${call.name}`);
+        console.log(`🛠️ [LiveEngine] Tool Call: ${call.name}`);
         if (this.onToolCallCallback) {
             const result = await this.onToolCallCallback(call.name, call.args);
             this.send({
                 toolResponse: {
-                    callId: call.id,
-                    response: { result }
+                    functionResponses: [{
+                        name: call.name,
+                        response: { result }
+                    }]
                 }
             });
         }
     }
 
-    /**
-     * SEND AUDIO STREAM
-     * Pipes raw PCM (base64) to the Relay.
-     */
-    public sendAudio(base64Chunk: string) {
-        if (this.socket?.readyState === WebSocket.OPEN) {
-            this.send({
-                realtimeInput: {
-                    mediaChunks: [{
-                        mimeType: "audio/pcm;rate=16000",
-                        data: base64Chunk
-                    }]
-                }
-            });
-        }
+    public sendAudio(pcmData: Uint8Array) {
+        const base64 = btoa(String.fromCharCode(...pcmData));
+        this.send({
+            realtime_input: {
+                media_chunks: [{
+                    mime_type: "audio/pcm;rate=16000",
+                    data: base64
+                }]
+            }
+        });
     }
 
     private send(data: any) {
@@ -140,9 +124,5 @@ export class LiveEngine {
             this.socket.close();
             this.socket = null;
         }
-    }
-
-    public isConnected(): boolean {
-        return this.socket?.readyState === WebSocket.OPEN;
     }
 }
