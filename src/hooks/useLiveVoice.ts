@@ -30,15 +30,7 @@ export function useLiveVoice(core: NovaCore) {
                 sampleRate: 16000,
             });
 
-            streamRef.current = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true,
-                    channelCount: 1,
-                    sampleRate: 16000
-                }
-            });
+            streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
             sourceRef.current = audioContextRef.current.createMediaStreamSource(streamRef.current);
 
             // Note: ScriptProcessor is deprecated but widely compatible for raw PCM mining.
