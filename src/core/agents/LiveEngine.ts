@@ -19,8 +19,8 @@ export class LiveEngine {
         if (this.socket) return;
 
         return new Promise<void>((resolve, reject) => {
-            // SOVEREIGN ENDPOINT: Points to the Unified Bridge on the VPS
-            const relayUrl = `wss://api.mysimpleaihelp.com:3506`;
+            // SOVEREIGN ENDPOINT: Points to the Secure N8N Tunnel on the VPS
+            const relayUrl = `wss://n8n.mysimpleaihelp.com/relay`;
 
             console.log(`📡 [Relay] Connecting to Sovereign Gateway: ${relayUrl}`);
             this.socket = new WebSocket(relayUrl);

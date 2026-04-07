@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { LiveEngine } from "./agents/LiveEngine";
+import { NovaComms } from "./communications/NovaComms";
 
 export class NovaCore {
     public supabase = createClient(
@@ -15,6 +16,9 @@ export class NovaCore {
         this.loadState();
         // SOVEREIGN: LiveEngine is initialized keyless. Key is on VPS.
         this.liveEngine = new LiveEngine();
+
+        // 👂 RESTORE EARS: Initialize the Level 5 Communication Hub
+        NovaComms.getInstance();
     }
 
     async startLiveSession() {

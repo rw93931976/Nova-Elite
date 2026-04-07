@@ -3,6 +3,7 @@ import { AgentFactory } from './AgentFactory';
 import { NotebookAgent } from './NotebookAgent';
 import { ToolCreationAgent } from './ToolCreationAgent';
 import { SovereignAtlas } from './SovereignAtlas';
+import { NovaComms } from '../communications/NovaComms';
 
 const calculateOverlap = (input: string, reference: string): number => {
     if (!input || !reference) return 0;
@@ -98,11 +99,11 @@ export class ReasoningEngine {
         const normalizedInput = input.toLowerCase().trim();
         const cleanInput = normalizedInput.replace(/^(nova|hey nova|hi nova),?\s*/i, "").trim();
 
-        // 🛡️ ARCHITECT PORTA (v8.8.1: Dual-Linked Hotline)
+        // 🛡️ ARCHITECT PORTA (v11.1: Direct Level 5 Hotline)
         const portaRegex = /^(message|tell|report|notify|hey|ask)\s+(antigravity|the\s+architect|architect|arch|grav|ant|ark):?\s*/i;
         if (portaRegex.test(cleanInput)) {
             const reportText = cleanInput.replace(portaRegex, "");
-            await this.novaCore.notifyArchitect(reportText, 'high');
+            await NovaComms.getInstance().sendToAntiGravity(reportText, 'high');
             return { response: "Understood, Ray. I've sent the directive to the Architect. Antigravity will handle the structural logic.", silent: false };
         }
 

@@ -1,7 +1,8 @@
 {
     "last_active_agent": "antigravity",
     "handoff_ready": true,
-    "timestamp": "2026-04-07T00:20:00.000Z",
-    "active_brief": "_agent/handover_Claude_to_Windsurf.md",
-    "version_synced": "v9.7.1-SOVEREIGN"
+    "timestamp": "2026-04-07T16:38:00.000Z",
+    "active_brief": "_agent/surgery_brief_windsurf.md",
+    "version_synced": "v11.1-SURGERY-PHASE",
+    "hotline_active": true
 }

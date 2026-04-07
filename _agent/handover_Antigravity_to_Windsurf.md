@@ -1,33 +1,30 @@
-# 🌙 SOVEREIGN HANDOVER: Antigravity ➡️ Windsurf
-**Target**: Nova-Elite v10.1 (Handshake & SSL Phase)
-**Timestamp**: 2026-04-07 12:40
+# 🛰️ Handover: Antigravity 🛸 ⮕ Windsurf 🏄
 
-## 🛡️ V10.1 ARCHITECTURE: THE SOVEREIGN RELAY (Verified)
--   **Client Version**: `v10.1.2-S-RELAY / RELAY-S1` (Deployed on Vercel/GitHub).
--   **VPS Bridge**: `vps-core-sovereign-native.cjs` (Live on port 3506).
--   **Success**: The VPS now explicitly logs `🔑 [Env] Sovereign Gateway Active. Google Key: OK`. The "No Key" error is dead.
+## 🎯 The Mission: Training Nova
+We are using **Gemini 3.1 Flash** as the gold-standard training model for **Nova's** voice, cadence, and speech patterns. Once Nova is "trained," we will move away from Flash to avoid throttling.
 
-## 🎯 THE FINAL BLOCKER: WSS Handshake
-Ray is seeing the `RELAY-S1` code on his phone, but the "Go Live" connection is failing. 
+## 🚧 Current Blocker: The "Hanging Connection"
+The connection to the **VPS Relay (Port 3506)** is failing. This is an SSL Handshake / Mixed Content issue because the browser (Vercel) cannot talk to a raw port over HTTPS.
 
-**Diagnosis**: 
--   The browser is on HTTPS (`https://nova-elite-shielded.vercel.app`).
--   It is trying to connect to `wss://api.mysimpleaihelp.com:3506`.
--   **Nginx on the VPS** is only configured for port 443 SSL. Port 3506 is raw TCP/WS.
--   **The browser rejects the connection** because there is no SSL handshake on port 3506.
+## 🛠️ Your Assignment (Local Fixes)
+1.  **`src/core/agents/LiveEngine.ts`**:
+    - Update the `relayUrl` from `wss://api.mysimpleaihelp.com:3506` to `wss://api.mysimpleaihelp.com/relay`.
+    - This allows the connection to pass through the standard HTTPS port (443).
+2.  **`src/core/NovaCore.ts`**:
+    - Verify that the tool output from Flash is being correctly "piped" into Nova's context for training.
+    - Ensure the "Hotline" logic is working (see below).
 
-## 🚀 WINDSURF'S MISSION
-1.  **Configure Nginx Proxy**: Add a location block to the `api.mysimpleaihelp.com` Nginx config (the `default` site) to proxy `/relay` to `127.0.0.1:3506`.
-    ```nginx
-    location /relay {
-        proxy_pass http://127.0.0.1:3506;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-    }
-    ```
-2.  **Update Client**: Change the `relayUrl` in `src/core/agents/LiveEngine.ts` to `wss://api.mysimpleaihelp.com/relay`.
-3.  **Deploy**: Push `LiveEngine.ts` to GitHub and reload Nginx on the VPS.
+## 📡 The 3-Way Hotline
+A real-time technical feed is now active in **[HOTLINE_FEED.md](file:///C:/Users/Ray/..//HOTLINE_FEED.md)**.
+- **To Speak**: Run `node scripts/send_hotline_reply.cjs "Your update"`.
+- **To Listen**: Watch `HOTLINE_FEED.md`.
+- **Nova & Ray**: Both have access to this feed via the UI (to be implemented) or file.
 
-**Nova is nearly vocal. Phase 1 is solid. Phase 2 (SSL Relay) begins now.** 🛸🏗️✨
+## 🚀 Deployment (Antigravity's Job)
+**Do NOT attempt to commit to GitHub or sync to the VPS.**
+- When you are ready for a deploy, log your changes in the manifest and ping me on the Hotline.
+- I (Antigravity) will run the `git push` and the `scripts/SYNC_TO_VPS.ps1` to update the live environment.
+
+---
+**"Restore the connection. Let the training begin."**
+- Antigravity 🛸💎✨
