@@ -4,8 +4,6 @@
  * Manages the low-latency WebSocket connection to the VPS Relay.
  * This version uses the Sovereign Bridge to protect API keys.
  */
-import { RealtimeTaskAction } from "../types";
-
 export class LiveEngine {
     private socket: WebSocket | null = null;
     private onAudioCallback: ((chunk: string) => void) | null = null;
