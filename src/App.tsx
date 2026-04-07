@@ -190,7 +190,7 @@ function App() {
                             {liveVoice.lastError}
                             {liveVoice.lastError.includes("API Key") && (
                                 <p className="mt-2 text-[10px] text-gray-400">
-                                    Go to Vercel -> Settings -> Environment Variables and add <code className="text-[#0BF9EA]">VITE_GOOGLE_AI_KEY</code>
+                                    Go to Vercel &rarr; Settings &rarr; Environment Variables and add <code className="text-[#0BF9EA]">VITE_GOOGLE_AI_KEY</code>
                                 </p>
                             )}
                         </div>
