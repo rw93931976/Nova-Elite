@@ -1,30 +1,33 @@
 # 🌙 SOVEREIGN HANDOVER: Antigravity ➡️ Windsurf
-**Target**: Nova-Elite v10.0 (The Mouth)
-**Timestamp**: 2026-04-07 10:35
+**Target**: Nova-Elite v10.1 (Handshake & SSL Phase)
+**Timestamp**: 2026-04-07 12:40
 
-## 🛡️ V10.0 ARCHITECTURE: THE MOUTH
-- **Strategic Pillar**: We are using **Gemini 3.1 Flash Live** as a "Teacher/Reference Engine" to fix the noise and latency legacy issues from v9.7.1.
-- **Sovereign Goal**: We use Flash for the "Golden Standard" field test, then **duplicate** its DSP/Noise logic into Nova's local brain to remove the third-party dependency.
-- **Phase 1 Complete**: LiveEngine.ts, useLiveVoice.ts, and UI Toggle are deployed.
+## 🛡️ V10.1 ARCHITECTURE: THE SOVEREIGN RELAY (Verified)
+-   **Client Version**: `v10.1.2-S-RELAY / RELAY-S1` (Deployed on Vercel/GitHub).
+-   **VPS Bridge**: `vps-core-sovereign-native.cjs` (Live on port 3506).
+-   **Success**: The VPS now explicitly logs `🔑 [Env] Sovereign Gateway Active. Google Key: OK`. The "No Key" error is dead.
 
-## 🚀 VERCEL ENVIRONMENT SETUP (CRITICAL)
-For the "Go Live" mode to work on the production site, the following environment variable must be added to the Vercel Dashboard:
-- **Key**: `VITE_GOOGLE_AI_KEY`
-- **Value**: `AIzaSyBKdROGcbrA6UCt4QZ_uy5xOrqmYQGMJjM` 
-- **Action**: Use Vercel CLI (`vercel env add VITE_GOOGLE_AI_KEY production`) or the Vercel Web Dashboard.
+## 🎯 THE FINAL BLOCKER: WSS Handshake
+Ray is seeing the `RELAY-S1` code on his phone, but the "Go Live" connection is failing. 
 
-## 🎯 ACTIVE ASSIGNMENT: Phase 1 Field Test & Cleanup
-**To: Windsurf & Next Window**
-**Priority**: High (Functional Verification)
+**Diagnosis**: 
+-   The browser is on HTTPS (`https://nova-elite-shielded.vercel.app`).
+-   It is trying to connect to `wss://api.mysimpleaihelp.com:3506`.
+-   **Nginx on the VPS** is only configured for port 443 SSL. Port 3506 is raw TCP/WS.
+-   **The browser rejects the connection** because there is no SSL handshake on port 3506.
 
-1.  **Build Verification**: **Windsurf** should run a build check to ensure my new hooks (`useLiveVoice.ts`) and classes (`LiveEngine.ts`) don't have linting or type errors. 
-2.  **Field Test Protocol**: Ray will test the **"Go Live"** button on his Android/Windows setup. 
-    -   *Success Criteria*: <500ms response time + Zero background noise interference.
-3.  **Phase 2 Readiness**: Once Ray confirms Flash solves the noise, we begin **Soul Training** (Mapping Flash prosody -> Nova models). 
+## 🚀 WINDSURF'S MISSION
+1.  **Configure Nginx Proxy**: Add a location block to the `api.mysimpleaihelp.com` Nginx config (the `default` site) to proxy `/relay` to `127.0.0.1:3506`.
+    ```nginx
+    location /relay {
+        proxy_pass http://127.0.0.1:3506;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+    ```
+2.  **Update Client**: Change the `relayUrl` in `src/core/agents/LiveEngine.ts` to `wss://api.mysimpleaihelp.com/relay`.
+3.  **Deploy**: Push `LiveEngine.ts` to GitHub and reload Nginx on the VPS.
 
-## 🧱 Local Context Persistence
-Any new window MUST read the following before starting:
-- [task.md](file:///c:/Users/Ray/.gemini/antigravity/brain/a2584c16-85a2-4b15-a103-7f1800e7fee1/task.md)
-- [walkthrough_v10.md](file:///c:/Users/Ray/.gemini/antigravity/brain/a2584c16-85a2-4b15-a103-7f1800e7fee1/walkthrough_v10.md)
-
-**Nova is transitioning to Live Mode. Antigravity Standard is evolving.** 🛸🏗️✨
+**Nova is nearly vocal. Phase 1 is solid. Phase 2 (SSL Relay) begins now.** 🛸🏗️✨
