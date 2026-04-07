@@ -24,6 +24,10 @@ export class LiveEngine {
      */
     public async connect(systemInstruction: string) {
         console.log("🛰️ [LiveEngine] Initiating Sovereign Live connection...");
+        if (!this.genAI.apiKey) {
+            console.error("❌ [LiveEngine] NO API KEY DETECTED. Check VITE_GOOGLE_AI_KEY.");
+            throw new Error("Missing Gemini API Key. Check Environment Variables.");
+        }
         try {
             // Using the new Gemini 3.1 Flash Live model via the SDK extension
             // Note: In March 2026, the SDK supports native multimodal live sessions.

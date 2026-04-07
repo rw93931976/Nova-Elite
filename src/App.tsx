@@ -188,12 +188,15 @@ function App() {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => liveVoice.isLiveActive ? liveVoice.stopLive() : liveVoice.startLive()}
+                            disabled={liveVoice.isConnecting}
                             className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all border-2 font-black text-[10px] uppercase tracking-widest ${liveVoice.isLiveActive
                                 ? "bg-red-500 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.6)]"
-                                : "bg-[#121212]/40 text-[#0BF9EA]/60 border-[#0BF9EA]/20"}`}
+                                : liveVoice.isConnecting
+                                    ? "bg-yellow-500/20 text-yellow-500 border-yellow-500/40 animate-pulse"
+                                    : "bg-[#121212]/40 text-[#0BF9EA]/60 border-[#0BF9EA]/20"}`}
                         >
-                            <Activity size={16} className={liveVoice.isLiveActive ? "animate-pulse" : ""} />
-                            {liveVoice.isLiveActive ? "Live Mode" : "Go Live"}
+                            <Activity size={16} className={liveVoice.isLiveActive || liveVoice.isConnecting ? "animate-pulse" : ""} />
+                            {liveVoice.isLiveActive ? "Live Mode" : liveVoice.isConnecting ? "Connecting..." : "Go Live"}
                         </button>
                         <button
                             onClick={toggleHalt}

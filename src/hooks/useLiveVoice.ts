@@ -9,6 +9,7 @@ import { NovaCore } from "../core/NovaCore";
  */
 export function useLiveVoice(core: NovaCore) {
     const [isLiveActive, setIsLiveActive] = useState(false);
+    const [isConnecting, setIsConnecting] = useState(false);
     const audioContextRef = useRef<AudioContext | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const processorRef = useRef<ScriptProcessorNode | null>(null);
@@ -22,15 +23,23 @@ export function useLiveVoice(core: NovaCore) {
      */
     const startLive = useCallback(async () => {
         try {
-            console.log("🎙️ [useLiveVoice] Starting Live session...");
+            setIsConnecting(true);
+            console.log("🎙️ [useLiveVoice] Initializing Live session...");
             await core.startLiveSession();
+            console.log("🎙️ [useLiveVoice] Core Session started. Initializing Audio Context...");
 
             // Setup Audio Context (16kHz Mono for Gemini Live)
             audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({
                 sampleRate: 16000,
             });
 
+            if (audioContextRef.current.state === 'suspended') {
+                await audioContextRef.current.resume();
+            }
+
+            console.log("🎙️ [useLiveVoice] Requesting Microphone permissions...");
             streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log("🎙️ [useLiveVoice] Mic access granted.");
             sourceRef.current = audioContextRef.current.createMediaStreamSource(streamRef.current);
 
             // Note: ScriptProcessor is deprecated but widely compatible for raw PCM mining.
@@ -57,8 +66,11 @@ export function useLiveVoice(core: NovaCore) {
             });
 
             setIsLiveActive(true);
+            setIsConnecting(false);
+            console.log("🚀 [useLiveVoice] Live session ACTIVE.");
         } catch (err) {
             console.error("❌ [useLiveVoice] Failed to start Live:", err);
+            setIsConnecting(false);
             stopLive();
         }
     }, [core]);
@@ -99,7 +111,7 @@ export function useLiveVoice(core: NovaCore) {
         node.start();
     };
 
-    return { isLiveActive, startLive, stopLive };
+    return { isLiveActive, isConnecting, startLive, stopLive };
 }
 
 // -- UTILS --
