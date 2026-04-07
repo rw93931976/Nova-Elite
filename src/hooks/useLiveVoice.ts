@@ -15,6 +15,7 @@ export function useLiveVoice(core: NovaCore) {
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
     const playbackQueue = useRef<Int16Array[]>([]);
     const isPlaying = useRef(false);
+    const nextPlayTime = useRef(0);
 
     /**
      * START LIVE SESSION
@@ -44,7 +45,15 @@ export function useLiveVoice(core: NovaCore) {
             };
 
             sourceRef.current.connect(processorRef.current);
-            processorRef.current.connect(audioContextRef.current.destination);
+            // 🚫 DO NOT CONNECT TO DESTINATION (Prevents feedback loop/tone)
+            // processorRef.current.connect(audioContextRef.current.destination); 
+
+            // Note: In Chrome, ScriptProcessor requires a connection to a destination 
+            // or another node to stay alive. We'll connect it to a GainNode with value 0.
+            const silence = audioContextRef.current.createGain();
+            silence.gain.value = 0;
+            processorRef.current.connect(silence);
+            silence.connect(audioContextRef.current.destination);
 
             // Handle Incoming Audio from Gemini
             core.liveEngine.onAudio((base64Chunk) => {
@@ -88,15 +97,26 @@ export function useLiveVoice(core: NovaCore) {
         isPlaying.current = true;
         const chunk = playbackQueue.current.shift()!;
         const float32 = convertInt16ToFloat32(chunk);
-
         const buffer = audioContextRef.current.createBuffer(1, float32.length, 16000);
         buffer.getChannelData(0).set(float32);
 
         const node = audioContextRef.current.createBufferSource();
         node.buffer = buffer;
         node.connect(audioContextRef.current.destination);
-        node.onended = () => playNextInQueue();
-        node.start();
+
+        // SCHEDULED PLAYBACK (v10.1): Prevents "tone/clicking" from gaps
+        const now = audioContextRef.current.currentTime;
+        if (nextPlayTime.current < now) {
+            nextPlayTime.current = now + 0.05; // 50ms buffer to start
+        }
+
+        node.start(nextPlayTime.current);
+        nextPlayTime.current += buffer.duration;
+
+        node.onended = () => {
+            if (playbackQueue.current.length > 0) playNextInQueue();
+            else isPlaying.current = false;
+        };
     };
 
     return { isLiveActive, startLive, stopLive };
