@@ -186,7 +186,14 @@ function App() {
                             <Activity size={16} />
                             Connection Failure
                         </div>
-                        <div className="text-white text-xs font-bold text-center">{liveVoice.lastError}</div>
+                        <div className="text-white text-xs font-bold text-center">
+                            {liveVoice.lastError}
+                            {liveVoice.lastError.includes("API Key") && (
+                                <p className="mt-2 text-[10px] text-gray-400">
+                                    Go to Vercel -> Settings -> Environment Variables and add <code className="text-[#0BF9EA]">VITE_GOOGLE_AI_KEY</code>
+                                </p>
+                            )}
+                        </div>
                         <button
                             onClick={handleHardRefresh}
                             className="mt-1 text-[10px] font-black uppercase text-red-500 underline decoration-2 underline-offset-4"

@@ -18,7 +18,9 @@ export class NovaCore {
 
     constructor() {
         this.loadState();
-        this.liveEngine = new LiveEngine(import.meta.env.VITE_GOOGLE_AI_KEY || "");
+        // Use either GOOGLE_AI_KEY or GEMINI_API_KEY (matching VPS store)
+        const apiKey = import.meta.env.VITE_GOOGLE_AI_KEY || import.meta.env.VITE_GEMINI_API_KEY || "";
+        this.liveEngine = new LiveEngine(apiKey);
     }
 
     async initialize() {
