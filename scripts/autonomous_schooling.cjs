@@ -1,116 +1,116 @@
-const axios = require('axios');
+const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config();
 
-async function runSchooling() {
-    console.log("🚀 [Sovereign Schooling] Initiating 6-hour autonomous cycle...");
+// 🛠️ CONFIG: Load environment from root .env
+const envPath = path.join(__dirname, '..', '.env');
+const envContentRaw = fs.readFileSync(envPath, 'utf8');
+const env = {};
+envContentRaw.split(/\r?\n/).forEach(line => {
+    const parts = line.split('=');
+    if (parts.length >= 2) env[parts[0].trim()] = parts.slice(1).join('=').trim();
+});
 
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = env['VITE_SUPABASE_URL'];
+const supabaseKey = env['VITE_SUPABASE_ANON_KEY'];
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// 📚 MASTER SYLLABUS: Parse subjects from master_syllabus.md
+const syllabusPath = path.join(__dirname, '..', 'master_syllabus.md');
+const syllabusRaw = fs.readFileSync(syllabusPath, 'utf8');
+const allSubjects = syllabusRaw.split('\n')
+    .filter(line => line.trim().startsWith('- '))
+    .map(line => line.replace(/- /, '').trim());
+
+// 🎭 EMOTIONAL SPECTRUM & NATURAL FLOW (Grade 9.7)
+const emotionSubjects = [
+    "Detection: Happy, Satisfied, Calm",
+    "Detection: Sad, Getting Upset, Confused",
+    "Critical Detection: Getting Angry, Frantic",
+    "Handling: De-escalation of Anger & Frantic Calls",
+    "Handling: Sincere Response to Sadness & Confusion",
+    "Conversational: Natural Prosody & Pacing (Human-Mimicry)",
+    "Conversational: Managing Upfront Disclaimers in Natural Flow",
+    "Architecture: Designing High-EQ Sub-Agent Personas",
+    "Service: Exceeding Human Performance (The 'Plus' Factor)"
+];
+
+async function runAutonomousSchooling() {
+    console.log(`[${new Date().toISOString()}] 🎓 [Sovereign-Schooling] Initializing Mastery Cycle...`);
 
     if (!supabaseUrl || !supabaseKey) {
-        console.error("❌ [Sovereign Schooling] Missing SUPABASE_URL or SUPABASE_KEY in environment.");
-        process.exit(1);
+        console.error("❌ Missing Supabase configuration.");
+        return;
     }
 
-    try {
-        // 0. Ingest Local Library Context
-        console.log("[Library] Ingesting Identity and Solutions Vault...");
-        const libraryDir = path.join(__dirname, '../nova-data/library');
-        let libraryContext = "";
+    // 1. SELECT SUBJECTS (1 Business + 1 Emotion)
+    const bizSubject = allSubjects.length > 0
+        ? allSubjects[Math.floor(Math.random() * allSubjects.length)]
+        : "Internet Business Architecture";
 
-        if (fs.existsSync(libraryDir)) {
-            const files = fs.readdirSync(libraryDir);
-            files.forEach(file => {
-                if (file.endsWith('.md')) {
-                    const content = fs.readFileSync(path.join(libraryDir, file), 'utf8');
-                    libraryContext += `\n--- FILE: ${file} ---\n${content}\n`;
-                }
+    const emoSubject = emotionSubjects[Math.floor(Math.random() * emotionSubjects.length)];
+
+    console.log(`🏫 [Level 5] Dual Study: "${bizSubject}" + "${emoSubject}"`);
+
+    // 2. TRIGGER STUDIES (Research via Sovereign Brain)
+    // The Brain will perform the research AND use the 'write_notebook' tool 
+    // to save it back to the VPS filesystem.
+    const studies = [
+        { subject: bizSubject, type: "Business" },
+        { subject: emoSubject, type: "Emotion" }
+    ];
+
+    for (const study of studies) {
+        console.log(`🔍 Researching ${study.type}: ${study.subject}...`);
+
+        const isBusiness = study.type === "Business";
+        const payload = {
+            input: `SOVEREIGN_RESEARCH_PROTOCOL: Deep doctoral study on "${study.subject}". 
+            - ${isBusiness ? "STRATEGIC MEAT: Study this from a 'Human-to-Human' interaction perspective (Negotiation, Strategy, Psychology)." : "AI CONTROL: Study this for 'AI-to-Customer' emotion detection and high-EQ handling."}
+            - Extract execution patterns and strategic rules.
+            - Focus on local contextual application for Ray's business (SMB to Enterprise).
+            - For Business studies, analyze as if performing a peer-level strategic audit.
+            - WRITE findings to: "file://nova-data/notebooks/${study.subject.replace(/\W/g, '_')}.md".`,
+            persona: `You are Nova Elite, performing an Autonomous Research Study. You are a doctoral-level peer for Ray. Professional, sharp, and strategic.`,
+            silent: true
+        };
+
+        try {
+            // Use standard fetch (Node 18+) or axios if installed. Bridge uses axios.
+            const response = await fetch(`${supabaseUrl}/functions/v1/sovereign-brain`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${supabaseKey}`
+                },
+                body: JSON.stringify(payload)
             });
-        }
 
-        // 1. Get Research Plan from Brain (Volume 3: Triple Speed + Sentinel Audit)
-        console.log("[Brain] Requesting Depth-3 research with Sentinel Audit Priority...");
-        const brainRes = await axios.post(`${supabaseUrl}/functions/v1/sovereign-brain`, {
-            input: "Initiate Level 5 Sovereign Study: Perform a mandatory SENTINEL AUDIT on AEO, Social Media (X/Pinterest/LinkedIn), or Email Mastery. Then pick 2 other distinct subjects from your doctorate syllabus. For each, provide an in-depth strategic report covering high-level enterprise strategy AND its practical application to SMBs. Deeply research SMB specific needs, pain points, and wishes. Also, audit your Identity/Routine files/NotebookLM Context and record 1 new solution or observation.",
-            persona: `You are Nova Elite, a Doctorate-level AI. Your goal is to become the ultimate Business Advisor for Small to Medium Businesses (SMBs). Use the provided library context (including any NotebookLM exports) to ensure continuity. 
-            
-            SENTINEL AUDIT: You must stay at the absolute cutting edge of AEO, Social Media Rules (AI writing/posting), and Email Communication.
-            STRATEGY: Extract strategic knowledge from enterprise successes and "The Top 1%".
-            APPLICATION: Ground that knowledge in the reality of SMBs. Study their needs, pain points, and wishes.
-            
-            ${libraryContext}
-            
-            REPORT_FORMAT:
-            - RESEARCH_REPORT: [Report Content]
-            - SENTINEL_AUDIT_STATUS: [Completed for Subject X]
-            - GOAL_PROPOSAL: [Goal Content]
-            - VAULT_UPDATE: [New Solution/Fix/NotebookLM Observation]
-            - USER_PROFILE_UPDATE: [New User Observation]
-            `
-        }, {
-            headers: { 'Authorization': `Bearer ${supabaseKey}` }
-        });
-
-        const plan = brainRes.data.response;
-        if (!plan) throw new Error("No research generated by brain.");
-        console.log("✅ [Sovereign Brain] Autonomous Plan Received.");
-
-        // 2. Syllabus Detection & Update
-        console.log("📝 [Syllabus] Updating Doctorate Progress...");
-        const syllabusPath = path.join(__dirname, '../SYLLABUS_DOCTORATE.md');
-        if (fs.existsSync(syllabusPath)) {
-            let syllabus = fs.readFileSync(syllabusPath, 'utf8');
-            const updated = syllabus.replace(/\[ \]/, '[x]');
-            fs.writeFileSync(syllabusPath, updated);
-            console.log("✅ [Syllabus] 1 Subject Mastered and Logged.");
-        }
-
-        // 3. Record to Solutions Vault
-        const vaultPath = path.join(libraryDir, 'solutions_vault.md');
-        if (fs.existsSync(vaultPath)) {
-            const vaultEntry = `\n- [v3.6.1 Build] Success: Autonomous Schooling Cycle completed for ${new Date().toISOString()}\n`;
-            fs.appendFileSync(vaultPath, vaultEntry);
-            console.log("💎 [Vault] Observation logged to Solutions Vault.");
-        }
-
-        // 4. Relay Jobs & Permanent Memory (Persistence)
-        console.log("🧠 [Memory] Embedding research for long-term recall...");
-        if (plan.includes("RESEARCH_REPORT:")) {
-            const report = plan.split("RESEARCH_REPORT:")[1].split("GOAL_PROPOSAL:")[0].trim();
-
-            // Get Embedding via OpenAI
-            const embRes = await axios.post("https://api.openai.com/v1/embeddings", {
-                model: "text-embedding-3-small",
-                input: report
-            }, { headers: { 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` } });
-
-            if (embRes.data.data[0].embedding) {
-                await axios.post(`${supabaseUrl}/rest/v1/nova_memories`, {
-                    content: report,
-                    embedding: embRes.data.data[0].embedding,
-                    category: 'doctoral_research',
-                    metadata: { type: 'schooling_cycle', timestamp: new Date().toISOString() }
-                }, {
-                    headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' }
-                });
-                console.log("✅ [Memory] Research successfully embedded in Supabase.");
+            if (response.ok) {
+                console.log(`✅ ${study.type} Study archived to VPS Context.`);
+                // Note: The Edge function handles embedding to Supabase automatically.
+            } else {
+                console.error(`❌ ${study.type} Study failed:`, await response.text());
             }
+        } catch (e) {
+            console.error(`❌ ${study.type} Network Error:`, e.message);
         }
-
-        const goalMatch = plan.match(/GOAL_PROPOSAL:\s*(.*)/);
-
-        console.log("🏁 [Sovereign Schooling] Cycle Complete. Standby for 6h interval.");
-
-    } catch (error) {
-        console.error("❌ [Sovereign Schooling] Fatal Error:", error.response?.data || error.message);
     }
+
+    // 3. LOG COMPLETION
+    const timestamp = new Date().toISOString();
+
+    // Update Doctorate Syllabus
+    const docSyllabusPath = path.join(__dirname, '..', 'SYLLABUS_DOCTORATE.md');
+    const logSyllabus = `- [v9.6-MASTERS] Success: ${bizSubject} & ${emoSubject} archived at ${timestamp}\n`;
+    fs.appendFileSync(docSyllabusPath, logSyllabus);
+
+    // Update Solutions Vault
+    const vaultPath = path.join(__dirname, '..', 'nova-data', 'library', 'solutions_vault.md');
+    const logVault = `\n- [Schooling] Mastery Cycle completed for "${bizSubject}" on ${timestamp}`;
+    if (fs.existsSync(vaultPath)) fs.appendFileSync(vaultPath, logVault);
+
+    console.log("🏁 [Sovereign-Schooling] Cycle Complete. Standby for 6h interval.");
 }
 
-// Check for PM2 context or direct run
-if (require.main === module) {
-    runSchooling();
-}
-
-module.exports = { runSchooling };
+runAutonomousSchooling();

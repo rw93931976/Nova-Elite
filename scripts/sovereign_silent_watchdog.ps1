@@ -28,12 +28,12 @@ while ($true) {
             Start-Process -FilePath "node.exe" -ArgumentList $BRIDGE_SCRIPT -WindowStyle Hidden -WorkingDirectory $PROJECT_DIR
         }
 
-        # 🏫 SCHOOLING MONITOR
-        $schoolingProcess = Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" | Where-Object { $_.CommandLine -like "*$SCHOOLING_SCRIPT*" }
-        if (-not $schoolingProcess) {
-            Write-Log "⚠️ [Watchdog] Schooling Agent down. Performing silent restart..."
-            Start-Process -FilePath "node.exe" -ArgumentList $SCHOOLING_SCRIPT -WindowStyle Hidden -WorkingDirectory $PROJECT_DIR
-        }
+        # 🏫 SCHOOLING MONITOR (Disabled: Managed by GitHub Actions v9.5)
+        # $schoolingProcess = Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" | Where-Object { $_.CommandLine -like "*$SCHOOLING_SCRIPT*" }
+        # if (-not $schoolingProcess) {
+        #     Write-Log "⚠️ [Watchdog] Schooling Agent down. Performing silent restart..."
+        #     Start-Process -FilePath "node.exe" -ArgumentList $SCHOOLING_SCRIPT -WindowStyle Hidden -WorkingDirectory $PROJECT_DIR
+        # }
     } catch {
         Write-Log "❌ [Watchdog] Critical Error in monitoring cycle: $($_.Exception.Message)"
     }

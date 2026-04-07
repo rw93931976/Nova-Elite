@@ -8,9 +8,14 @@ on:
 jobs:
   schooling:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Allow pushing updates to syllabus/vault
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -32,3 +37,11 @@ jobs:
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
         run: |
           node scripts/autonomous_schooling.cjs
+
+      - name: "Commit & Push Progress"
+        run: |
+          git config --global user.name "Nova Sovereign"
+          git config --global user.email "nova@elite-shielded.ai"
+          git add SYLLABUS_DOCTORATE.md nova-data/library/solutions_vault.md
+          git commit -m "🛸 [Sovereign Schooling] Cycle Complete (v9.5)" || echo "No changes to commit"
+          git push
