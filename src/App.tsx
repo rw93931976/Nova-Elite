@@ -12,6 +12,7 @@ import {
     Activity
 } from "lucide-react";
 import { useNova } from "./hooks/useNova";
+import { useLiveVoice } from "./hooks/useLiveVoice";
 import { StatusBadge } from "./components/StatusBadge";
 import { Manifest } from "./components/Manifest";
 import { Inventory } from "./components/Inventory";
@@ -20,6 +21,7 @@ import Autonomy from "./components/Autonomy";
 
 function App() {
     const nova = useNova();
+    const liveVoice = useLiveVoice(nova.core);
     const chatEndRef = useRef<HTMLDivElement>(null);
     const {
         isListening,
@@ -131,17 +133,24 @@ function App() {
                 return (
                     <div className="flex flex-col items-center justify-center min-h-[50vh] py-4">
                         <div className="relative flex justify-center mb-12">
-                            <div className={`absolute inset-0 bg-[#0BF9EA]/20 blur-[80px] rounded-full pointer-events-none transition-all duration-1000 ${isListening ? "scale-150 animate-pulse" : "scale-75"}`}></div>
+                            <div className={`absolute inset-0 bg-[#0BF9EA]/20 blur-[80px] rounded-full pointer-events-none transition-all duration-1000 ${isListening || liveVoice.isLiveActive ? "scale-150 animate-pulse" : "scale-75"}`}></div>
                             <button
                                 onClick={() => {
-                                    toggleListening();
-                                    if (typeof (nova as any).unlockAudio === 'function') {
-                                        (nova as any).unlockAudio();
+                                    if (liveVoice.isLiveActive) {
+                                        liveVoice.stopLive();
+                                    } else {
+                                        toggleListening();
+                                        if (typeof (nova as any).unlockAudio === 'function') {
+                                            (nova as any).unlockAudio();
+                                        }
                                     }
                                 }}
-                                className={`mic-button relative z-10 ${isListening ? "active" : ""}`}
+                                className={`mic-button relative z-10 ${isListening || liveVoice.isLiveActive ? "active" : ""}`}
                             >
                                 <Mic size={48} />
+                                {liveVoice.isLiveActive && (
+                                    <span className="absolute -top-2 -right-2 bg-red-500 text-[8px] font-black px-2 py-1 rounded-full animate-bounce">LIVE</span>
+                                )}
                             </button>
                         </div>
 
@@ -176,14 +185,25 @@ function App() {
                         <h1 className="text-4xl font-black italic tracking-tighter text-[#0BF9EA] uppercase drop-shadow-[0_0_25px_rgba(11,249,234,0.6)]">Nova Sovereign</h1>
                         <span className="text-[10px] font-black text-[#0BF9EA]/60 tracking-[0.6em] uppercase mt-1">Elite {nova.version}</span>
                     </div>
-                    <button
-                        onClick={toggleHalt}
-                        className={`p-3 rounded-xl transition-all border-2 ${isHalted
-                            ? "bg-[#0BF9EA] text-[#121212] border-[#0BF9EA] animate-pulse shadow-[0_0_15px_rgba(11,249,234,0.8)]"
-                            : "bg-[#121212]/40 text-[#0BF9EA]/60 border-[#0BF9EA]/20"}`}
-                    >
-                        <Shield size={24} />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => liveVoice.isLiveActive ? liveVoice.stopLive() : liveVoice.startLive()}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all border-2 font-black text-[10px] uppercase tracking-widest ${liveVoice.isLiveActive
+                                ? "bg-red-500 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.6)]"
+                                : "bg-[#121212]/40 text-[#0BF9EA]/60 border-[#0BF9EA]/20"}`}
+                        >
+                            <Activity size={16} className={liveVoice.isLiveActive ? "animate-pulse" : ""} />
+                            {liveVoice.isLiveActive ? "Live Mode" : "Go Live"}
+                        </button>
+                        <button
+                            onClick={toggleHalt}
+                            className={`p-3 rounded-xl transition-all border-2 ${isHalted
+                                ? "bg-[#0BF9EA] text-[#121212] border-[#0BF9EA] animate-pulse shadow-[0_0_15px_rgba(11,249,234,0.8)]"
+                                : "bg-[#121212]/40 text-[#0BF9EA]/60 border-[#0BF9EA]/20"}`}
+                        >
+                            <Shield size={24} />
+                        </button>
+                    </div>
                 </header>
 
                 <main className="flex-1 overflow-hidden relative">

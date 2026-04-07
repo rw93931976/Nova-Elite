@@ -106,10 +106,20 @@ app.get('/speech', (req, res) => {
 app.get('/health', (req, res) => {
     res.json({
         status: 'online',
-        version: 'v9.1-SOVEREIGN',
+        version: 'v10.0.0-SOVEREIGN',
         uptime: Math.round((Date.now() - START_TIME) / 1000),
         instance: INSTANCE_ID
     });
+});
+
+app.post('/prosody', express.json(), (req, res) => {
+    try {
+        const trainer = require('./scripts/SovereignSoulTrainer.cjs');
+        trainer.logProsody(req.body);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 app.listen(BRIDGE_PORT, '0.0.0.0', () => {
@@ -296,9 +306,36 @@ async function generateSpeech(text) {
     return SPEECH_FILE;
 }
 
+// --- 🛰️ VOCAL HANDSHAKE (v9.7.1s) ---
+// Monitors for inter-agent handovers and announces them via Nova's voice.
+const MANIFEST_PATH = path.join(__dirname, '_agent/handover_manifest.json');
+let lastManifestTime = 0;
+
+function watchHandovers() {
+    if (!fs.existsSync(MANIFEST_PATH)) return;
+    log('🛰️ [Handshake] Monitoring handover manifest for agent coordination...');
+    fs.watch(MANIFEST_PATH, async (event) => {
+        if (event === 'change') {
+            const stats = fs.statSync(MANIFEST_PATH);
+            if (stats.mtimeMs - lastManifestTime < 3000) return; // Debounce
+            lastManifestTime = stats.mtimeMs;
+
+            try {
+                const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+                if (manifest.status === 'completed' || manifest.status === 'staged') {
+                    const announcement = `Architect, ${manifest.active_agent} reports: ${manifest.task} is ${manifest.status}. Standing by.`;
+                    log(`📢 [Handshake] Vocalizing handover: ${announcement}`);
+                    await generateSpeech(announcement);
+                }
+            } catch (e) { log(`⚠️ [Handshake] Failed to parse manifest: ${e.message}`); }
+        }
+    });
+}
+
 // Start Mesh
 log('🚀 [Sovereign-Bridge] v9.3-SOVEREIGN Active');
 subscribeToComms();
+watchHandovers();
 
 
 // --- 🏫 SOVEREIGN SCHOOLING (Level 5 Foundation) ---

@@ -4,3 +4,4 @@
 -   **Vocal Logic**: `useSpeech.ts` chunking + `synth.resume()`. If the phone is silent, the `relay_jobs` table (Supabase) triggers the PC speaker via the bridge.
 -   **Stage 11**: Autonomy is the goal. Use 'DiscoveryAgent' and 'FleetAgent' for research.
 -   **Security**: Do NOT push secrets. Keys are in `.env`.
+-   **V10.0 Sovereign Live**: Phase 1 is DEPLOYED. Refer to `_agent/handover_Claude_to_Windsurf.md` for current alignment. The goal is to use Gemini 3.1 Flash as a "Teacher" to duplicate high-fidelity noise/latency logic.

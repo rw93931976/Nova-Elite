@@ -34,6 +34,12 @@
   - **Before**: 18 patterns, **After**: 28 patterns
   - **Purpose**: Bridge hardening to match frontend conversational bloat filtering
   - **Status**: Ready for deployment
+  
+  - **File**: `scripts/stability_sentinel.cjs`
+  - **Change**: Added version status check (lines 84-99)
+  - **Details**: Added v9.7.1-SOVEREIGN tag reporting to heartbeat logging
+  - **Purpose**: Future issue tracking with version-specific monitoring
+  - **Status**: Ready for deployment
 
 ## 📡 5. Architect Continuity
 > *To the next Architect (Antigravity Window):*

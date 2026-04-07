@@ -173,6 +173,6 @@ export function useNova() {
   }, [core]);
 
   return {
-    isListening, isThinking, isInitialized, isHalted, messages, lastTone, hasNewArchMsg, resetArchAlert, toggleListening, toggleHalt, handleHardRefresh: () => { localStorage.clear(); window.location.reload(); }, notifyArchitect: (m: string) => core.notifyArchitect(m), version: core.version
+    core, isListening, isThinking, isInitialized, isHalted, messages, lastTone, hasNewArchMsg, resetArchAlert, toggleListening, toggleHalt, handleHardRefresh: () => { localStorage.clear(); window.location.reload(); }, notifyArchitect: (m: string) => core.notifyArchitect(m), version: core.version
   };
 }

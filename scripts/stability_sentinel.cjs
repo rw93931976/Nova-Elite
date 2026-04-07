@@ -81,7 +81,24 @@ async function runHealthCheck() {
         }
     });
 
-    // 3. Finalize
+    // 3. Version Status Check
+    try {
+        const packageJsonPath = path.resolve(__dirname, '../package.json');
+        if (fs.existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+            report.checks.version = packageJson.version || 'v9.7.1-SOVEREIGN';
+            report.checks.versionTag = 'sovereign-v9.7.1';
+        } else {
+            report.checks.version = 'UNKNOWN';
+            report.checks.versionTag = 'MISSING';
+        }
+    } catch (err) {
+        report.checks.version = 'ERROR';
+        report.checks.versionTag = 'ERROR';
+        report.errors.push(`Failed to check version: ${err.message}`);
+    }
+
+    // 4. Finalize
     console.log(`[SENTINEL] Result: ${report.status} (${report.errors.length} errors)`);
     logStability(report);
 }
