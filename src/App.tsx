@@ -180,6 +180,21 @@ function App() {
     return (
         <div className="h-[100dvh] bg-[#121212] flex flex-col items-center overflow-hidden">
             <div className="main-content h-full flex flex-col overflow-hidden">
+                {liveVoice.lastError && (
+                    <div className="mx-4 mt-4 p-4 bg-red-500/20 border-2 border-red-500 rounded-2xl flex flex-col items-center gap-2 animate-bounce">
+                        <div className="flex items-center gap-2 text-red-500 font-black uppercase text-[10px] tracking-widest">
+                            <Activity size={16} />
+                            Connection Failure
+                        </div>
+                        <div className="text-white text-xs font-bold text-center">{liveVoice.lastError}</div>
+                        <button
+                            onClick={handleHardRefresh}
+                            className="mt-1 text-[10px] font-black uppercase text-red-500 underline decoration-2 underline-offset-4"
+                        >
+                            Try Nuclear Reset
+                        </button>
+                    </div>
+                )}
                 <header className="flex justify-between items-center mb-6 pt-4 px-2">
                     <div className="flex flex-col">
                         <h1 className="text-4xl font-black italic tracking-tighter text-[#0BF9EA] uppercase drop-shadow-[0_0_25px_rgba(11,249,234,0.6)]">Nova Sovereign</h1>
