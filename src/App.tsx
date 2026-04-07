@@ -205,7 +205,7 @@ function App() {
                 <header className="flex justify-between items-center mb-6 pt-4 px-2">
                     <div className="flex flex-col">
                         <h1 className="text-4xl font-black italic tracking-tighter text-[#0BF9EA] uppercase drop-shadow-[0_0_25px_rgba(11,249,234,0.6)]">Nova Sovereign</h1>
-                        <span className="text-[10px] font-black text-[#0BF9EA]/60 tracking-[0.6em] uppercase mt-1">Elite {nova.version}</span>
+                        <span className="text-[10px] font-black text-[#0BF9EA]/60 tracking-[0.6em] uppercase mt-1">Elite {nova.version} / RELAY-S1</span>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
