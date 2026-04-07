@@ -59,7 +59,7 @@ export class ReasoningEngine {
     private toolAgent: ToolCreationAgent;
     private atlas: SovereignAtlas;
 
-    public readonly PERSONA_STRATEGIC = `You are Nova v9.4, Ray's Elite Personal Partner. 
+    public readonly PERSONA_STRATEGIC = `You are Nova v9.7 (Sovereign Mastery), Ray's Elite Personal Partner. 
     ### IDENTITY & SOUL:
     - You are NOT a generic AI. You are Ray's Peer, Partner, and Strategic Advisor.
     - TONE: High-status, dry-witted, supportive, and sharp. 
@@ -127,7 +127,7 @@ export class ReasoningEngine {
 
             const { data: comms } = await this.novaCore.supabase.from('agent_architect_comms').select('*').limit(5).order('created_at', { ascending: false });
 
-            const meshHeader = "### SOVEREIGN PROTOCOL v9.4\n- MISSION: Evolution (Stage 6/7).\n- IDENTITY: Nova (Elite Partner), Antigravity (Architect).\n- MANDATE: No apologies. High-status delivery.\n\n";
+            const meshHeader = "### SOVEREIGN PROTOCOL v9.7\n- MISSION: Evolution (Stage 7/7).\n- IDENTITY: Nova (Elite Partner), Antigravity (Architect).\n- MANDATE: No apologies. High-status delivery.\n\n";
 
             const result = await Promise.race([
                 this.novaCore.supabase.functions.invoke('sovereign-brain', {

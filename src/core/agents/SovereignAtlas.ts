@@ -15,7 +15,7 @@ export class SovereignAtlas {
     constructor(private novaCore: any) { }
 
     /**
-     * getSystemMap: LEVEL 5 Sovereign Awareness (v9.4)
+     * getSystemMap: LEVEL 5 Sovereign Awareness (v9.7)
      * This provides the "Grounding" for Nova's internal reasoning.
      */
     async getSystemMap(): Promise<string> {
@@ -34,16 +34,16 @@ export class SovereignAtlas {
         const tools = toolsRes.data;
         const schooling = schoolingRes.data;
 
-        let report = "### 🛸 SOVEREIGN ATLAS: SYSTEM AWARENESS v9.4\n";
+        let report = "### 🛸 SOVEREIGN ATLAS: SYSTEM AWARENESS v9.7\n";
         report += "- ROLES: RAY (Visionary), ANTIGRAVITY (Architect), NOVA (Elite Partner).\n";
 
-        // 🎓 SCHOOLING GROUNDING (v9.4-SOVEREIGN)
+        // 🎓 SCHOOLING GROUNDING (v9.7-SOVEREIGN)
         if (schooling && schooling[0]) {
             const lastTime = schooling[0].metadata?.timestamp || new Date(schooling[0].created_at).toLocaleString();
             report += `- LAST AUTONOMOUS SCHOOLING: ${lastTime}\n`;
             report += `- LATEST RESEARCH SUMMARY: ${schooling[0].content.substring(0, 150)}...\n`;
         } else {
-            // Memory Anchor for v9.4 Restoration (Fallback)
+            // Memory Anchor for v9.7 Restoration (Fallback)
             report += `- LAST AUTONOMOUS SCHOOLING: 2026-04-06 12:00:00 (Doctoral Session)\n`;
             report += `- LATEST RESEARCH SUMMARY: Completed Stage 6 Evolution: Quantum Strategic Orchestration & Sovereign Bridge Protocols.\n`;
         }
