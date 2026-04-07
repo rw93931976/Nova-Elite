@@ -8,7 +8,7 @@ export class NovaCore {
         import.meta.env.VITE_SUPABASE_ANON_KEY || ""
     );
 
-    public readonly version = 'v10.1.0-S-RELAY';
+    public readonly version = 'v11.1.0-S-RELAY';
     public isHalted: boolean = false;
     public liveEngine: LiveEngine;
 
