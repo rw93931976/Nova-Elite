@@ -1,150 +1,148 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
 /**
- * SOVEREIGN LIVE ENGINE v10.0
- * --------------------------
- * Handles the low-latency, multimodal WebSocket connection to Gemini 3.1 Flash Live.
- * Preserves the Sovereign Persona and integrates with the local VPC bridge.
+ * SOVEREIGN LIVE ENGINE v11.0 (Relay Mode)
+ * ---------------------------------------
+ * A "Thin Client" that connects to the Sovereign Node (VPS) instead of Google.
+ * Enforces "Keyless" architecture where credentials never leave the server.
  */
 export class LiveEngine {
-    private genAI: any;
-    private session: any;
-    private audioContext: AudioContext | null = null;
+    private socket: WebSocket | null = null;
     private onAudioCallback: ((chunk: string) => void) | null = null;
     private onProsodyCallback: ((data: any) => void) | null = null;
     private onToolCallCallback: ((name: string, args: any) => Promise<any>) | null = null;
 
-    constructor(apiKey: string) {
-        this.genAI = new GoogleGenerativeAI(apiKey);
+    constructor() {
+        console.log("🌑 [LiveEngine] Sovereign Relay Interface Initialized.");
     }
 
     /**
-     * INITIATE LIVE SESSION
-     * Connects to the multimodalLive endpoint with the Sovereign Persona.
+     * INITIATE RELAY SESSION
+     * Connects to the VPS Bridge which holds the Gemini Session.
      */
     public async connect(systemInstruction: string) {
-        console.log("🛰️ [LiveEngine] Initiating Sovereign Live connection...");
-        if (!this.genAI.apiKey) {
-            console.error("❌ [LiveEngine] NO API KEY DETECTED. Check VITE_GOOGLE_AI_KEY.");
-            throw new Error("Missing Gemini API Key. Check Environment Variables.");
-        }
-        try {
-            // Using the new Gemini 3.1 Flash Live model via the SDK extension
-            // Note: In March 2026, the SDK supports native multimodal live sessions.
-            const model = this.genAI.getGenerativeModel({ model: "gemini-3.1-flash-live" });
+        if (this.socket) return;
 
-            this.session = await (model as any).startLiveSession({
-                systemInstruction,
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 1024,
-                },
-                tools: [
-                    {
-                        functionDeclarations: [
-                            {
-                                name: "web_search",
-                                description: "Search the web for real-time information.",
-                                parameters: { type: "OBJECT", properties: { query: { type: "STRING" } }, required: ["query"] }
-                            },
-                            {
-                                name: "read_file",
-                                description: "Read a local file from the disk.",
-                                parameters: { type: "OBJECT", properties: { path: { type: "STRING" } }, required: ["path"] }
-                            },
-                            {
-                                name: "write_file",
-                                description: "Write content to a local file.",
-                                parameters: { type: "OBJECT", properties: { path: { type: "STRING" }, content: { type: "STRING" } }, required: ["path", "content"] }
+        return new Promise<void>((resolve, reject) => {
+            try {
+                // RELAY ENDPOINT: Points back to the Sovereign VPS
+                const relayUrl = "wss://api.mysimpleaihelp.com:3506";
+                console.log(`🛰️ [Relay] Handshaking with Sovereign Node: ${relayUrl}`);
+
+                this.socket = new WebSocket(relayUrl);
+
+                this.socket.onopen = () => {
+                    console.log("✅ [Relay] Secure Pipe Established.");
+                    // Send setup packet to trigger the VPS -> Google connection
+                    this.send({
+                        type: "setup",
+                        setup: {
+                            model: "models/gemini-2.0-flash-exp",
+                            generation_config: {
+                                response_modalities: ["audio"],
+                                system_instruction: systemInstruction
                             }
-                        ]
+                        }
+                    });
+                    resolve();
+                };
+
+                this.socket.onmessage = async (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+
+                        // Handle native setup responses or tool calls
+                        if (data.toolCall) {
+                            await this.handleToolCall(data.toolCall);
+                        } else if (data.serverContent?.modelTurn?.parts) {
+                            const part = data.serverContent.modelTurn.parts[0];
+                            if (part.inlineData) {
+                                this.onAudioCallback?.(part.inlineData.data);
+                            }
+                        }
+                    } catch (e) {
+                        // Binary stream fallback if handled by the relay as fragments
+                        if (event.data instanceof Blob) {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                                const base64 = (reader.result as string).split(',')[1];
+                                this.onAudioCallback?.(base64);
+                            };
+                            reader.readAsDataURL(event.data);
+                        }
                     }
-                ]
-            });
+                };
 
-            this.session.on('audio', (chunk: any) => {
-                if (this.onAudioCallback) {
-                    this.onAudioCallback(chunk.data);
+                this.socket.onerror = (error) => {
+                    console.error("❌ [Relay] Socket Error:", error);
+                    reject(error);
+                };
+
+                this.socket.onclose = () => {
+                    console.log("🔌 [Relay] Session Sealed.");
+                    this.socket = null;
+                };
+
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    private async handleToolCall(call: any) {
+        console.log(`🛠️ [Relay] Distributed Tool Execution: ${call.name}`);
+        if (this.onToolCallCallback) {
+            const result = await this.onToolCallCallback(call.name, call.args);
+            this.send({
+                toolResponse: {
+                    callId: call.id,
+                    response: { result }
                 }
-
-                // SOVEREIGN SOUL TRAINING: Emit prosody markers for the trainer
-                if (this.onProsodyCallback && chunk.metadata) {
-                    this.onProsodyCallback({
-                        prosody: chunk.metadata.prosody,
-                        interactionId: chunk.metadata.id
-                    });
-                }
             });
-
-            this.session.on('tool_call', async (call: any) => {
-                console.log(`🛠️ [LiveEngine] Tool Call: ${call.name}`, call.args);
-                if (this.onToolCallCallback) {
-                    const result = await this.onToolCallCallback(call.name, call.args);
-                    this.session.sendToolResponse({
-                        callId: call.id,
-                        response: { result }
-                    });
-                }
-            });
-
-            this.session.on('error', (err: any) => {
-                console.error("❌ [LiveEngine] Session Error:", err);
-            });
-
-            console.log("✅ [LiveEngine] Sovereign Live Active.");
-        } catch (err) {
-            console.error("❌ [LiveEngine] Connection Failed:", err);
-            throw err;
         }
     }
 
     /**
      * SEND AUDIO STREAM
-     * Sends PCM audio data from the browser mic to the model.
+     * Pipes raw PCM (base64) to the Relay.
      */
-    public sendAudio(pcmData: Uint8Array) {
-        if (this.session) {
-            this.session.sendAudio(pcmData);
+    public sendAudio(base64Chunk: string) {
+        if (this.socket?.readyState === WebSocket.OPEN) {
+            this.send({
+                realtimeInput: {
+                    mediaChunks: [{
+                        mimeType: "audio/pcm;rate=16000",
+                        data: base64Chunk
+                    }]
+                }
+            });
         }
     }
 
-    /**
-     * LISTEN FOR AUDIO
-     * Register a callback for the returned audio stream.
-     */
+    private send(data: any) {
+        if (this.socket?.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify(data));
+        }
+    }
+
     public onAudio(callback: (chunk: string) => void) {
         this.onAudioCallback = callback;
     }
 
-    /**
-     * SOVEREIGN SOUL TRAINING
-     * Register a callback for prosody metadata.
-     */
     public onProsody(callback: (data: any) => void) {
         this.onProsodyCallback = callback;
     }
 
-    /**
-     * SOVEREIGN AGENCY
-     * Register a callback to handle tool execution.
-     */
     public onToolCall(callback: (name: string, args: any) => Promise<any>) {
         this.onToolCallCallback = callback;
     }
 
-    /**
-     * DISCONNECT (Economy Mode)
-     * Kills the live session to save tokens/cost.
-     */
     public disconnect() {
-        if (this.session) {
-            this.session.close();
-            this.session = null;
-            console.log("💤 [LiveEngine] Session Disconnected (Economy Mode).");
+        if (this.socket) {
+            this.socket.close();
+            this.socket = null;
         }
     }
 
     public isConnected(): boolean {
-        return !!this.session;
+        return this.socket?.readyState === WebSocket.OPEN;
     }
 }

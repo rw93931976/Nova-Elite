@@ -55,7 +55,12 @@ export function useLiveVoice(core: NovaCore) {
             processorRef.current.onaudioprocess = (e) => {
                 const inputData = e.inputBuffer.getChannelData(0);
                 const pcmData = convertFloat32ToInt16(inputData);
-                core.liveEngine.sendAudio(new Uint8Array(pcmData.buffer));
+                // Convert to base64 for the Sovereign Relay
+                const uint8 = new Uint8Array(pcmData.buffer);
+                let binary = "";
+                for (let i = 0; i < uint8.length; i++) binary += String.fromCharCode(uint8[i]);
+                const base64 = btoa(binary);
+                core.liveEngine.sendAudio(base64);
             };
 
             sourceRef.current.connect(processorRef.current);

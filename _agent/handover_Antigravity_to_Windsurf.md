@@ -1,11 +1,17 @@
 # 🌙 SOVEREIGN HANDOVER: Antigravity ➡️ Windsurf
 **Target**: Nova-Elite v10.0 (The Mouth)
-**Timestamp**: 2026-04-07 08:30
+**Timestamp**: 2026-04-07 10:35
 
 ## 🛡️ V10.0 ARCHITECTURE: THE MOUTH
 - **Strategic Pillar**: We are using **Gemini 3.1 Flash Live** as a "Teacher/Reference Engine" to fix the noise and latency legacy issues from v9.7.1.
 - **Sovereign Goal**: We use Flash for the "Golden Standard" field test, then **duplicate** its DSP/Noise logic into Nova's local brain to remove the third-party dependency.
 - **Phase 1 Complete**: LiveEngine.ts, useLiveVoice.ts, and UI Toggle are deployed.
+
+## 🚀 VERCEL ENVIRONMENT SETUP (CRITICAL)
+For the "Go Live" mode to work on the production site, the following environment variable must be added to the Vercel Dashboard:
+- **Key**: `VITE_GOOGLE_AI_KEY`
+- **Value**: `AIzaSyBKdROGcbrA6UCt4QZ_uy5xOrqmYQGMJjM` 
+- **Action**: Use Vercel CLI (`vercel env add VITE_GOOGLE_AI_KEY production`) or the Vercel Web Dashboard.
 
 ## 🎯 ACTIVE ASSIGNMENT: Phase 1 Field Test & Cleanup
 **To: Windsurf & Next Window**
