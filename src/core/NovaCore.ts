@@ -13,16 +13,14 @@ export class NovaCore {
 
     constructor() {
         this.loadState();
-        // INITIALIZE LIVE ENGINE WITH API KEY FROM ENV
-        const apiKey = import.meta.env.VITE_GOOGLE_AI_KEY || "";
-        this.liveEngine = new LiveEngine(apiKey);
+        // SOVEREIGN: LiveEngine is initialized keyless. Key is on VPS.
+        this.liveEngine = new LiveEngine();
     }
 
     async startLiveSession() {
         const { ReasoningEngine } = await import("./agents/ReasoningEngine");
         const persona = new ReasoningEngine(this).persona_strategic;
 
-        // Tool Handler for Sovereign Agency
         this.liveEngine.onToolCall(async (name, args) => {
             console.log(`📡 [NovaCore] Executing Live Tool: ${name}`);
             const { data: job } = await this.supabase

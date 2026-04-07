@@ -1,104 +1,109 @@
 /**
- * LiveEngine: SOVEREIGN LIVE BRIDGE (v10.0)
- * -----------------------------------------
- * Manages the low-latency WebSocket connection to Gemini 3.1 Flash.
- * This version connects DIRECTLY to Google for Phase 1 verification.
+ * LiveEngine: SOVEREIGN LIVE ENGINE v11.0 (Relay Mode)
+ * --------------------------------------------------
+ * A "Thin Client" that connects to the Sovereign Node (VPS) instead of Google.
+ * Enforces "Keyless" architecture where credentials NEVER leave the server.
  */
 export class LiveEngine {
     private socket: WebSocket | null = null;
     private onAudioCallback: ((chunk: string) => void) | null = null;
     private onProsodyCallback: ((data: any) => void) | null = null;
     private onToolCallCallback: ((name: string, args: any) => Promise<any>) | null = null;
-    private apiKey: string;
 
-    constructor(apiKey: string) {
-        this.apiKey = apiKey;
-        if (!this.apiKey) {
-            console.error("❌ [LiveEngine] CRITICAL: No API key provided.");
-        }
+    constructor() {
+        console.log("🌑 [LiveEngine] Sovereign Relay Interface Initialized.");
     }
 
+    /**
+     * INITIATE RELAY SESSION
+     * Connects to the VPS Bridge which holds the Gemini Session.
+     */
     public async connect(systemInstruction: string) {
         if (this.socket) return;
-        if (!this.apiKey) throw new Error("API key not found");
 
         return new Promise<void>((resolve, reject) => {
-            const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidirectionalGenerateContent?key=${this.apiKey}`;
-            
-            this.socket = new WebSocket(url);
+            try {
+                // RELAY ENDPOINT: Points back to the Sovereign VPS
+                // We use the public URL for Ray's mobile device connectivity.
+                const relayUrl = "wss://api.mysimpleaihelp.com:3506";
+                console.log(`🛰️ [Relay] Handshaking with Sovereign Node: ${relayUrl}`);
 
-            this.socket.onopen = () => {
-                console.log("✅ [LiveEngine] Connected to Gemini 3.1 Flash Live");
-                this.send({
-                    setup: {
-                        model: "models/gemini-2.0-flash-exp",
-                        generation_config: {
-                            response_modalities: ["audio"],
-                            speech_config: {
-                                voice_config: { prebuilt_voice_config: { voice_name: "Puck" } } // Placeholder for Nova voice training
+                this.socket = new WebSocket(relayUrl);
+
+                this.socket.onopen = () => {
+                    console.log("✅ [Relay] Secure Pipe Established.");
+                    this.send({
+                        type: "setup",
+                        setup: {
+                            model: "models/gemini-2.0-flash-exp",
+                            generation_config: {
+                                response_modalities: ["audio"],
+                                system_instruction: systemInstruction
                             }
-                        },
-                        system_instruction: { parts: [{ text: systemInstruction }] }
+                        }
+                    });
+                    resolve();
+                };
+
+                this.socket.onmessage = async (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+
+                        // Handle Tool Calls or Model Content
+                        if (data.toolCall) {
+                            await this.handleToolCall(data.toolCall);
+                        } else if (data.serverContent?.modelTurn?.parts) {
+                            const part = data.serverContent.modelTurn.parts[0];
+                            if (part.inlineData) {
+                                this.onAudioCallback?.(part.inlineData.data);
+                            }
+                        }
+                    } catch (e) {
+                        // Binary fallback if the relay pipes fragments
                     }
-                });
-                resolve();
-            };
+                };
 
-            this.socket.onmessage = async (event) => {
-                const data = JSON.parse(event.data);
-                
-                // Handle Audio
-                if (data.serverContent?.modelTurn?.parts) {
-                    const part = data.serverContent.modelTurn.parts[0];
-                    if (part.inlineData) {
-                        this.onAudioCallback?.(part.inlineData.data);
-                    }
-                }
+                this.socket.onerror = (error) => {
+                    console.error("❌ [Relay] Socket Error:", error);
+                    reject(error);
+                };
 
-                // Handle Tool Calls (Sovereign Agency)
-                if (data.serverContent?.modelTurn?.parts?.[0]?.toolCall) {
-                    const call = data.serverContent.modelTurn.parts[0].toolCall;
-                    await this.handleToolCall(call);
-                }
-            };
+                this.socket.onclose = () => {
+                    console.log("🔌 [Relay] Session Sealed.");
+                    this.socket = null;
+                };
 
-            this.socket.onerror = (error) => {
-                console.error("❌ [LiveEngine] WebSocket Error:", error);
+            } catch (error) {
                 reject(error);
-            };
-
-            this.socket.onclose = () => {
-                console.log("🔌 [LiveEngine] Connection closed");
-                this.socket = null;
-            };
+            }
         });
     }
 
     private async handleToolCall(call: any) {
-        console.log(`🛠️ [LiveEngine] Tool Call: ${call.name}`);
+        console.log(`🛠️ [Relay] Distributed Tool Execution: ${call.name}`);
         if (this.onToolCallCallback) {
             const result = await this.onToolCallCallback(call.name, call.args);
             this.send({
                 toolResponse: {
-                    functionResponses: [{
-                        name: call.name,
-                        response: { result }
-                    }]
+                    callId: call.id,
+                    response: { result }
                 }
             });
         }
     }
 
     public sendAudio(pcmData: Uint8Array) {
-        const base64 = btoa(String.fromCharCode(...pcmData));
-        this.send({
-            realtime_input: {
-                media_chunks: [{
-                    mime_type: "audio/pcm;rate=16000",
-                    data: base64
-                }]
-            }
-        });
+        if (this.socket?.readyState === WebSocket.OPEN) {
+            const base64 = btoa(String.fromCharCode(...pcmData));
+            this.send({
+                realtimeInput: {
+                    mediaChunks: [{
+                        mimeType: "audio/pcm;rate=16000",
+                        data: base64
+                    }]
+                }
+            });
+        }
     }
 
     private send(data: any) {
