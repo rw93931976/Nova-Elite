@@ -7,7 +7,7 @@ export class NovaCore {
         import.meta.env.VITE_SUPABASE_ANON_KEY || ""
     );
 
-    public readonly version = 'v10.0.0-SOVEREIGN-LIVE';
+    public readonly version = 'v10.1.0-S-RELAY';
     public isHalted: boolean = false;
     public liveEngine: LiveEngine;
 
@@ -64,7 +64,7 @@ export class NovaCore {
 
     private saveState() {
         localStorage.setItem('nova_core_state', JSON.stringify({ isHalted: this.isHalted }));
-        localStorage.setItem('nova_version_tag', 'sovereign-v10.0.0');
+        localStorage.setItem('nova_version_tag', 'sovereign-v10.1.0');
     }
 
     private loadState() {
@@ -74,7 +74,7 @@ export class NovaCore {
             this.isHalted = state.isHalted;
         }
 
-        const currentTag = 'sovereign-v10.0.0';
+        const currentTag = 'sovereign-v10.1.0';
         if (localStorage.getItem('nova_version_tag') !== currentTag) {
             localStorage.clear();
             localStorage.setItem('nova_version_tag', currentTag);
