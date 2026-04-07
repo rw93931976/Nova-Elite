@@ -52,17 +52,30 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
             const lastResponseWords = lastResponse.split(/\s+/);
             const overlap = words.length > 0 ? (words.filter(w => lastResponseWords.includes(w)).length / words.length) : 0;
 
-            // ⚡ EMERGENCY BARGE-IN (v8.8.4): Kill speech ONLY if it's NOT an echo
-            if (isSpeaking && text.length > 0 && overlap < 0.6) {
-                console.log('[useSpeech] ⚡ BARGE-IN DETECTED. Killing speech:', text);
+            // ⚡ EMERGENCY BARGE-IN (v9.7-SOVEREIGN): Robust Noise Rejection
+            const speechStartTime = (window as any).novaSpeechStartTime || 0;
+            const timeInSpeech = Date.now() - speechStartTime;
+
+            // Rejection Criteria:
+            // 1. Grace Period: First 600ms of speech are noise-immune to prevent mic-click triggers.
+            // 2. Fragment Filter: Ignore single words or fragments < 6 chars.
+            // 3. Echo Check: Ensure it's not a hallucinated echo (overlap check).
+            const isTooShort = text.length < 6 && !text.includes(" ");
+            const inGracePeriod = timeInSpeech < 600;
+
+            if (isSpeaking && !inGracePeriod && !isTooShort && overlap < 0.6) {
+                console.log('[useSpeech] ⚡ GENUINE BARGE-IN DETECTED. Killing speech:', text);
                 window.speechSynthesis.cancel();
                 (window as any).lastNovaResponse = "";
                 isSpeakingRef.current = false;
                 (window as any).isNovaSpeaking = false;
                 if (options?.onBargeIn) options.onBargeIn();
                 return;
-            } else if (isSpeaking && overlap >= 0.6) {
-                console.log(`[useSpeech] Echo ignored [Overlap: ${(overlap * 100).toFixed(0)}%]:`, text);
+            } else if (isSpeaking) {
+                // Log suppressed noise/echo for debugging
+                if (inGracePeriod) console.log(`[useSpeech] Barge-in suppressed (Grace Period): ${text}`);
+                else if (isTooShort) console.log(`[useSpeech] Barge-in suppressed (Length/Noise): ${text}`);
+                else if (overlap >= 0.6) console.log(`[useSpeech] Echo ignored [Overlap: ${(overlap * 100).toFixed(0)}%]:`, text);
                 return;
             }
 
@@ -79,12 +92,11 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
 
         recognizer.onerror = (event: any) => {
             console.error('[useSpeech] Recognition Error:', event.error);
-            if (event.error === 'no-speech' || event.error === 'network') {
-                if (shouldListenRef.current) {
-                    setTimeout(() => {
-                        try { recognitionRef.current?.start(); } catch (e) { }
-                    }, 200);
-                }
+            // 🛡️ AGGRESSIVE RECOVERY (v9.7-SOVEREIGN): Never stay silent if shouldListen is true
+            if (shouldListenRef.current) {
+                setTimeout(() => {
+                    try { recognitionRef.current?.start(); } catch (e) { }
+                }, 400);
             } else {
                 setIsListening(false);
             }
@@ -176,6 +188,7 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
         utterance.onstart = () => {
             isSpeakingRef.current = true;
             (window as any).isNovaSpeaking = true;
+            (window as any).novaSpeechStartTime = Date.now();
         };
 
         utterance.onend = () => {
