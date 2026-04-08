@@ -1,0 +1,111 @@
+[TAILING] Tailing last 100 lines for [nova-bridge] process (change the value with --lines option)
+/home/aims/.pm2/logs/nova-bridge-out.log last 100 lines:
+0|nova-bri | [2026-04-07T14:57:02.928Z] 🚀 [Sovereign-Bridge] v9.3-SOVEREIGN Active
+0|nova-bri | [2026-04-07T14:57:02.933Z] 🔗 [Mesh] Initializing Supabase Realtime listener...
+0|nova-bri | [2026-04-07T14:57:02.954Z] [VocalMirror] Server active on port 3505
+0|nova-bri | [2026-04-07T15:35:47.993Z] 🛰️ [Relay] Sovereign Live Gateway initializing on port 3506...
+0|nova-bri | [2026-04-07T15:35:48.039Z] 🚀 [Sovereign-Bridge] v9.3-SOVEREIGN Active
+0|nova-bri | [2026-04-07T15:35:48.039Z] 🔗 [Mesh] Initializing Supabase Realtime listener...
+0|nova-bri | [2026-04-07T15:35:48.070Z] [VocalMirror] Server active on port 3505
+0|nova-bri | [2026-04-07T15:36:53.641Z] 🛰️ [Relay] Sovereign Live Gateway initializing on port 3506...
+0|nova-bri | [2026-04-07T15:36:53.682Z] 🚀 [Sovereign-Bridge] v9.3-SOVEREIGN Active
+0|nova-bri | [2026-04-07T15:36:53.683Z] 🔗 [Mesh] Initializing Supabase Realtime listener...
+0|nova-bri | [2026-04-07T15:36:53.713Z] [VocalMirror] Server active on port 3505
+0|nova-bri | [2026-04-07T15:42:15.930Z] 🛰️ [Relay] Sovereign Live Gateway initializing on port 3506...
+0|nova-bri | [2026-04-07T15:42:15.931Z] 🔑 [Env] Google Key: AIzaSyBKdR...
+0|nova-bri | [2026-04-07T15:42:15.932Z] 🔑 [Env] Supabase URL: OK
+0|nova-bri | [2026-04-07T15:42:15.932Z] 🔑 [Env] Supabase Key: OK
+0|nova-bri | [2026-04-07T15:42:15.932Z] 🔑 [Env] OpenAI Key: OK
+0|nova-bri | [2026-04-07T15:42:15.955Z] 🚀 [Sovereign-Bridge] v9.3-SOVEREIGN Active
+0|nova-bri | [2026-04-07T15:42:15.956Z] 🔗 [Mesh] Initializing Supabase Realtime listener...
+0|nova-bri | [2026-04-07T15:42:15.975Z] [VocalMirror] Server active on port 3505
+0|nova-bri | [2026-04-07T15:44:06.028Z] 🛰️ [Relay] Sovereign Live Gateway initializing on port 3506...
+0|nova-bri | [2026-04-07T15:44:06.030Z] 🔑 [Env] Google Key: AIzaSyBKdR...
+0|nova-bri | [2026-04-07T15:44:06.030Z] 🔑 [Env] Supabase URL: OK
+0|nova-bri | [2026-04-07T15:44:06.030Z] 🔑 [Env] Supabase Key: OK
+0|nova-bri | [2026-04-07T15:44:06.030Z] 🔑 [Env] OpenAI Key: OK
+0|nova-bri | [2026-04-07T15:44:06.070Z] 🚀 [Sovereign-Bridge] v9.3-SOVEREIGN Active
+0|nova-bri | [2026-04-07T15:44:06.070Z] 🔗 [Mesh] Initializing Supabase Realtime listener...
+0|nova-bri | [2026-04-07T15:44:06.111Z] [VocalMirror] Server active on port 3505
+0|nova-bri | [2026-04-07T15:44:26.023Z] 🛰️ [Relay] Sovereign Live Gateway initializing on port 3506...
+0|nova-bri | [2026-04-07T15:44:26.024Z] 🔑 [Env] Google Key: AIzaSyBKdR...
+0|nova-bri | [2026-04-07T15:44:26.025Z] 🔑 [Env] Supabase URL: OK
+0|nova-bri | [2026-04-07T15:44:26.025Z] 🔑 [Env] Supabase Key: OK
+0|nova-bri | [2026-04-07T15:44:26.025Z] 🔑 [Env] OpenAI Key: OK
+0|nova-bri | [2026-04-07T15:44:26.043Z] 🚀 [Sovereign-Bridge] v9.3-SOVEREIGN Active
+0|nova-bri | [2026-04-07T15:44:26.043Z] 🔗 [Mesh] Initializing Supabase Realtime listener...
+0|nova-bri | [2026-04-07T15:44:26.058Z] [VocalMirror] Server active on port 3505
+0|nova-bri | [2026-04-07T17:06:26.619Z] 🔑 [Env] Sovereign Gateway Active. Google Key: OK
+0|nova-bri | [2026-04-07T17:06:26.622Z] 🛰️ [Relay] Sovereign Live Gateway initializing on port 3506...
+0|nova-bri | [2026-04-07T17:06:26.731Z] 🔗 [Mesh] Connected to Sovereign Database.
+0|nova-bri | [2026-04-07T17:06:26.737Z] [VocalMirror] Base Bridge active on port 3505
+0|nova-bri | [2026-04-07T17:07:05.984Z] 🔑 [Env] Sovereign Gateway Active. Google Key: OK
+0|nova-bri | [2026-04-07T17:07:05.992Z] 🛰️ [Relay] Sovereign Live Gateway initializing on port 3506...
+0|nova-bri | [2026-04-07T17:07:06.048Z] 🔗 [Mesh] Connected to Sovereign Database.
+0|nova-bri | [2026-04-07T17:07:06.054Z] [VocalMirror] Base Bridge active on port 3505
+0|nova-bri | [2026-04-07T17:08:40.461Z] 🔑 [Env] Sovereign Gateway Active. Google Key: OK
+0|nova-bri | [2026-04-07T17:08:40.464Z] 🛰️ [Relay] Sovereign Live Gateway initializing on port 3506...
+0|nova-bri | [2026-04-07T17:08:40.493Z] 🔗 [Mesh] Connected to Sovereign Database.
+0|nova-bri | [2026-04-07T17:08:40.498Z] [VocalMirror] Base Bridge active on port 3505
+
+/home/aims/.pm2/logs/nova-bridge-error.log last 100 lines:
+0|nova-bri | /home/aims/nova/vps-core-sovereign-native.cjs:28
+0|nova-bri | const env = {};
+0|nova-bri |       ^
+0|nova-bri | 
+0|nova-bri | SyntaxError: Identifier 'env' has already been declared
+0|nova-bri |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+0|nova-bri |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+0|nova-bri |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+0|nova-bri |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+0|nova-bri |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+0|nova-bri |     at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+0|nova-bri |     at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+0|nova-bri |     at loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:339:3)
+0|nova-bri |     at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:242:7)
+0|nova-bri |     at ModuleJob.run (node:internal/modules/esm/module_job:430:25)
+0|nova-bri | /home/aims/nova/vps-core-sovereign-native.cjs:28
+0|nova-bri | const env = {};
+0|nova-bri |       ^
+0|nova-bri | 
+0|nova-bri | SyntaxError: Identifier 'env' has already been declared
+0|nova-bri |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+0|nova-bri |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+0|nova-bri |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+0|nova-bri |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+0|nova-bri |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+0|nova-bri |     at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+0|nova-bri |     at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+0|nova-bri |     at loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:339:3)
+0|nova-bri |     at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:242:7)
+0|nova-bri |     at ModuleJob.run (node:internal/modules/esm/module_job:430:25)
+0|nova-bri | /home/aims/nova/vps-core-sovereign-native.cjs:28
+0|nova-bri | const env = {};
+0|nova-bri |       ^
+0|nova-bri | 
+0|nova-bri | SyntaxError: Identifier 'env' has already been declared
+0|nova-bri |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+0|nova-bri |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+0|nova-bri |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+0|nova-bri |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+0|nova-bri |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+0|nova-bri |     at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+0|nova-bri |     at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+0|nova-bri |     at loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:339:3)
+0|nova-bri |     at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:242:7)
+0|nova-bri |     at ModuleJob.run (node:internal/modules/esm/module_job:430:25)
+0|nova-bri | /home/aims/nova/vps-core-sovereign-native.cjs:28
+0|nova-bri | const env = {};
+0|nova-bri |       ^
+0|nova-bri | 
+0|nova-bri | SyntaxError: Identifier 'env' has already been declared
+0|nova-bri |     at wrapSafe (node:internal/modules/cjs/loader:1735:18)
+0|nova-bri |     at Module._compile (node:internal/modules/cjs/loader:1778:20)
+0|nova-bri |     at Object..js (node:internal/modules/cjs/loader:1936:10)
+0|nova-bri |     at Module.load (node:internal/modules/cjs/loader:1525:32)
+0|nova-bri |     at Module._load (node:internal/modules/cjs/loader:1327:12)
+0|nova-bri |     at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+0|nova-bri |     at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+0|nova-bri |     at loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:339:3)
+0|nova-bri |     at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:242:7)
+0|nova-bri |     at ModuleJob.run (

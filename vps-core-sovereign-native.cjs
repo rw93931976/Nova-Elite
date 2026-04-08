@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '.env') });
-const env = process.env;
+const processEnv = process.env;
 const INSTANCE_ID = Math.random().toString(36).substring(2, 10);
 const START_TIME = Date.now();
 const http = require('http');

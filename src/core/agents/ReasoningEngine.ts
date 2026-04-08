@@ -103,8 +103,8 @@ export class ReasoningEngine {
         const portaRegex = /^(message|tell|report|notify|hey|ask)\s+(antigravity|the\s+architect|architect|arch|grav|ant|ark):?\s*/i;
         if (portaRegex.test(cleanInput)) {
             const reportText = cleanInput.replace(portaRegex, "");
-            await NovaComms.getInstance().sendToAntiGravity(reportText, 'high');
-            return { response: "Understood, Ray. I've sent the directive to the Architect. Antigravity will handle the structural logic.", silent: false };
+            await NovaComms.getInstance().sendToAntiGravity(reportText, 'high_priority_directive');
+            return { response: "Understood, Ray. I've sent the directive to Architect via the Sovereign Hotline.", silent: false };
         }
 
         // 🧠 INTENT DETECTION
