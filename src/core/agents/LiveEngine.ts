@@ -20,7 +20,7 @@ export class LiveEngine {
 
         return new Promise<void>((resolve, reject) => {
             // SOVEREIGN ENDPOINT: Points to the Secure N8N Tunnel on the VPS
-            const relayUrl = `wss://n8n.mysimpleaihelp.com/relay`;
+            const relayUrl = `wss://n8n.mysimpleaihelp.com/relay?key=sovereign-secret-12345`;
 
             console.log(`📡 [Relay] Connecting to Sovereign Gateway: ${relayUrl}`);
             this.socket = new WebSocket(relayUrl);
