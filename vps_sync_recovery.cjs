@@ -16,7 +16,7 @@ try {
     execSync('npx pm2 start core_v7.cjs --name core');
 
     // 3. Start Relay v5 on 3512 (bridging to 3508)
-    console.log("📡 Launching Relay v5 (Gateway) on Port 3515...");
+    console.log("📡 Launching Relay v5 (Gateway) on Port 3520...");
     execSync('npx pm2 start relay_v5.cjs --name relay');
 
     // 4. Save state
@@ -25,8 +25,8 @@ try {
     console.log("\n✅ [SUCCESS] Sovereign Gateway is now aligned.");
     console.log("Port Map:");
     console.log(" - Brain: 3509");
-    console.log(" - Gateway: 3515");
-    console.log(" - Nginx: Proxying /relay -> 3515");
+    console.log(" - Gateway: 3520");
+    console.log(" - Nginx: Proxying /relay -> 3520");
 } catch (error) {
     console.error("❌ FAILED:", error.message);
 }

@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 require('dotenv').config();
 
 const GOOGLE_API_KEY = process.env.VITE_GOOGLE_AI_KEY;
-const PORT = 3509;
+const PORT = 4001;
 
 console.log('🚀 [Core] Sovereign Brain Initializing...');
 
@@ -10,7 +10,9 @@ const wss = new WebSocket.Server({ port: PORT, host: '127.0.0.1' });
 
 wss.on('connection', (ws) => {
     console.log('👤 [Core] Connection Received');
-    const googleUrl = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BiDiSession?rt=b&key=' + GOOGLE_API_KEY;
+    if (!GOOGLE_API_KEY) console.error('⚠️ [Core] WARNING: GOOGLE_API_KEY is undefined!');
+    const googleUrl = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=' + GOOGLE_API_KEY;
+    console.log('🔗 [Core] Connecting to:', googleUrl.split('key=')[0] + 'key=REDACTED');
     const googleWs = new WebSocket(googleUrl);
 
     googleWs.on('open', () => {
