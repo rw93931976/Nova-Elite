@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 require('dotenv').config();
 
 const GOOGLE_API_KEY = process.env.VITE_GOOGLE_AI_KEY;
-const PORT = 3508;
+const PORT = 3509;
 
 console.log('🚀 [Core] Sovereign Brain Initializing...');
 

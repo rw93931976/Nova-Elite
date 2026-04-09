@@ -5,7 +5,7 @@ require('dotenv').config();
 const wss = new WebSocket.Server({ noServer: true });
 const SOVEREIGN_SECRET = process.env.SOVEREIGN_SECRET || 'sovereign-secret-12345';
 
-console.log('🛰️ [Relay] Sovereign Relay Live on 127.0.0.1:3512');
+console.log('🛰️ [Relay] Sovereign Relay Live on 127.0.0.1:3515');
 
 const server = http.createServer((req, res) => { res.writeHead(200); res.end('Relay Active'); });
 
@@ -16,7 +16,7 @@ server.on('upgrade', (request, socket, head) => {
 
     wss.handleUpgrade(request, socket, head, (ws) => {
         console.log('🤝 [Relay] Bridge Opening...');
-        const core = new WebSocket('ws://127.0.0.1:3508');
+        const core = new WebSocket('ws://127.0.0.1:3509');
         core.on('open', () => { console.log('✅ [Relay] Bridge OPEN'); wss.emit('connection', ws, request); });
         core.on('message', (data) => { if (ws.readyState === WebSocket.OPEN) ws.send(data); });
         ws.on('message', (data) => { if (core.readyState === WebSocket.OPEN) core.send(data); });
@@ -25,4 +25,4 @@ server.on('upgrade', (request, socket, head) => {
     });
 });
 
-server.listen(3512, '127.0.0.1');
+server.listen(3515, '127.0.0.1');
