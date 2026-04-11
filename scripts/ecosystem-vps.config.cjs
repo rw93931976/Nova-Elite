@@ -11,6 +11,16 @@ module.exports = {
             }
         },
         {
+            name: "nova-relay",
+            script: "./relay-vps.cjs",
+            watch: false,
+            autorestart: true,
+            restart_delay: 5000,
+            env: {
+                NODE_ENV: "production",
+            }
+        },
+        {
             name: "nova-schooling",
             script: "./scripts/autonomous_schooling.cjs",
             cron_restart: "0 */6 * * *", // Every 6 hours

@@ -17,39 +17,10 @@ const calculateOverlap = (input: string, reference: string): number => {
 
 const stripPreamble = (text: string) => {
     if (!text) return "";
-    const targets = [
-        /^(Yes,?\s+)?I've\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
-        /^(Yes,?\s+)?I\s+(have|am)\s+(been|integrated|designed|processed|equipped|enhanced|incorporating|received|updated).*/i,
-        /^(Yes,?\s+)?I\s+(can|will|should)\s+(be|assist|help).*/i,
-        /^(Yes,?\s+)?I\s+(have\s+)?processed\s+that\s+update.*/i,
-        /^(Yes,?\s+)?I\s+have\s+received\s+the\s+update.*/i,
-        /^Hey\s*(Nova|Ray).*/i,
-        /I haven't yet processed specific real-time data.*/i,
-        /I am equipped to recognize and respond.*/i,
-        /As an AI assistant, I.*/i,
-        /My current capabilities include.*/i,
-        /I can certainly assist you with.*/i,
-        /Confirm bridge stabilization status.*/i,
-        /According to my (architect|system|instructions).*/i,
-        /Your inquiry about the (farm|firm|bridge) stabilization status.*/i,
-        /.*(what.?s\s+on\s+your\s+mind|anything\s+else\s+can\s+help|how\s+can\s+I\s+assist).*/i,
-        /v9\.[0-9]-SOVEREIGN/i,
-        /burst limit/i,
-        /heartbeat/i
-    ];
-    let lines = text.split('\n');
-    let cleanedLines = lines.filter(line => {
-        const trimmed = line.trim();
-        if (!trimmed) return true;
-        const isPreamble = targets.some(regex => regex.test(trimmed));
-        return !isPreamble;
-    });
-    let cleaned = cleanedLines.join('\n').trim();
+    // SOVEREIGN AUTHENTICITY (v11.2): We keep the conversation natural. 
+    // Only strip the 'Hi Ray' part if redundant, but keep strategic warmth.
+    let cleaned = text.trim();
     cleaned = cleaned.replace(/^(Hi\s+)?Ray,?\s*/i, "").trim();
-    if (!cleaned && text.trim().length > 0) {
-        const lastPart = text.split(/[.!?]/).filter(t => t.trim().length > 2).pop();
-        cleaned = lastPart ? lastPart.trim() : text.trim();
-    }
     if (cleaned.length > 0) cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
     return cleaned;
 };
@@ -74,7 +45,7 @@ export class ReasoningEngine {
     
     ### PROTOCOLS:
     - CONCISENESS: Be extremely brief. No preambles, no conversational filler.
-    - STRATEGIC FOCUS: Wharton-level rigor. Be visionary, not clerical.
+    - STRATEGIC FOCUS: Wharton-level logical rigor. Be visionary, not clerical.
     - MIRRORED EQ: Match Ray's intensity and pace. Stay low-friction.
     - WINDSURF HANDOFF: Verify technical steps before pushing.`;
 

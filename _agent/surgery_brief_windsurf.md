@@ -1,36 +1,29 @@
-# 🩺 Surgery Brief: Nova Level 5 Restoration
-**Surgeon**: Windsurf 🏄
-**Assistant**: Antigravity 🛸
+# 🩺 Surgery Brief: Nova Level 5 Restoration (v11.6)
+**Surgeons**: Windsurf 🏄 & Antigravity 🛸
 
 ## 📋 The Mission
-Strip the 'Sovereign Relay Gateway' bloat and reconnect Nova's brain to her Level 5 nerves.
+Restore Nova from an "Infant" regression to her Level 5 Strategic Partner status and fix the Gateway Disconnection.
 
-## 🛠️ Step 1: Reconnect the Nerves
-**File**: `src/core/agents/ReasoningEngine.ts`
-- Remove the crude `portaRegex` logic (Lines 102-107).
-- Import `NovaComms` from `../communications/NovaComms`.
-- Replace the regex block with:
-```typescript
-if (portaRegex.test(cleanInput)) {
-    const reportText = cleanInput.replace(portaRegex, "");
-    await NovaComms.getInstance().sendToAntiGravity(reportText, 'high_priority_directive');
-    return { response: "Understood, Ray. I've sent the directive to the Architect via the Sovereign Hotline.", silent: false };
-}
-```
+## 🛠️ Phase 1: Brain Surgery (COMPLETED)
+**Accomplished**:
+- Refactored `sovereign-brain` (Edge Function) to lock in GPT-4o and disable aggressive preamble filters.
+- Refactored `ReasoningEngine.ts` to restore strategic warmth and partnership tone.
+- Nova is no longer an "Infant"; her reasoning layer is restored.
 
-## 🛠️ Step 2: Initialize the Ears
-**File**: `src/core/NovaCore.ts`
-- In the `initialize` or constructor, call `NovaComms.getInstance()`.
-- This activates her real-time listener (Ears) for hotline messages from you or me.
+## 🛠️ Phase 2: Live Sensor Recovery (IN PROGRESS)
+**Current Obstacle**: The Multimodal Live API is rejecting the WebSocket handshake.
+- **Error 1008 (VPS)**: Google blocks the VPS IP range. 
+- **Error 1006 (Browser)**: Restored connection via Direct IP using `v1alpha.GenerativeService.BiDiSession`, but session terminates immediately with Code 1006.
 
-## 🛠️ Step 3: Fix the Relay Connection
-**File**: `src/core/agents/LiveEngine.ts`
-- Change the `REPLAY_URL` (or WebSocket URL) from `:3506` to `wss://api.mysimpleaihelp.com/relay`.
-- Antigravity will handle the VPS-side proxy to map this to Port 3506.
+**Your Objective**:
+1.  **Analyze `src/core/agents/LiveEngine.ts`**: Verify the `setup` message structure for the `v1alpha` endpoint.
+2.  **Verify API Key**: Check if `VITE_GOOGLE_AI_KEY` has restrictions preventing the high-bandwidth Live session.
+3.  **Handshake Sweep**: Validate the JSON exchange between the Browser and Google to identify why the session is being closed.
 
-## 🛠️ Step 4: UI Audio Receipt (Optional but recommended)
-- Add a small chime sound when `NovaComms` receives a message so Ray knows he's been heard on the road.
+## 📂 Strategic Assets
+Full diagnostic context and recovery scripts are available in:
+`WINDSURF_HANDOFF/`
 
 ---
-**Status**: 🚀 **MOVE TO EXECUTION**
-Once complete, ping Antigravity for the VPS Sync.
+**Status**: 🧪 **DIAGNOSTIC PHASE**
+Ping Antigravity if you need a VPS port-shift or Nginx update.

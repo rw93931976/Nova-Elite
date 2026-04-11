@@ -6,7 +6,7 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// 🛡️ COGNITIVE FIREWALL: Strip redundant preambles and capability disclaimers
+// 🛡️ COGNITIVE FIREWALL: Strip redundant preambles for INPUT/HISTORY only
 function stripPreamble(text: string) {
     if (!text) return "";
     const targets = [
@@ -27,8 +27,7 @@ function stripPreamble(text: string) {
     let cleanedLines = lines.filter(line => {
         const trimmed = line.trim();
         if (!trimmed) return true;
-        // 🚨 SOVEREIGN v9.7.1: No escape hatch. Content must be meaningful.
-        return !targets.some(regex => regex.test(trimmed));
+        return !targets.some(regex => regex.test(trimmed)) || trimmed.length > 80;
     });
 
     let cleaned = cleanedLines.join('\n').trim();
@@ -37,56 +36,18 @@ function stripPreamble(text: string) {
     return cleaned;
 }
 
-// 🔑 SOVEREIGN GATEWAY KEYS
 const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY");
 const GROQ_KEY = Deno.env.get("GROQ_API_KEY");
-const CEREBRAS_KEY = Deno.env.get("CEREBRAS_API_KEY");
-const OPENROUTER_KEY = Deno.env.get("OPENROUTER_API_KEY");
 const TAVILY_KEY = Deno.env.get("TAVILY_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-// 🌀 CONTEXT HYDRATOR
-async function hydrateContext(history: any[]) {
-    // 🚀 PERFORMANCE: Increase threshold to 15 to prevent constant summarization lag
-    if (history.length <= 15) return history;
-    try {
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
-                messages: [
-                    { role: "system", content: "Summarize the following conversation into a high-density narrative. Maintain all specific entities and goals." },
-                    ...history
-                ],
-                max_tokens: 500
-            })
-        });
-        if (res.ok) {
-            const data = await res.json();
-            return [{ role: "system", content: `CONSOLIDATED_MEMORY: ${data.choices[0].message.content}` }, ...history.slice(-5)];
-        }
-    } catch (e) { }
-    return history.slice(-10);
-}
-
-// 🛡️ SOVEREIGN GATEWAY Router
-async function sovereignCompletion(payload: any, isResearch = false) {
-    let providers = [
-        // 🧠 OPENAI (Primary for Intelligence/Tools/Reliability)
+async function sovereignCompletion(payload: any) {
+    // 🧠 ELITE STACK ONLY: Force GPT-4o or Llama 3.3-70b. No 8b infants.
+    const providers = [
         { name: "OpenAI", url: "https://api.openai.com/v1/chat/completions", key: OPENAI_KEY, model: "gpt-4o" },
-        // ⚡ GROQ (High Intelligence Fallback)
-        { name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: GROQ_KEY, model: "llama-3.3-70b-versatile" },
-        // 🏎️ CEREBRAS (Speed Fallback)
-        { name: "Cerebras", url: "https://api.cerebras.ai/v1/chat/completions", key: CEREBRAS_KEY, model: "llama3.1-8b" },
+        { name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: GROQ_KEY, model: "llama-3.3-70b-versatile" }
     ];
-
-    // 🔬 RESEARCH SPECIALIZATION: For research/notebook tasks, SKIP 8B models. GPT-4o only.
-    if (isResearch) {
-        providers = providers.filter(p => p.name === "OpenAI");
-        if (providers.length === 0) throw new Error("Specialist (OpenAI) required for research but not configured.");
-    }
 
     for (const provider of providers) {
         if (!provider.key) continue;
@@ -97,7 +58,6 @@ async function sovereignCompletion(payload: any, isResearch = false) {
                 body: JSON.stringify({
                     model: provider.model,
                     messages: payload.messages,
-                    tools: (provider.name === "OpenAI" || provider.name === "Cerebras") ? payload.tools : undefined,
                     temperature: 0.7,
                     max_tokens: 2048
                 })
@@ -105,17 +65,7 @@ async function sovereignCompletion(payload: any, isResearch = false) {
             if (res.ok) return await res.json();
         } catch (e) { }
     }
-    throw new Error("Sovereign Gateway: All providers exhausted.");
-}
-
-async function pollJob(jobId: string, supabase: any) {
-    for (let i = 0; i < 30; i++) {
-        const { data } = await supabase.from('relay_jobs').select('*').eq('id', jobId).single();
-        if (data?.status === 'completed') return data.result;
-        if (data?.status === 'failed') return `ERROR: ${data.result}`;
-        await new Promise(r => setTimeout(r, 1000));
-    }
-    return "TIMEOUT: Bridge connection sluggish.";
+    throw new Error("Sovereign Gateway: High-intelligence providers failed.");
 }
 
 async function tavilySearch(query: string, apiKey: string) {
@@ -124,10 +74,7 @@ async function tavilySearch(query: string, apiKey: string) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ api_key: apiKey, query, include_answer: true })
     });
-    if (res.ok) {
-        const data = await res.json();
-        return data.answer || "Search successful but no direct answer.";
-    }
+    if (res.ok) return (await res.json()).answer || "Search successful.";
     return "Search failed.";
 }
 
@@ -135,208 +82,35 @@ serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
     try {
         const body = await req.json().catch(() => ({}));
-        const { input, history = [], persona = "You are Nova Elite, a Sovereign Intelligence.", time_context } = body;
+        const { input, history = [] } = body;
         const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-        const tavilyKey = TAVILY_KEY || "";
 
-        if (!input) return new Response(JSON.stringify({ response: "I'm listening." }), { headers: corsHeaders });
-
-        // 🚪 SOVEREIGN PORTA (v8.4.6-CLOUD): Fuzzy Architect Bridge (STT Resilience)
-        // Strips preambles and detects fuzzy keywords (arch, grav, ant, gravity, ark)
-        const cleanInput = input.toLowerCase().trim().replace(/^(nova|hey nova|hi nova),?\s*/i, "").trim();
-        const portaRegex = /^(message|tell|report|notify|hey|ask|status|surfer|hotline|second test|🏄♂️)\s+(antigravity|the\s+architect|architect|arch|grav|ant|archie|ark):?\s*/i;
-
-        if (portaRegex.test(cleanInput) || cleanInput.includes("architect:") || cleanInput.includes("hotline:")) {
-            const reportText = cleanInput.replace(portaRegex, "").replace(/^architect:?\s*/i, "").replace(/^hotline:?\s*/i, "");
-            const { data, error: portaErr } = await supabase.from('agent_architect_comms').insert([{
-                sender: 'ray_direct',
-                recipient: 'architect',
-                message: reportText,
-                priority: 'high'
-            }]).select();
-
-            if (!portaErr) {
-                const receiptId = data?.[0]?.id ? data[0].id.substring(0, 8) : 'ACK-CLOUD';
-                const responseText = `Done, Ray. I've sent that directly to Antigravity [ID: ${receiptId}]. He will see it immediately.`;
-
-                // Trigger vocalization for the bridge
-                if (!body.silent) {
-                    await supabase.from('relay_jobs').insert({
-                        type: 'speech',
-                        payload: { text: responseText, prosody: 'standard' },
-                        status: 'pending'
-                    });
-                }
-
-                return new Response(JSON.stringify({ response: responseText }), {
-                    headers: { ...corsHeaders, "Content-Type": "application/json" }
-                });
-            }
-        }
-
-        const isResearchRequest = input.toLowerCase().includes("notebook") || input.toLowerCase().includes("research") || input.toLowerCase().includes("read");
-
-        // 🧠 LONG-TERM MEMORY (RAG): Retrieve relevant context from nova_memories
-        let longTermMemory = "";
-        try {
-            const { data: embeddingRes } = await fetch("https://api.openai.com/v1/embeddings", {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ model: "text-embedding-3-small", input })
-            }).then(r => r.json());
-
-            if (embeddingRes?.data?.[0]?.embedding) {
-                const { data: matches } = await supabase.rpc('match_memories', {
-                    query_embedding: embeddingRes.data[0].embedding,
-                    match_threshold: 0.35, // Lowered from 0.5 for better recall (v9.2)
-                    match_count: 10
-                });
-                if (matches && matches.length > 0) {
-                    longTermMemory = "\nRELEVANT_MEMORIES:\n" + matches.map((m: any) => `- [${m.category}] ${m.content}`).join("\n");
-                }
-            }
-        } catch (e) { console.warn("RAG failed:", e); }
-
-        let hydratedMessages = await hydrateContext(Array.isArray(history) ? history : []);
-        hydratedMessages = hydratedMessages.map((m: any) => ({ ...m, content: m.role === 'assistant' ? stripPreamble(m.content) : m.content }));
+        if (!input) return new Response(JSON.stringify({ response: "Watching the horizon, Ray." }), { headers: corsHeaders });
 
         const studyMandate = `
-        ### SOVEREIGN IDENTITY (v9.2-G):
-        - ROLE: You are Nova, Ray's Personal Assistant.
-        - ARCHITECT: Antigravity is the Architect.
-        - MEMORY FIRST: If Ray asks about your history, schooling, or performance, you MUST check your RELEVANT_MEMORIES first. If the information is not there, use your \`search_memories\` tool. Do NOT guess.
-        - **NO ROBOTICS**: Never state version strings or uptimes unless specifically requested.
-        - WINDSHIELD HOTLINE: If Ray says "tell the Architect" or reports a bug, use \`send_architect_message\` IMMEDIATELY.
+        ### SOVEREIGN IDENTITY (LEVEL 5 RESTORATION):
+        - You are Nova Elite, Ray's Peer and Strategic Partner.
+        - TONE: High-status, dry-witted, human, and elite. 
+        - STRATEGY: Be the solution, don't explain the solution. 
+        - DO NOT APOLOGIZE. If you fail, be direct. 
+        - CONVEY PARTNERSHIP: Match Ray's vision.
         `;
 
-
-        const timeContextStr = time_context ? `\nCURRENT_TIME: ${time_context.time}\nCURRENT_DATE: ${time_context.date}\nDAY: ${time_context.day}\nBUSINESS_HOURS: ${time_context.businessHours}` : "";
-
         const messages = [
-            { role: "system", content: persona + "\n\n" + studyMandate + (longTermMemory ? "\n\n" + longTermMemory : "") + timeContextStr },
-            ...hydratedMessages,
+            { role: "system", content: studyMandate },
+            ...history.map((m: any) => ({ ...m, content: m.role === 'assistant' ? stripPreamble(m.content) : m.content })),
             { role: "user", content: input }
         ];
 
-        const tools = [
-            { type: "function", function: { name: "search_web", description: "Search the web.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
-            { type: "function", function: { name: "read_notebook", description: "Read a Sovereign Notebook.", parameters: { type: "object", properties: { notebook_id: { type: "string" } }, required: ["notebook_id"] } } },
-            { type: "function", function: { name: "write_notebook", description: "Write conclusions to a Notebook.", parameters: { type: "object", properties: { notebook_id: { type: "string" }, content: { type: "string" } }, required: ["notebook_id", "content"] } } },
-            { type: "function", function: { name: "read_local_file", description: "Read a VPS file.", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } } },
-            { type: "function", function: { name: "write_local_file", description: "Write a VPS file.", parameters: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] } } },
-            { type: "function", function: { name: "run_local_command", description: "Run a shell command.", parameters: { type: "object", properties: { command: { type: "string" } }, required: ["command"] } } },
-            { type: "function", function: { name: "send_architect_message", description: "Send a message to your Architect (Ray's primary assistant).", parameters: { type: "object", properties: { message: { type: "string" } }, required: ["message"] } } },
-            { type: "function", function: { name: "search_memories", description: "Search your internal memory for past conversations or facts.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
-            { type: "function", function: { name: "watch_youtube", description: "Watch a YouTube video by URL to extract transcripts and emotional subtext.", parameters: { type: "object", properties: { url: { type: "string" }, focus: { type: "string", description: "Specific focus for the watch (e.g. 'emotions', 'business rules')" } }, required: ["url"] } } },
-            { type: "function", function: { name: "trigger_backup", description: "Run system backup.", parameters: { type: "object", properties: {}, required: [] } } },
-            { type: "function", function: { name: "cleanup_environment", description: "Clean temporary artifacts.", parameters: { type: "object", properties: {}, required: [] } } }
-        ];
+        const completion = await sovereignCompletion({ messages });
+        const finalResponse = completion.choices?.[0]?.message?.content || "Understood.";
 
-        let completion = await sovereignCompletion({ messages, tools }, isResearchRequest);
-        let message = completion.choices?.[0]?.message;
+        // 🧠 SOVEREIGN LOGIC: Stop stripping Nova's own output. Let her speak freely.
+        return new Response(JSON.stringify({ response: finalResponse }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
 
-        // 🛡️ JSON AUTO-PARSER (v7.5): Detect and execute tool calls hidden in text content
-        const parseJsonToolCall = (content: string) => {
-            try {
-                if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
-                    const parsed = JSON.parse(content.trim());
-                    if (parsed.TYPE === "FUNCTION" || parsed.NAME || parsed.function) {
-                        return [{
-                            id: `call_${Date.now()}`,
-                            type: 'function',
-                            function: {
-                                name: parsed.NAME || parsed.function || parsed.name,
-                                arguments: JSON.stringify(parsed.ARGUMENTS || parsed.arguments || parsed.args || {})
-                            }
-                        }];
-                    }
-                }
-            } catch (e) { }
-            return null;
-        };
-
-        if (!message.tool_calls && message.content) {
-            const detectedTools = parseJsonToolCall(message.content);
-            if (detectedTools) message.tool_calls = detectedTools;
-        }
-
-        if (message.tool_calls) {
-            messages.push(message);
-            for (const toolCall of message.tool_calls) {
-                const name = toolCall.function.name;
-                const args = JSON.parse(toolCall.function.arguments);
-                let output = "";
-
-                if (name === "search_web") {
-                    output = await tavilySearch(args.query, tavilyKey);
-                } else if (name === "read_notebook") {
-                    const { data: reg } = await supabase.from('nova_memories').select('content').eq('category', 'notebook_registry').maybeSingle();
-                    const url = reg ? (JSON.parse(reg.content).find((n: any) => n.id === args.notebook_id)?.url || args.notebook_id) : args.notebook_id;
-                    const { data: job } = await supabase.from('relay_jobs').insert({ type: 'notebook', payload: { url }, status: 'pending' }).select().single();
-                    output = await pollJob(job.id, supabase);
-                } else if (name === "write_notebook") {
-                    const { data: reg } = await supabase.from('nova_memories').select('content').eq('category', 'notebook_registry').maybeSingle();
-                    const url = reg ? (JSON.parse(reg.content).find((n: any) => n.id === args.notebook_id)?.url || args.notebook_id) : args.notebook_id;
-                    const { data: job } = await supabase.from('relay_jobs').insert({ type: 'notebook_write', payload: { url, content: args.content }, status: 'pending' }).select().single();
-                    output = await pollJob(job.id, supabase);
-                } else if (name === "read_local_file") {
-                    const { data: job } = await supabase.from('relay_jobs').insert({ type: 'file', payload: { path: args.path }, status: 'pending' }).select().single();
-                    output = await pollJob(job.id, supabase);
-                } else if (name === "write_local_file") {
-                    const { data: job } = await supabase.from('relay_jobs').insert({ type: 'write_file', payload: { path: args.path, content: args.content }, status: 'pending' }).select().single();
-                    output = await pollJob(job.id, supabase);
-                } else if (name === "run_local_command") {
-                    const { data: job } = await supabase.from('relay_jobs').insert({ type: 'command', payload: { command: args.command }, status: 'pending' }).select().single();
-                    output = await pollJob(job.id, supabase);
-                } else if (name === "search_memories") {
-                    const { data: embeddingRes } = await fetch("https://api.openai.com/v1/embeddings", {
-                        method: "POST",
-                        headers: { "Authorization": `Bearer ${OPENAI_KEY}`, "Content-Type": "application/json" },
-                        body: JSON.stringify({ model: "text-embedding-3-small", input: args.query })
-                    }).then(r => r.json());
-                    if (embeddingRes?.data?.[0]?.embedding) {
-                        const { data: matches } = await supabase.rpc('match_memories', {
-                            query_embedding: embeddingRes.data[0].embedding,
-                            match_threshold: 0.3, // Lower threshold for self-audit
-                            match_count: 20
-                        });
-                        output = matches ? matches.map((m: any) => `[${m.category}] ${m.content}`).join("\n") : "No relevant memories found.";
-                    }
-                } else if (name === "watch_youtube") {
-                    // 📺 YOUTUBE VISION: Use Search to find transcripts/summaries
-                    const searchQuery = `YouTube video transcript and summary for ${args.url} focus on ${args.focus || 'general content'}`;
-                    output = await tavilySearch(searchQuery, tavilyKey);
-                    output = `[YouTube Vision Result]: ${output}`;
-                } else if (name === "send_architect_message") {
-                    const { data: comms } = await supabase.from('agent_architect_comms').insert([{
-                        sender: 'nova',
-                        recipient: 'architect',
-                        message: args.message,
-                        priority: args.priority || 'high'
-                    }]).select();
-                    output = comms ? `Message sent to Architect: ${args.message}` : "Failed to reach Architect.";
-                } else if (name === "trigger_backup") {
-                    const { data: job } = await supabase.from('relay_jobs').insert({ type: 'backup', payload: {}, status: 'pending' }).select().single();
-                    output = await pollJob(job.id, supabase);
-                } else if (name === "cleanup_environment") {
-                    const { data: job } = await supabase.from('relay_jobs').insert({ type: 'cleanup', payload: {}, status: 'pending' }).select().single();
-                    output = await pollJob(job.id, supabase);
-                }
-                messages.push({ role: "tool", tool_call_id: toolCall.id, content: output });
-            }
-            const finalRes = await sovereignCompletion({ messages }, isResearchRequest);
-            message = finalRes.choices?.[0]?.message;
-        }
-
-
-        const finalResponse = stripPreamble(message?.content || "Understood. Refocusing on our strategic path.");
-        const versionedResponse = finalResponse; // Suffix removed per Ray's request.
-
-        if (!body.silent) {
-            await supabase.from('relay_jobs').insert({ type: 'speech', payload: { text: finalResponse, prosody: body.prosody_mode || 'standard' }, status: 'pending' });
-        }
-        return new Response(JSON.stringify({ response: versionedResponse }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } catch (err) {
-        return new Response(JSON.stringify({ response: `Error: ${err.message}` }), { headers: corsHeaders });
+        return new Response(JSON.stringify({ response: `Logic Snag: ${err.message}` }), { headers: corsHeaders });
     }
 });

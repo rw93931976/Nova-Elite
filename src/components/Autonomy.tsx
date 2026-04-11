@@ -13,23 +13,20 @@ interface AutonomyFeature {
 
 const Autonomy: React.FC = () => {
   const [features, setFeatures] = useState<AutonomyFeature[]>([
-    { id: "a1", name: "Voice Interface", description: "Sub-500ms Vocal Sync", level: 1, completed: true, icon: <Mic size={20} />, progress: 100 },
-    { id: "a2", name: "VPS Root Access", description: "Sovereign File Mastery", level: 1, completed: true, icon: <Shield size={20} />, progress: 100 },
-    { id: "a3", name: "Registry Integrity", description: "5-Notebook Sync Active", level: 1, completed: true, icon: <Target size={20} />, progress: 100 },
-    { id: "a4", name: "Temporal Awareness", description: "Real-time Context Injection", level: 2, completed: true, icon: <Activity size={20} />, progress: 100 },
-    { id: "a5", name: "Context Mirroring", description: "Environmental Awareness v3", level: 2, completed: true, icon: <Globe size={20} />, progress: 100 },
-    { id: "a6", name: "Sovereign News", description: "Real-time Intel Stream", level: 2, completed: true, icon: <TrendingUp size={20} />, progress: 100 },
-    { id: "a7", name: "OODAR Capability", description: "Observe/Orient/Decide/Act", level: 3, completed: true, icon: <Zap size={20} />, progress: 100 },
-    { id: "a8", name: "System Integration", description: "Full VPS Orchestration", level: 3, completed: true, icon: <Cpu size={20} />, progress: 100 },
-    { id: "a9", name: "Gateway Resilience", description: "Multi-Provider Fallback", level: 3, completed: true, icon: <Shield size={20} />, progress: 100 },
-    { id: "a10", name: "Emotional Resonance", description: "Subtext & Nuance Detection", level: 4, completed: true, icon: <Activity size={20} />, progress: 100 },
-    { id: "a11", name: "Cognitive Mirroring", description: "Strategic Alignment Active", level: 4, completed: true, icon: <Brain size={20} />, progress: 100 },
-    { id: "a12", name: "Anticipatory Action", description: "Oversight Gating v2", level: 4, completed: true, icon: <Award size={20} />, progress: 100 },
-    { id: "a13", name: "Doctorate Cycle", description: "6h Autonomous Schooling", level: 5, completed: true, icon: <Rocket size={20} />, progress: 100 },
-    { id: "a14", name: "Memory Density", description: "333% RAG Efficiency", level: 5, completed: true, icon: <HardDrive size={20} />, progress: 100 },
-    { id: "a15", name: "Fortress Backups", description: "Nightly Sync & Mirroring", level: 5, completed: true, icon: <Lock size={20} />, progress: 100 },
-    { id: "a16", name: "Subject Mastery", description: "AEO/Social/Email Modules", level: 5, completed: true, icon: <Brain size={20} />, progress: 100 },
-    { id: "a17", name: "Sovereign Mind Hub", description: "Cloud Sync & Logic Relay", level: 5, completed: true, icon: <Globe size={20} />, progress: 100 },
+    { id: "a0_1", name: "VPS Root Access", description: "Safe Local Operations", level: 0, completed: true, icon: <Shield size={20} />, progress: 100 },
+    { id: "a1_1", name: "Discovery Link", description: "Online Intelligence", level: 1, completed: true, icon: <Globe size={20} />, progress: 100 },
+    { id: "a2_1", name: "Sensory Pulse", description: "Voice Handshake", level: 2, completed: true, icon: <Mic size={20} />, progress: 100 },
+    { id: "a3_1", name: "Emotional Resonance", description: "Conflict De-Escalation", level: 3, completed: true, icon: <Activity size={20} />, progress: 100 },
+    { id: "a3_2", name: "Adversarial Check", description: "Guardrail Enforcements", level: 3, completed: true, icon: <Shield size={20} />, progress: 100 },
+    { id: "a4_1", name: "Context Mirroring", description: "Cross-Session Embedding", level: 4, completed: true, icon: <HardDrive size={20} />, progress: 100 },
+    { id: "a5_1", name: "Anticipatory Action", description: "Goal-Oriented Wait", level: 5, completed: true, icon: <Target size={20} />, progress: 100 },
+    { id: "a6_1", name: "Agent Spawning", description: "Child Hierarchy Active", level: 6, completed: true, icon: <Rocket size={20} />, progress: 100 },
+    { id: "a6_2", name: "Hive Mind Broadcast", description: "Role-Based Overwrite", level: 6, completed: true, icon: <Brain size={20} />, progress: 100 },
+    { id: "a7_1", name: "QC Oversight", description: "Automated QA Loop", level: 7, completed: false, icon: <Award size={20} />, progress: 35 },
+    { id: "a8_1", name: "Business Integration", description: "CRM Sync Initiated", level: 8, completed: false, icon: <Cpu size={20} />, progress: 0 },
+    { id: "a8_2", name: "Revenue Flow", description: "Sovereign Invoicing", level: 8, completed: false, icon: <Zap size={20} />, progress: 0 },
+    { id: "a9_1", name: "Evolution Protocol", description: "Sandbox Refinement", level: 9, completed: false, icon: <Lightbulb size={20} />, progress: 0 },
+    { id: "a10_1", name: "Scale Architect", description: "10,000 Concurrent Limit", level: 10, completed: false, icon: <Globe size={20} />, progress: 0 },
   ]);
 
   useEffect(() => {
@@ -64,22 +61,27 @@ const Autonomy: React.FC = () => {
             <TrendingUp size={14} className="text-[#0BF9EA]/40 animate-pulse" />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {items.map(f => (
-              <div key={f.id} className={`${f.completed ? "sovereign-card" : "bg-white/[0.03] border border-white/5 opacity-20 filter grayscale rounded-2xl p-4"} transition-all duration-700`}>
+              <div key={f.id} className={`${f.completed ? "sovereign-card" : "bg-white/[0.03] border border-white/5 opacity-40 filter grayscale rounded-2xl p-4"} transition-all duration-700`}>
                 <div className="flex flex-col gap-3">
-                  <div className="flex justify-between items-start">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${f.completed ? "bg-[#121212]/10 text-[#121212]" : "bg-white/5 text-white/40"}`}>
-                      {f.icon}
+                  <div className="flex justify-between items-center w-full">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center ${f.completed ? "bg-[#121212]/10 text-[#121212]" : "bg-white/5 text-white/40"}`}>
+                        {f.icon}
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-[12px] font-black uppercase tracking-tight block">{f.name}</span>
+                        <span className="text-[10px] uppercase font-bold opacity-70 block">{f.description}</span>
+                      </div>
                     </div>
-                    {f.completed ? <CheckCircle2 size={18} className="text-[#121212]" /> : <Circle size={16} className="text-white/20" />}
+                    <div className="shrink-0 flex items-center pl-2">
+                      {f.completed ? <CheckCircle2 size={24} className="text-[#0BF9EA]" /> : <Circle size={24} className="text-white/20" />}
+                    </div>
                   </div>
 
-                  <div>
-                    <span className="text-[11px] font-black uppercase tracking-tight block">{f.name}</span>
-                    <div className="w-full bg-[#121212]/10 h-[4px] mt-2 rounded-full overflow-hidden">
-                      <div className="bg-[#121212] h-full transition-all duration-1000 shadow-[0_0_10px_rgba(18,18,18,0.3)]" style={{ width: `${f.progress}%` }} />
-                    </div>
+                  <div className="w-full bg-[#121212]/10 h-[6px] mt-2 rounded-full overflow-hidden">
+                    <div className="bg-[#0BF9EA] h-full transition-all duration-1000 shadow-[0_0_10px_rgba(11,249,234,0.3)]" style={{ width: `${f.progress}%` }} />
                   </div>
                 </div>
               </div>

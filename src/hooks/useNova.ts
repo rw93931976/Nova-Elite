@@ -14,7 +14,7 @@ interface Message {
 }
 
 export function useNova() {
-  const [core] = useState(() => new NovaCore());
+  const [core] = useState(() => NovaCore.getInstance());
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [isHalted, setIsHalted] = useState(false);

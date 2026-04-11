@@ -50,7 +50,7 @@ export function useLiveVoice(core: NovaCore) {
 
             // Note: ScriptProcessor is deprecated but widely compatible for raw PCM mining.
             // In v10.1 we might transition to AudioWorklets.
-            processorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+            processorRef.current = audioContextRef.current.createScriptProcessor(512, 1, 1);
 
             processorRef.current.onaudioprocess = (e) => {
                 const inputData = e.inputBuffer.getChannelData(0);
@@ -113,7 +113,7 @@ export function useLiveVoice(core: NovaCore) {
         const chunk = playbackQueue.current.shift()!;
         const float32 = convertInt16ToFloat32(chunk);
 
-        const buffer = audioContextRef.current.createBuffer(1, float32.length, 16000);
+        const buffer = audioContextRef.current.createBuffer(1, float32.length, 24000);
         buffer.getChannelData(0).set(float32);
 
         const node = audioContextRef.current.createBufferSource();
@@ -132,7 +132,8 @@ function convertFloat32ToInt16(buffer: Float32Array): Int16Array {
     let l = buffer.length;
     const buf = new Int16Array(l);
     while (l--) {
-        buf[l] = Math.min(1, buffer[l]) * 0x7FFF;
+        const s = Math.max(-1, Math.min(1, buffer[l]));
+        buf[l] = s < 0 ? s * 0x8000 : s * 0x7FFF;
     }
     return buf;
 }

@@ -3,6 +3,7 @@ import { LiveEngine } from "./agents/LiveEngine";
 import { NovaComms } from "./communications/NovaComms";
 
 export class NovaCore {
+    private static instance: NovaCore;
     public supabase = createClient(
         import.meta.env.VITE_SUPABASE_URL || "",
         import.meta.env.VITE_SUPABASE_ANON_KEY || ""
@@ -13,17 +14,38 @@ export class NovaCore {
     public liveEngine: LiveEngine;
 
     constructor() {
+        if (NovaCore.instance) {
+            return NovaCore.instance;
+        }
         this.loadState();
         // SOVEREIGN: LiveEngine is initialized keyless. Key is on VPS.
         this.liveEngine = new LiveEngine();
 
         // 👂 RESTORE EARS: Initialize the Level 5 Communication Hub
         NovaComms.getInstance();
+        NovaCore.instance = this;
+    }
+
+    public static getInstance(): NovaCore {
+        if (!NovaCore.instance) {
+            NovaCore.instance = new NovaCore();
+        }
+        return NovaCore.instance;
+    }
+
+    async initialize() {
+        console.log("🛰️ [NovaCore] System Initialized");
+    }
+
+    async processElite(input: string, context: any = {}, onReceipt?: (r: string) => void) {
+        const { ReasoningEngine } = await import("./agents/ReasoningEngine");
+        const engine = new ReasoningEngine(this);
+        return engine.reason(input, context, onReceipt);
     }
 
     async startLiveSession() {
         const { ReasoningEngine } = await import("./agents/ReasoningEngine");
-        const persona = new ReasoningEngine(this).persona_strategic;
+        const persona = new ReasoningEngine(this).PERSONA_STRATEGIC;
 
         this.liveEngine.onToolCall(async (name, args) => {
             console.log(`📡 [NovaCore] Executing Live Tool: ${name}`);

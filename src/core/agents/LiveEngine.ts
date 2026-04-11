@@ -1,8 +1,8 @@
 /**
- * LiveEngine: SOVEREIGN RELAY GATEWAY (v10.1)
- * -----------------------------------------
- * Manages the low-latency WebSocket connection to the VPS Relay.
- * This version uses the Sovereign Bridge to protect API keys.
+ * LiveEngine: SOVEREIGN SDK RELAY CLIENT (v14.0)
+ * --------------------------------------------
+ * This client talks to the Managed SDK Relay on the VPS.
+ * It no longer manages the Gemini handshake directly.
  */
 export class LiveEngine {
     private socket: WebSocket | null = null;
@@ -10,121 +10,109 @@ export class LiveEngine {
     private onProsodyCallback: ((data: any) => void) | null = null;
     private onToolCallCallback: ((name: string, args: any) => Promise<any>) | null = null;
     private onStateChange: ((state: 'connected' | 'disconnected' | 'error', msg?: string) => void) | null = null;
+    private isSetupComplete: boolean = false;
 
     constructor() {
-        console.log("🛰️ [LiveEngine] Initialization (Relay Mode)");
+        console.log("🛰️ [LiveEngine] Initialization (SDK Relay Mode)");
     }
 
-    public async connect(systemInstruction: string) {
+    public async connect(_systemInstruction: string) {
         if (this.socket) return;
 
         return new Promise<void>((resolve, reject) => {
-            // SOVEREIGN ENDPOINT: Points to the Secure N8N Tunnel on the VPS
-            const relayUrl = `wss://n8n.mysimpleaihelp.com/relay?key=sovereign-secret-12345`;
+            // SOVEREIGN SDK RELAY: Secure Dynamic Proxy
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname === 'localhost' ? '31.220.59.237' : window.location.host;
+            const relayUrl = `${protocol}//${host}/relay`;
 
-            console.log(`📡 [Relay] Connecting to Sovereign Gateway: ${relayUrl}`);
+            console.log(`📡 [Relay] Connecting to Managed SDK Engine: ${relayUrl}`);
             this.socket = new WebSocket(relayUrl);
 
             this.socket.onopen = () => {
-                console.log("✅ [Relay] Connected to Sovereign Gateway");
-                this.onStateChange?.('connected');
+                console.log(" [Relay] Linked to Managed SDK Engine");
 
-                // Send SETUP via Relay
-                this.send({
+                // SOVEREIGN: Trigger Remote Handshake immediately
+                this.socket?.send(JSON.stringify({
                     type: 'setup',
                     setup: {
                         model: "models/gemini-2.0-flash-exp",
                         generation_config: {
-                            response_modalities: ["audio"],
-                            speech_config: {
-                                voice_config: { prebuilt_voice_config: { voice_name: "Puck" } }
-                            }
+                            response_modalities: ["audio"]
                         },
-                        system_instruction: { parts: [{ text: systemInstruction }] }
+                        system_instruction: {
+                            parts: [{ text: _systemInstruction }]
+                        }
                     }
-                });
+                }));
+
+                this.onStateChange?.('connected');
                 resolve();
             };
 
             this.socket.onmessage = async (event) => {
-                const data = JSON.parse(event.data);
+                try {
+                    const data = JSON.parse(event.data);
 
-                if (data.type === 'error') {
-                    console.error(`❌ [Relay] Error: ${data.message}`);
-                    this.onStateChange?.('error', data.message);
-                    return;
-                }
-
-                // Handle Audio
-                if (data.serverContent?.modelTurn?.parts) {
-                    const part = data.serverContent.modelTurn.parts[0];
-                    if (part.inlineData) {
-                        this.onAudioCallback?.(part.inlineData.data);
+                    // Handshake Completion from Server
+                    if (data.setupComplete) {
+                        console.log("✨ [Relay] Sovereign Handshake SUCCESS");
+                        this.isSetupComplete = true;
+                        return;
                     }
-                }
 
-                // Handle Tool Calls
-                if (data.serverContent?.modelTurn?.parts?.[0]?.toolCall) {
-                    const call = data.serverContent.modelTurn.parts[0].toolCall;
-                    await this.handleToolCall(call);
+                    // Handle Audio/Text Content
+                    const content = data.serverContent;
+                    if (content?.modelTurn?.parts) {
+                        for (const part of content.modelTurn.parts) {
+                            if (part.inlineData) {
+                                this.onAudioCallback?.(part.inlineData.data);
+                            }
+                        }
+                    }
+
+                    // Handle Error Messages from Relay
+                    if (data.error) {
+                        console.error("❌ [Relay] Engine Error:", data.error);
+                    }
+                } catch (error) {
+                    // Ignore binary pulses if any
                 }
             };
 
             this.socket.onerror = (error) => {
-                console.error("❌ [Relay] Connection Error:", error);
-                this.onStateChange?.('error', 'Gateway Connection Failed');
+                console.error("❌ [Relay] Engine Connection Error:", error);
+                this.onStateChange?.('error', 'SDK Relay Connection Failed');
                 reject(error);
             };
 
-            this.socket.onclose = () => {
-                console.log("🔌 [Relay] Gateway Disconnected");
+            this.socket.onclose = (event) => {
+                console.log(`🔌 [Relay] Connection Closed (Code: ${event.code})`);
                 this.onStateChange?.('disconnected');
                 this.socket = null;
+                this.isSetupComplete = false;
             };
         });
     }
 
-    private async handleToolCall(call: any) {
-        console.log(`🛠️ [Relay] Executing Tool: ${call.name}`);
-        if (this.onToolCallCallback) {
-            const result = await this.onToolCallCallback(call.name, call.args);
-            this.send({
-                toolResponse: {
-                    functionResponses: [{
-                        name: call.name,
-                        response: { result }
-                    }]
-                }
-            });
+    public sendAudio(base64Data: string) {
+        if (!this.isSetupComplete) {
+            // Suppress until handshake is confirmed by VPS
+            return;
         }
-    }
-
-    public sendAudio(pcmData: Uint8Array) {
-        const base64 = btoa(String.fromCharCode(...pcmData));
-        this.send({
-            realtime_input: {
-                media_chunks: [{
-                    mime_type: "audio/pcm;rate=16000",
-                    data: base64
-                }]
-            }
-        });
-    }
-
-    private send(data: any) {
         if (this.socket?.readyState === WebSocket.OPEN) {
-            this.socket.send(JSON.stringify(data));
+            this.socket.send(JSON.stringify({
+                realtimeInput: {
+                    audio: {
+                        mimeType: "audio/pcm;rate=16000",
+                        data: base64Data
+                    }
+                }
+            }));
         }
     }
 
     public onAudio(callback: (chunk: string) => void) { this.onAudioCallback = callback; }
     public onToolCall(callback: (name: string, args: any) => Promise<any>) { this.onToolCallCallback = callback; }
     public onStatus(callback: (state: 'connected' | 'disconnected' | 'error', msg?: string) => void) { this.onStateChange = callback; }
-
-    public disconnect() {
-        if (this.socket) {
-            this.socket.close();
-            this.socket = null;
-        }
-    }
+    public disconnect() { if (this.socket) this.socket.close(); }
 }

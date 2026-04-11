@@ -205,7 +205,7 @@ export const useSpeech = (onResult: (text: string) => void, options?: { onBargeI
 
         const loadVoices = () => {
             const voices = synth.getVoices();
-            const preferred = voices.find(v => v.name.includes("Google US English")) || voices[0];
+            const preferred = voices.find(v => v.name.includes("Google US English") || v.name.includes("Female") || v.name.includes("Zira") || v.name.includes("Samantha")) || voices[0];
             if (preferred) utterance.voice = preferred;
         };
 

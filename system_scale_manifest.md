@@ -3,13 +3,20 @@
 ## 🎯 THE MISSION
 To provide high-EQ, "Dashboard-Free" Virtual Intelligence to small service companies. Nova acts as the **Mother-Agent**, spawning **Multiple Specialized Sub-Agents** to handle diverse client operations at scale.
 
-## 🏗️ THE ARCHITECTURE: MOTHER & SUB-AGENTS
-- **Nova (Mother)**: The architect and strategy lead. 
-    - **Learning Path**: She studies the business side via "Human-to-Human" interaction patterns (Strategy, Negotiating, Market Rules).
-- **Sub-Agents (Specialized Roles)**:
-    - **Primary Duty**: Specialized business operations (Reception, Ops, Sales, Reputation).
-    - **Service Standard**: **"Better Than Human"**—Indistinguishable from a person in natural flow, yet delivering faster, more accurate, and higher-EQ service than a human employee.
-    - **Escalation**: Handover to the **Business Owner** or their designated contact.
+## 🏗️ THE ARCHITECTURE: THE HIERARCHY OF AGENTS
+To ensure "Head and Shoulders" superiority, Nova operates through a multi-level military-grade hierarchy. 
+
+- **Level 5: Nova (The Architect)**: Sits at the top. Strategy and master-logic only. Only communicates with Ray or the Level 4 agent.
+- **Level 4: The Coordinator**: Global monitoring and strategic relay.
+- **Level 3 & 2: Management & Supervision**: Ensures operational tempo and detects "Process Heartbeats."
+- **Level 1: The Receptionist**: The battle-line agent. Indistinguishable from a human, handling all client interactions.
+
+## 🛡️ THE "NEXT MAN UP" RELIABILITY PROTOCOL
+Failure is NOT an option. If an agent at any level (especially Level 1) suffers a technical "hiccup" or process meltdown:
+1.  **Instant Hot-Swap**: The Level 2/3 supervisor instantly spawns a pre-initialized "Mirror" agent to take over the conversation.
+2.  **Zero-Downtime Handshake**: State persistence is maintained. The customer never detects a handoff; the second agent steps in mid-sentence if necessary.
+3.  **No Triage, Only Execution**: We do NOT use "emergency recordings" or triage modes. The "Next Man Up" takes the field immediately, maintaining the illusion of perfect continuity.
+4.  **Undersell, Overdeliver**: This level of resilience is what separates System Scale from every other AI competitor in the world.
 
 ## 🗣️ THE NATURAL FLOW PROTOCOL
 - **Indistinguishability**: Voice and text must be so refined that the user cannot detect an AI presence through conversational friction.

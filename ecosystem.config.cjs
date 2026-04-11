@@ -11,9 +11,19 @@ module.exports = {
       }
     },
     {
+      name: "nova-relay",
+      script: "./relay-vps.cjs",
+      watch: false,
+      autorestart: true,
+      restart_delay: 5000,
+      env: {
+        NODE_ENV: "production",
+      }
+    },
+    {
       name: "nova-frontend",
-      script: "npm.cmd",
-      args: "run dev -- --host --port 3111",
+      script: "npx",
+      args: "vite --port 3111 --host",
       cwd: "./",
       watch: false,
       autorestart: true,
@@ -27,8 +37,8 @@ module.exports = {
       name: "nova-schooling",
       script: "./scripts/autonomous_schooling.cjs",
       watch: false,
-      autorestart: true,
-      restart_delay: 21600000, // 6 Hours
+      autorestart: false,
+      cron_restart: "6 0,6,12,18 * * *",
       env: {
         NODE_ENV: "production",
       }

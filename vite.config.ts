@@ -44,6 +44,7 @@ export default defineConfig({
     __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   },
   server: {
+    allowedHosts: ['nova.mysimpleaihelp.com'],
     proxy: {
       '/bridge-vps': {
         target: 'http://31.220.59.237:3505',

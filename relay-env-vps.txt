@@ -1,0 +1,6 @@
+GEMINI_API_KEY=AIzaSyD-5_qTo8_n-P770u8vXp_5_S_6_...REDACTED...
+PORT=3506
+SOVEREIGN_SECRET=sovereign-secret-12345
+NOVA_CORE_URL=ws://nova-core:3505
+GEMINI_REALTIME_URL=wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidirectionalGenerateContent?key=AIzaSyD-5_qTo8_n-P770u8vXp_5_S_6_...REDACTED...
+VITE_GOOGLE_AI_KEY=AIzaSyBKdROGcbrA6UCt4QZ_uy5xOrqmYQGMJjM

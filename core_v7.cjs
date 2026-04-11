@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 require('dotenv').config();
 
 const GOOGLE_API_KEY = process.env.VITE_GOOGLE_AI_KEY;
-const PORT = 4001;
+const PORT = 4501;
 
 console.log('🚀 [Core] Sovereign Brain Initializing...');
 
@@ -19,8 +19,7 @@ wss.on('connection', (ws) => {
         console.log('✅ [Core] Brain: Connected to Google Gemini');
         googleWs.send(JSON.stringify({
             setup: {
-                model: "models/gemini-2.0-flash-exp",
-                generation_config: { response_modalities: ["audio"] }
+                model: "models/gemini-2.0-flash-exp"
             }
         }));
     });
@@ -30,14 +29,21 @@ wss.on('connection', (ws) => {
     });
 
     googleWs.on('message', (data) => {
+        console.log('📬 [Core] Google Message Received:', data.toString());
         if (ws.readyState === WebSocket.OPEN) ws.send(data);
     });
 
     googleWs.on('error', (e) => console.error('❌ [Core] Brain Error:', e.message));
     ws.on('error', (e) => console.error('❌ [Core] Client Error:', e.message));
 
-    ws.on('close', () => { console.log('👤 [Core] Client Closed'); googleWs.close(); });
-    googleWs.on('close', () => { console.log('✅ [Core] Brain Closed'); ws.close(); });
+    ws.on('close', (code, reason) => {
+        console.log(`👤 [Core] Client Closed (Code: ${code}, Reason: ${reason})`);
+        googleWs.close();
+    });
+    googleWs.on('close', (code, reason) => {
+        console.log(`✅ [Core] Brain Closed (Code: ${code}, Reason: ${reason})`);
+        ws.close();
+    });
 });
 
 console.log(`🚀 [Core] IPv4 Authority Active on Port ${PORT}`);

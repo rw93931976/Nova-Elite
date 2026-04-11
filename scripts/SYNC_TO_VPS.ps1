@@ -32,6 +32,7 @@ else {
 # 2. Sync Files via SCP
 Write-Log "Synchronizing core files via SCP..."
 scp -i "$IDENTITY_FILE" "vps-core-sovereign-native.cjs" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/vps-core-sovereign-native.cjs"
+scp -i "$IDENTITY_FILE" "relay-vps.cjs" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/relay-vps.cjs"
 scp -i "$IDENTITY_FILE" "scripts/ecosystem-vps.config.cjs" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/ecosystem.config.cjs"
 ssh -i "$IDENTITY_FILE" "${REMOTE_USER}@${REMOTE_HOST}" "mkdir -p ${REMOTE_DIR}/scripts"
 scp -i "$IDENTITY_FILE" "scripts/stability_sentinel.cjs" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/scripts/stability_sentinel.cjs"

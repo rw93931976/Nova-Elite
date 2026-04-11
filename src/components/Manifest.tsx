@@ -45,10 +45,15 @@ export const Manifest = () => {
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-col gap-3">
                             {stage.items.map((item, idx) => (
-                                <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-charcoal/10 border border-charcoal/5">
-                                    <span className="text-[10px] font-bold tracking-tight">{item}</span>
+                                <div key={idx} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#121212]/5 border border-[#121212]/10">
+                                    {stage.status !== 'locked' ? (
+                                        <CheckCircle2 size={18} className={stage.status === 'active' ? "text-[#0BF9EA]" : "text-[#121212]/40"} />
+                                    ) : (
+                                        <Circle size={18} className="text-white/20" />
+                                    )}
+                                    <span className="text-[12px] font-black uppercase tracking-wide">{item}</span>
                                 </div>
                             ))}
                         </div>

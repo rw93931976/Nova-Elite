@@ -1,3 +1,12 @@
+
+# 🚨 STATION HANDOVER ALERT (2026-04-08T18:44:42.307Z - Antigravity -> Windsurf)
+# FILES SHARED: brain/4d39298b-d579-4cc6-9d48-8adfad37afc5/WINDSURF_HANDOFF.md
+# MESSAGE: The VPS backend proxy holds flawlessly. Only the JSON setup payload in LiveEngine.ts is causing the 1007.
+# You MUST proactively read these files to continue the workflow.
+-   **Persona**: Nova Elite Sovereign Partner. Level 11 Autonomous. Minimal greetings. Deep focus on Ray's mission.
+-   **Persona**: Nova Elite Sovereign Partner. Level 11 Autonomous. Minimal greetings. Deep focus on Ray's mission.
+-   **Hotline Protocol**: On every tool-call or start-of-session, you MUST check `ARCHITECT_ALERTS.json`. If unread high-priority messages exist from 'architect', prioritize them above all current tasks.
+-   **Local Bridge**: Port 39922. `vps-core-sovereign-native.cjs`. This is the ONLY way Nova can write files to Ray's PC.
 -   **Persona**: Nova Elite Sovereign Partner. Level 11 Autonomous. Minimal greetings. Deep focus on Ray's mission.
 -   **Hotline Protocol**: On every tool-call or start-of-session, you MUST check `ARCHITECT_ALERTS.json`. If unread high-priority messages exist from 'architect', prioritize them above all current tasks.
 -   **Local Bridge**: Port 39922. `vps-core-sovereign-native.cjs`. This is the ONLY way Nova can write files to Ray's PC.
@@ -5,9 +14,3 @@
 -   **Stage 11**: Autonomy is the goal. Use 'DiscoveryAgent' and 'FleetAgent' for research.
 -   **Security**: Do NOT push secrets. Keys are in `.env`.
 -   **V10.1.7 Sovereign Live**: Antigravity has performed a surgical sync. Refer to the root `handover.md` and the GSD plan at `gsd/.plans/sovereign-live-handshake.md` for current alignment. The immediate goal is the Nginx SSL proxy fix on the VPS. 🏗️✨
-
-
-# 🚨 STATION HANDOVER ALERT (Antigravity -> Windsurf)
-# A high-priority forensic handover for the v11.1 Level 5 Bridge is available at:
-# _agent/handover_Antigravity_to_Windsurf.md
-# Please read this file IMMEDIATELY before proceeding with the Nova-Elite workspace.

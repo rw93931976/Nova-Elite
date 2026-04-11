@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-04-08T18:44:42.307Z",
+  "source": "Antigravity",
+  "target": "windsurf",
+  "message": "The VPS backend proxy holds flawlessly. Only the JSON setup payload in LiveEngine.ts is causing the 1007.",
+  "files": [
+    "brain/4d39298b-d579-4cc6-9d48-8adfad37afc5/WINDSURF_HANDOFF.md"
+  ]
+}
