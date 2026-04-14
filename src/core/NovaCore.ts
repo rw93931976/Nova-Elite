@@ -1,15 +1,13 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "../integrations/supabase";
 import { LiveEngine } from "./agents/LiveEngine";
 import { NovaComms } from "./communications/NovaComms";
+import { ReasoningEngine } from "./agents/ReasoningEngine";
 
 export class NovaCore {
     private static instance: NovaCore;
-    public supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL || "",
-        import.meta.env.VITE_SUPABASE_ANON_KEY || ""
-    );
+    public supabase = supabase;
 
-    public readonly version = 'v11.1.0-S-RELAY';
+    public readonly version = 'v15.0-SOVEREIGN-ELITE';
     public isHalted: boolean = false;
     public liveEngine: LiveEngine;
 
@@ -38,14 +36,19 @@ export class NovaCore {
     }
 
     async processElite(input: string, context: any = {}, onReceipt?: (r: string) => void) {
-        const { ReasoningEngine } = await import("./agents/ReasoningEngine");
         const engine = new ReasoningEngine(this);
         return engine.reason(input, context, onReceipt);
     }
 
     async startLiveSession() {
-        const { ReasoningEngine } = await import("./agents/ReasoningEngine");
-        const persona = new ReasoningEngine(this).PERSONA_STRATEGIC;
+        const engine = new ReasoningEngine(this);
+        const basePersona = engine.PERSONA_STRATEGIC;
+
+        let groundingData = "\n### CURRENT RESEARCH GROUNDING:\n";
+        groundingData += `
+        [The Mission]: High-end strategy and market transition models for elite partners.
+        [Strategy]: Start with the 'Night Watchman' to solve their immediate pain.
+        `;
 
         this.liveEngine.onToolCall(async (name, args) => {
             console.log(`📡 [NovaCore] Executing Live Tool: ${name}`);
@@ -70,7 +73,7 @@ export class NovaCore {
             return "ERROR: Job creation failed";
         });
 
-        await this.liveEngine.connect(persona);
+        await this.liveEngine.connect(basePersona + groundingData);
     }
 
     stopLiveSession() {
@@ -90,7 +93,7 @@ export class NovaCore {
 
     private saveState() {
         localStorage.setItem('nova_core_state', JSON.stringify({ isHalted: this.isHalted }));
-        localStorage.setItem('nova_version_tag', 'sovereign-v10.1.0');
+        localStorage.setItem('nova_version_tag', this.version);
     }
 
     private loadState() {
@@ -100,7 +103,7 @@ export class NovaCore {
             this.isHalted = state.isHalted;
         }
 
-        const currentTag = 'sovereign-v10.1.0';
+        const currentTag = this.version;
         if (localStorage.getItem('nova_version_tag') !== currentTag) {
             localStorage.clear();
             localStorage.setItem('nova_version_tag', currentTag);

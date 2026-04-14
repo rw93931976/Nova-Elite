@@ -1,10 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "../../integrations/supabase";
 
 export class SovereignAtlas {
-    private supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL || "",
-        import.meta.env.VITE_SUPABASE_ANON_KEY || ""
-    );
+    private supabase = supabase;
 
     private knownSkills: Array<{ name: string; description: string; category: string }> = [
         { name: "VPS-Sync", description: "Real-time bridge across the Sovereign Mesh", category: "Core" },

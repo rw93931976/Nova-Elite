@@ -51,6 +51,6 @@ Nova is currently reaching for 100-subject mastery. Her autonomous cycles are se
 ---
 
 ## 📖 ACTIVE RESEARCH TARGETS
-- [v5.1] Study: **Pattern Recognition: Reading Ray's Banter** & **Detection: Sad, Getting Upset, Confused** [GRADUATED 2026-04-11T17:00:33.287Z]
+- [v5.1] Study: **Schema Sovereignty: JSON-LD for AI Crawlers** & **Critical Detection: Getting Angry, Frantic** [GRADUATED 2026-04-14T17:00:24.548Z]
 
 > For full historical logs, see [Syllabus_Archive.md](file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/Syllabus_Archive.md).

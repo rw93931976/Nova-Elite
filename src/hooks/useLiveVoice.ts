@@ -1,148 +1,179 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { NovaCore } from "../core/NovaCore";
 
 /**
- * useLiveVoice: SOVEREIGN LIVE BRIDGE (v10.0)
+ * useLiveVoice: SOVEREIGN LIVE BRIDGE (v15.0)
  * -----------------------------------------
- * Low-latency, bidirectional audio streaming between the browser and 
- * Gemini 3.1 Flash Live. Bypasses standard STT/TTS.
+ * Direct Web Audio implementation with Gain control for volume.
  */
 export function useLiveVoice(core: NovaCore) {
     const [isLiveActive, setIsLiveActive] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const [lastError, setLastError] = useState<string | null>(null);
+    const [volume, setVolumeState] = useState(() => {
+        const saved = localStorage.getItem("nova_voice_volume");
+        return saved ? parseFloat(saved) : 1.0;
+    });
+
+    // Engine Refs
     const audioContextRef = useRef<AudioContext | null>(null);
+    const gainNodeRef = useRef<GainNode | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const processorRef = useRef<ScriptProcessorNode | null>(null);
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-    const playbackQueue = useRef<Int16Array[]>([]);
-    const isPlaying = useRef(false);
+
+    // State Refs
+    const playbackQueueRef = useRef<Int16Array[]>([]);
+    const playingRef = useRef(false);
+
+    /**
+     * UPDATE GAIN
+     */
+    const setVolume = useCallback((val: number) => {
+        setVolumeState(val);
+        localStorage.setItem("nova_voice_volume", val.toString());
+        if (gainNodeRef.current && audioContextRef.current) {
+            // Smooth volume transition (50ms) to avoid clicks
+            gainNodeRef.current.gain.setTargetAtTime(val, audioContextRef.current.currentTime, 0.05);
+        }
+    }, []);
+
+    /**
+     * QUEUED AUDIO PLAYBACK
+     */
+    const playNextInQueue = () => {
+        const context = audioContextRef.current;
+        if (!context || playbackQueueRef.current.length === 0) {
+            playingRef.current = false;
+            return;
+        }
+
+        playingRef.current = true;
+        const chunk = playbackQueueRef.current.shift()!;
+
+        // Convert Int16 to Float32
+        const float32 = new Float32Array(chunk.length);
+        for (let i = 0; i < chunk.length; i++) {
+            float32[i] = chunk[i] / 32768.0;
+        }
+
+        const buffer = context.createBuffer(1, float32.length, 24000);
+        buffer.getChannelData(0).set(float32);
+
+        const node = context.createBufferSource();
+        node.buffer = buffer;
+
+        // Ensure GainNode exists and is connected
+        if (!gainNodeRef.current) {
+            gainNodeRef.current = context.createGain();
+            gainNodeRef.current.gain.value = volume;
+            gainNodeRef.current.connect(context.destination);
+        }
+
+        node.connect(gainNodeRef.current);
+        node.onended = () => playNextInQueue();
+        node.start();
+    };
 
     /**
      * START LIVE SESSION
-     * Connects the engine and starts the mic capture.
      */
     const startLive = useCallback(async () => {
         try {
             setLastError(null);
             setIsConnecting(true);
-            console.log("🎙️ [useLiveVoice] Initializing Live session...");
+            console.log("🎙️ [useLiveVoice] Initializing Hotfix Bridge...");
 
-            // 🤳 MOBILE USER GESTURE (v10.4): Request Mic FIRST to satisfy browser security
-            console.log("🎙️ [useLiveVoice] Requesting Microphone permissions (Gesture check)...");
-            streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
-            console.log("🎙️ [useLiveVoice] Mic access granted.");
+            // 1. Request Microphone
+            streamRef.current = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    channelCount: 1,
+                    sampleRate: 24000
+                }
+            });
 
-            // Setup Audio Context immediately after gesture
+            // 2. Setup Audio Context
             audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({
-                sampleRate: 16000,
+                sampleRate: 24000,
             });
 
             if (audioContextRef.current.state === 'suspended') {
                 await audioContextRef.current.resume();
             }
 
-            console.log("🎙️ [useLiveVoice] Connecting to Core Session...");
+            // 3. Persistent Gain Node
+            gainNodeRef.current = audioContextRef.current.createGain();
+            gainNodeRef.current.gain.value = volume;
+            gainNodeRef.current.connect(audioContextRef.current.destination);
+
+            // 4. Connect to Engine
             await core.startLiveSession();
-            console.log("🎙️ [useLiveVoice] Core Session started.");
 
+            // 5. Setup Input Processor
             sourceRef.current = audioContextRef.current.createMediaStreamSource(streamRef.current);
-
-            // Note: ScriptProcessor is deprecated but widely compatible for raw PCM mining.
-            // In v10.1 we might transition to AudioWorklets.
             processorRef.current = audioContextRef.current.createScriptProcessor(512, 1, 1);
 
             processorRef.current.onaudioprocess = (e) => {
-                const inputData = e.inputBuffer.getChannelData(0);
-                const pcmData = convertFloat32ToInt16(inputData);
-                // Convert to base64 for the Sovereign Relay
-                const uint8 = new Uint8Array(pcmData.buffer);
+                if (playingRef.current) return;
+
+                const input = e.inputBuffer.getChannelData(0);
+                const buf = new Int16Array(input.length);
+                for (let i = 0; i < input.length; i++) {
+                    const s = Math.max(-1, Math.min(1, input[i]));
+                    buf[i] = s < 0 ? s * 32768 : s * 32767;
+                }
+
+                const uint8Arr = new Uint8Array(buf.buffer);
                 let binary = "";
-                for (let i = 0; i < uint8.length; i++) binary += String.fromCharCode(uint8[i]);
-                const base64 = btoa(binary);
-                core.liveEngine.sendAudio(base64);
+                for (let i = 0; i < uint8Arr.length; i++) {
+                    binary += String.fromCharCode(uint8Arr[i]);
+                }
+
+                core.liveEngine.sendAudio(btoa(binary));
             };
 
             sourceRef.current.connect(processorRef.current);
             processorRef.current.connect(audioContextRef.current.destination);
 
-            // Handle Incoming Audio from Gemini
-            core.liveEngine.onAudio((base64Chunk) => {
-                const binary = atob(base64Chunk);
-                const bytes = new Uint8Array(binary.length);
-                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                const int16Array = new Int16Array(bytes.buffer);
-                playbackQueue.current.push(int16Array);
-                if (!isPlaying.current) playNextInQueue();
+            // 6. Setup Output Listener
+            core.liveEngine.onAudio((base64) => {
+                const bin = atob(base64);
+                const bytes = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) {
+                    bytes[i] = bin.charCodeAt(i);
+                }
+                playbackQueueRef.current.push(new Int16Array(bytes.buffer));
+
+                if (!playingRef.current) {
+                    playNextInQueue();
+                }
             });
 
             setIsLiveActive(true);
             setIsConnecting(false);
-            console.log("🚀 [useLiveVoice] Live session ACTIVE.");
+            console.log("🚀 [useLiveVoice] Bridge Established. Gain:", volume);
         } catch (err: any) {
-            console.error("❌ [useLiveVoice] Failed to start Live:", err);
-            setLastError(err.message || "Unknown Connection Error");
+            console.error("❌ [useLiveVoice] Critical Failure:", err);
+            setLastError(err.message || "Audio fail");
             setIsConnecting(false);
             stopLive();
         }
-    }, [core]);
+    }, [core, volume]);
 
     const stopLive = useCallback(() => {
-        console.log("💤 [useLiveVoice] Stopping Live session...");
         core.stopLiveSession();
-
         processorRef.current?.disconnect();
         sourceRef.current?.disconnect();
         streamRef.current?.getTracks().forEach(t => t.stop());
-        audioContextRef.current?.close();
-
+        try { audioContextRef.current?.close(); } catch (e) { }
+        gainNodeRef.current = null;
+        playingRef.current = false;
+        playbackQueueRef.current = [];
         setIsLiveActive(false);
     }, [core]);
 
-    /**
-     * QUEUED AUDIO PLAYBACK
-     * Ensures smooth streaming without pops/clicks.
-     */
-    const playNextInQueue = () => {
-        if (playbackQueue.current.length === 0 || !audioContextRef.current) {
-            isPlaying.current = false;
-            return;
-        }
-
-        isPlaying.current = true;
-        const chunk = playbackQueue.current.shift()!;
-        const float32 = convertInt16ToFloat32(chunk);
-
-        const buffer = audioContextRef.current.createBuffer(1, float32.length, 24000);
-        buffer.getChannelData(0).set(float32);
-
-        const node = audioContextRef.current.createBufferSource();
-        node.buffer = buffer;
-        node.connect(audioContextRef.current.destination);
-        node.onended = () => playNextInQueue();
-        node.start();
-    };
-
-    return { isLiveActive, isConnecting, lastError, startLive, stopLive };
-}
-
-// -- UTILS --
-
-function convertFloat32ToInt16(buffer: Float32Array): Int16Array {
-    let l = buffer.length;
-    const buf = new Int16Array(l);
-    while (l--) {
-        const s = Math.max(-1, Math.min(1, buffer[l]));
-        buf[l] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-    }
-    return buf;
-}
-
-function convertInt16ToFloat32(buffer: Int16Array): Float32Array {
-    let l = buffer.length;
-    const buf = new Float32Array(l);
-    while (l--) {
-        buf[l] = buffer[l] / 0x8000;
-    }
-    return buf;
+    return { isLiveActive, isConnecting, lastError, startLive, stopLive, volume, setVolume };
 }

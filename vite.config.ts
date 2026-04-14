@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      selfDestroying: false,
+      selfDestroying: true, // Reset service worker to clear caching conflicts
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'icon.png', 'vite.svg'],
       manifest: {
@@ -40,6 +40,14 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined, // Force NO CHUNKS
+      },
+    },
+    chunkSizeWarningLimit: 2000,
+  },
   define: {
     __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   },
@@ -47,20 +55,20 @@ export default defineConfig({
     allowedHosts: ['nova.mysimpleaihelp.com'],
     proxy: {
       '/bridge-vps': {
-        target: 'http://31.220.59.237:3505',
+        target: 'https://nova.mysimpleaihelp.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/bridge-vps/, '')
       },
       '/api': {
-        target: 'http://31.220.59.237:3505',
+        target: 'https://nova.mysimpleaihelp.com',
         changeOrigin: true
       },
       '/deep-discovery': {
-        target: 'http://31.220.59.237:3505',
+        target: 'https://nova.mysimpleaihelp.com',
         changeOrigin: true
       },
       '/health': {
-        target: 'http://31.220.59.237:3505',
+        target: 'https://nova.mysimpleaihelp.com',
         changeOrigin: true
       }
     }

@@ -2,7 +2,7 @@
 
 // Bridge URLs
 const LOCAL_BRIDGE_URL = 'http://localhost:3000';
-const VPS_BRIDGE_URL = 'http://31.220.59.237:3505';
+const VPS_BRIDGE_URL = 'https://nova.mysimpleaihelp.com';
 
 // Routing logic: determine which bridge to use based on query content
 const determineBridge = (query: string): 'local' | 'vps' => {

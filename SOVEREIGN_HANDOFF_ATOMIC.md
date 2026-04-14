@@ -1,58 +1,37 @@
-# 🌌 SOVEREIGN HANDOFF: ATOMIC BRIEFING (v2.6.10)
+# 🚨 🛰️ CRITICAL: NEW SERVER COORDINATES DETECTED
+# 📍 PRODUCTION IP: 159.223.206.225 (San Francisco)
+## DO NOT USE LEGACY NEW YORK IP (157.245.12.15)
 
-**Date**: 2026-03-23 14:40 UTC
-**Current Version**: `v2.6.10 Sovereign-Peak`
-**Status**: 🟢 **SYSTEM STABILIZED & INFRASTRUCTURE RESTORED**
+# SOVEREIGN ATOMIC HANDOFF: PROJECT EXODUS (v11.9.2)
 
----
+## 📍 CURRENT STATE
+Nova has been migrated from Hostinger (Stale) to a **DigitalOcean San Francisco Node**.
 
-## 🏗️ 1. ARCHITECTURE: THE SOVEREIGN RELAY
-To bypass firewall restrictions and model availability issues (Gemini 404s), the system has pivoted to an **Outbound Relay Architecture**.
+*   **Production IP**: `159.223.206.225` (SF)
 
-- **Frontend**: `App.tsx` dispatches reasoning tasks to `Supabase`.
-- **Relay**: The `relay_jobs` table in Supabase acts as the command queue.
-- **Brain (VPS)**: A Node.js process (`vps-core.cjs`) on the VPS polls Supabase, processes thoughts via **OpenAI (`gpt-4o-mini`)**, and pushes results back to the queue.
-- **Bridge**: The system reports as **ONLINE** when the heartbeat syncs.
+*   **Legacy IP**: `157.245.12.15` (NY - **PENDING DESTRUCTION**)
+*   **Domain**: `nova.mysimpleaihelp.com`
+*   **Current Version**: `v11.9.2-SF-FLY`
 
-### 🔑 Infrastructure Access (SECRET)
-> [!IMPORTANT]
-> **DO NOT PUSH API KEYS TO GITHUB.** 
-> The VPS environment variables were injected manually via SSH. If the bridge goes offline after a server reboot, you must manually re-inject the `OPENAI_API_KEY` and `SUPABASE_SERVICE_KEY` into the VPS process environment (PM2).
+## 🌉 THE STACK
+1.  **Face (UI)**: React/Vite/Tailwind served by Nginx on Port 443.
+    *   *Path*: `/home/aims/nova/dist`
+2.  **Brain (Relay)**: Node.js (Express/WS) Agnostic Bridge running on Port 3505.
+    *   *Path*: `/home/aims/nova-bridge/vps-core.cjs`
+    *   *Process*: `pm2 show nova-bridge`
+3.  **Communication Layer**: WebSocket Proxy via Nginx `/relay`.
 
----
+## ❌ CURRENT BLOCKAGE: "THE SILENT HANDSHAKE"
+The UI successfully establishes a WebSocket with the Bridge (verified via `Configuring Gemini` logs). However, there is no response/audio coming back from the Gemini 3.1 Flash Live session.
 
-## 🛠️ 2. CRITICAL FIXES DELIVERED (v2.6.x SERIES)
+### Suspected Root Causes:
+1.  **API Key Validity**: The `.env` on SF was copied from the local machine. May need manual verification.
+2.  **Handshake Payload**: The `setup` object sent by `LiveEngine.ts` might be using a deprecated `model` string for the `v1alpha` endpoint used by the bridge.
+3.  **Audio PCM Mismatch**: The bridge expects `audio/pcm;rate=16000`. If the browser sends a different rate, Gemini might reject the stream silently.
 
-### 🎤 Vocal Collision & Feedback (v2.6.8/v2.6.10)
-- **Problem**: Nova was "hearing herself" and looping responses.
-- **Fix**: Implemented a **Vocal Lock** in `useSpeech.ts`. The microphone is now explicitly paused during speech synthesis and re-engaged only after silence is detected.
+## 🛠️ HANDOVER INSTRUCTIONS FOR WINDSURF / GRONK
+1.  **Audit `.env`**: Confirm `VITE_GOOGLE_AI_KEY` is active and has "Generative AI SDK" enabled in Google AI Studio.
+2.  **Trace Handshake**: Enable verbose logging in `vps-core.cjs` on the server to see the literal JSON response from Google.
+3.  **Check Port 3505**: Ensure no firewall is blocking the traffic between Nginx and the Node process (internal only, but DO firewalls can be tricky).
 
-### 🧠 Reasoning Loop Suppression (v2.6.9)
-- **Problem**: A missing method (`getWisdomContext`) and missing table (`memory_hub`) caused an infinite loop where the system crashed and triggered a fallback loop (100+ jobs/min).
-- **Fix**: 
-  - Added `getWisdomContext` to `SchoolingAgent.ts`.
-  - Created the `memory_hub` table in Supabase.
-  - Implemented a **Circuit Breaker** (5-job burst limit) in `ReasoningEngine.ts`.
-
-### ⚡ Latency & Speed
-- **Fix**: Switched to `continuous: false` in `useSpeech.ts`. Transcription now finalizes instantly upon user silence, dropping latency from 20s to ~2s.
-
----
-
-## 🗺️ 3. CORE FILE MAP
-- **`src/core/agents/ReasoningEngine.ts`**: The main OODA loop. Handles tool calls and job dispatch.
-- **`src/core/agents/SchoolingAgent.ts`**: Manages the "Knowledge Atlas" sync from the VPS.
-- **`src/hooks/useSpeech.ts`**: The ears and mouth. Controls Vocal Lock and Transcription.
-- **`vps-core.cjs`**: The bridge engine running on the remote server.
-
----
-
-## 🎯 4. BEAST MODE & CLOUD OUTPOST (v4.5-BEAST)
-- [x] **Local Toolkits**: `C:/Users/Ray/.gemini/antigravity/scratch/MySimpleAIHelp/repos/` (`antigravity-kit` & `antigravity-awesome-skills`). Use these as your expert Playbooks.
-- [x] **VPS Outpost**: Nova is isolated in `/home/nova/`. UFW firewall is active.
-- [x] **Agent Constitution**: Hardcoded in `ReasoningEngine.ts` (One Voice + Approval Gates).
-- [x] **Ghost Mode**: `ghost-researcher` is online 24/7 as the `nova` user.
-
----
-**"Beast Mode is live. The fences are up. Nova is a Distributed Intelligence."**
-*Handoff prepared by Antigravity - Sovereign AI Architect*
+**Nova is alive but mute. Restore her voice.**

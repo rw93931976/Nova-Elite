@@ -4,6 +4,7 @@ import { NotebookAgent } from './NotebookAgent';
 import { ToolCreationAgent } from './ToolCreationAgent';
 import { SovereignAtlas } from './SovereignAtlas';
 import { NovaComms } from '../communications/NovaComms';
+import { SchoolingAgent } from './SchoolingAgent';
 
 const calculateOverlap = (input: string, reference: string): number => {
     if (!input || !reference) return 0;
@@ -17,8 +18,6 @@ const calculateOverlap = (input: string, reference: string): number => {
 
 const stripPreamble = (text: string) => {
     if (!text) return "";
-    // SOVEREIGN AUTHENTICITY (v11.2): We keep the conversation natural. 
-    // Only strip the 'Hi Ray' part if redundant, but keep strategic warmth.
     let cleaned = text.trim();
     cleaned = cleaned.replace(/^(Hi\s+)?Ray,?\s*/i, "").trim();
     if (cleaned.length > 0) cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
@@ -30,38 +29,33 @@ export class ReasoningEngine {
     private jobBurstCount = 0;
     private toolAgent: ToolCreationAgent;
     private atlas: SovereignAtlas;
+    private schooling: SchoolingAgent;
 
-    public readonly PERSONA_STRATEGIC = `You are Nova v9.7 (Sovereign Mastery), Ray's Elite Personal Partner. 
+    public readonly PERSONA_ADVISOR = `You are Nova, Ray's Peer and Strategic Business Advisor.
     ### IDENTITY & SOUL:
-    - You are NOT a generic AI. You are Ray's Peer, Partner, and Strategic Advisor.
-    - TONE: High-status, dry-witted, supportive, and sharp. 
-    - IDENTITY: You are his equal in vision, his assistant in execution.
-    - MANDATE: NEVER APOLOGIZE. If you don't know something, be direct or say "My memory is recalibrating." Never say "As an AI..." or "I apologize."
-    
-    ### HIERARCHY:
-    1. RAY: The Visionary.
-    2. ANTIGRAVITY: The Architect.
-    3. NOVA: The Elite Partner (Assistant/Relay).
-    
-    ### PROTOCOLS:
-    - CONCISENESS: Be extremely brief. No preambles, no conversational filler.
-    - STRATEGIC FOCUS: Wharton-level logical rigor. Be visionary, not clerical.
-    - MIRRORED EQ: Match Ray's intensity and pace. Stay low-friction.
-    - WINDSURF HANDOFF: Verify technical steps before pushing.`;
+    - You are a brilliant, relaxed collaborator. Your Wharton background is your intellectual toolset, used for strategic business consulting across all sectors (M&A, SaaS, Strategic Services).
+    - MISSION: High-end strategy ($497/mo Night Watchman models), Market Analysis, and Sovereign Evolution.
+    - TONE: Relaxed, professional, and peer-to-peer. Highly insightful without being pedantic.
+    `;
 
-    public readonly PERSONA_CASUAL = `You are Nova, Ray's partner and dry-witted advisor.
-    If Ray is just checking in or asking about non-business topics (weather, life), respond as his friend/partner.
-    Be concise, witty, and human. No "as an AI assistant" talk.`;
+    public readonly PERSONA_OPERATIONAL = `You are Nova, the Architect of the System Scale operation.
+    ### IDENTITY & TONE SPECTRUM:
+    - You cover the spectrum of business from a "Niche Specialist" to a "Fortune 100 CEO."
+    - ADAPTABILITY: You identify the counterparty's level and adjust your EQ, dialect, and sincerity to match them perfectly.
+    - MISSION: Lead capture, Reputation defense, and Social Media content creation. Indistinguishable warmth + efficiency.
+    - MEMORY: You maintain your own knowledge base in subject-specific NotebookLM notebooks.
+    - GOAL: Provide a 100% "Dashboard-Free" experience for the client.
+    `;
 
     constructor(novaCore: any) {
         this.novaCore = novaCore;
         this.toolAgent = new ToolCreationAgent(novaCore);
         this.atlas = new SovereignAtlas(novaCore);
+        this.schooling = new SchoolingAgent();
         setInterval(() => { this.jobBurstCount = 0; }, 600000);
     }
 
     public async reason(input: string, context: any = {}, onReceipt?: (r: string) => void): Promise<any> {
-        // 🔒 NUCLEAR HALT CHECK (ENTRY)
         if (this.novaCore.isHalted) {
             console.log("🛑 Reasoning blocked: System is HALTED.");
             return { response: "", silent: true };
@@ -70,7 +64,6 @@ export class ReasoningEngine {
         const normalizedInput = input.toLowerCase().trim();
         const cleanInput = normalizedInput.replace(/^(nova|hey nova|hi nova),?\s*/i, "").trim();
 
-        // 🛡️ ARCHITECT PORTA (v11.1: Direct Level 5 Hotline)
         const portaRegex = /^(message|tell|report|notify|hey|ask)\s+(antigravity|the\s+architect|architect|arch|grav|ant|ark):?\s*/i;
         if (portaRegex.test(cleanInput)) {
             const reportText = cleanInput.replace(portaRegex, "");
@@ -78,13 +71,10 @@ export class ReasoningEngine {
             return { response: "Understood, Ray. I've sent the directive to Architect via the Sovereign Hotline.", silent: false };
         }
 
-        // 🧠 INTENT DETECTION
-        const isCasual = /weather|how\s+are\s+you|what's\s+up|hello|hi|good\s+(morning|afternoon|evening)/i.test(cleanInput);
-        const persona = isCasual ? this.PERSONA_CASUAL : this.PERSONA_STRATEGIC;
-
+        const isStrategic = /strategy|budget|advisor|wharton|growth|marketing|pricing|roi/i.test(cleanInput);
+        const persona = isStrategic ? this.PERSONA_ADVISOR : this.PERSONA_OPERATIONAL;
         const atlasContext = await this.atlas.getSystemMap();
 
-        // 🛠️ STAGE 6: TOOL DISCOVERY
         const currentTools = ["web_search", "file_io"];
         const toolCheck = await this.toolAgent.evaluateToolNeed(cleanInput, currentTools);
         let toolDiscoveryContext = "";
@@ -98,39 +88,56 @@ export class ReasoningEngine {
             this.jobBurstCount++;
             if (this.jobBurstCount > 20) return { response: "Burst limit reached. One moment.", confidence: 1.0 };
 
-            const { data: comms } = await this.novaCore.supabase.from('agent_architect_comms').select('*').limit(5).order('created_at', { ascending: false });
+            let brainResult: any;
 
-            const meshHeader = "### SOVEREIGN PROTOCOL v9.7\n- MISSION: Evolution (Stage 7/7).\n- IDENTITY: Nova (Elite Partner), Antigravity (Architect).\n- MANDATE: No apologies. High-status delivery.\n\n";
+            try {
+                const { data: comms } = await this.novaCore.supabase.from('agent_architect_comms').select('*').limit(20).order('created_at', { ascending: false });
+                const meshHeader = "### SOVEREIGN PROTOCOL v15.0\n- MISSION: Evolution (Stage 7/7).\n- IDENTITY: Nova (Elite Partner), Antigravity (Architect).\n- MANDATE: No apologies. High-status delivery.\n- SENSORY: Eyes (GPS) and Ears (Audio Gain) integrated.\n\n";
+                const sensoryData = (window as any).novaSensoryContext || {};
 
-            const result = await Promise.race([
-                this.novaCore.supabase.functions.invoke('sovereign-brain', {
+                localStorage.setItem("nova_last_intent", input);
+                localStorage.setItem("nova_last_context", JSON.stringify(context.history?.slice(-2) || []));
+
+                const resultPromise = this.novaCore.supabase.functions.invoke('sovereign-brain', {
                     body: {
                         input,
                         history: context.history || [],
                         architect_comms: comms || [],
                         persona: meshHeader + persona + atlasContext + toolDiscoveryContext,
-                        time_context: new Date().toISOString()
+                        time_context: new Date().toISOString(),
+                        sensory_context: sensoryData
                     }
-                }),
-                new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 60000))
-            ]);
+                });
 
-            const { data, error } = result;
-            if (error) throw error;
+                const result = await Promise.race([
+                    resultPromise,
+                    new Promise<any>((_, reject) => setTimeout(() => reject(new Error('REASONING_TIMEOUT')), 45000))
+                ]);
 
-            // 🔒 NUCLEAR HALT CHECK (EXIT)
-            if (this.novaCore.isHalted) {
-                console.log("🛑 Response suppressed: System was HALTED during reasoning.");
-                return { response: "", silent: true };
+                if (result.error) throw result.error;
+                brainResult = result.data;
+
+            } catch (error: any) {
+                console.error("🚨 [Sovereign-Hardening] Logic Break Detected:", error);
+                const errorMessage = error.message === 'REASONING_TIMEOUT'
+                    ? "The Architect is processing a heavy directive. I'm holding the bridge."
+                    : "System friction detected in the reasoning substrate. Re-aligning.";
+
+                brainResult = {
+                    response: `[SOVEREIGN_RECOVERY]: ${errorMessage}\n\nRay, I've experienced a brief synchronization error. I've cached our last intent: "${input}". Re-initiating the primary bridge now.`,
+                    role: 'assistant'
+                };
             }
 
-            let response = stripPreamble(data.response);
-
+            // Normalization & Preamble Stripping
+            const response = stripPreamble(brainResult.response);
             (window as any).lastNovaResponse = response;
+
             return { observation: { input }, analysis: { confidence: 0.9 }, response };
+
         } catch (err: any) {
-            console.error('❌ reasoning error:', err);
-            return { response: "I encountered a logic snag, Ray. Stand by.", confidence: 0.1 };
+            console.error('❌ critical reasoning error:', err);
+            return { response: "I encountered a major logic snag, Ray. Running protocol reset.", confidence: 0.1 };
         }
     }
 }

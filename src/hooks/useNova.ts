@@ -48,7 +48,8 @@ export function useNova() {
 
       const thought = await core.processElite(input, { history }, options?.onReceipt);
       if (thought?.response && !isHalted) {
-        if ((window as any).NOVA_USE_BROWSER_TTS) speakRef.current(thought.response);
+        // 🎙️ VOICE AUTO-FIRE (v11.1-SOVEREIGN): Ensure Nova speaks by default
+        speakRef.current(thought.response);
         await core.supabase.from("nova_messages").insert([{ role: "assistant", content: thought.response }]);
       }
       return thought;

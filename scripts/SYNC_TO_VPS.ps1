@@ -12,7 +12,7 @@ function Write-Log {
 
 $IDENTITY_FILE = "C:\Users\Ray\.ssh\aims_ed25519"
 $REMOTE_USER = "aims"
-$REMOTE_HOST = "31.220.59.237"
+$REMOTE_HOST = "159.223.206.225"
 $REMOTE_DIR = "~/nova"
 
 Write-Log "--- Starting VPS Synchronization ---"

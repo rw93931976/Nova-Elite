@@ -46,7 +46,7 @@ export class MemoryAgent {
                 .from('nova_memories')
                 .select('*')
                 .order('importance', { ascending: false })
-                .limit(20);
+                .limit(50);
 
             if (!error && data) {
                 this.memories = data;

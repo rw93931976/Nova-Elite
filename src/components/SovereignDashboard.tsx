@@ -1,15 +1,50 @@
 import React from 'react';
-import { Activity, Shield, Clock, Power, ShieldAlert, Globe } from 'lucide-react';
+import { Activity, Shield, Clock, Power, ShieldAlert, Globe, Volume2, Zap } from 'lucide-react';
 import type { NovaStatus } from '../types/nova';
 
 interface SovereignDashboardProps {
     status: NovaStatus;
     onToggleHalt: () => void;
+    hasHotlineDirective?: boolean;
+    onDirectiveClick?: () => void;
+    volume?: number;
+    onVolumeChange?: (val: number) => void;
 }
 
-export const SovereignDashboard: React.FC<SovereignDashboardProps> = ({ status, onToggleHalt }) => {
+export const SovereignDashboard: React.FC<SovereignDashboardProps> = ({
+    status,
+    onToggleHalt,
+    hasHotlineDirective,
+    onDirectiveClick,
+    volume = 1.0,
+    onVolumeChange
+}) => {
     return (
         <div className="space-y-6">
+            {/* 🛡️ SOVEREIGN HOTLINE: HIGH-PRIORITY DIRECTIVE */}
+            {hasHotlineDirective && (
+                <div
+                    onClick={onDirectiveClick}
+                    className="p-1 rounded-2xl bg-gradient-to-r from-red-500 via-rose-500 to-red-600 animate-pulse shadow-[0_0_30px_rgba(244,63,94,0.6)] cursor-pointer hover:scale-[1.02] transition-all"
+                >
+                    <div className="bg-[#121212] rounded-[calc(1rem-1px)] p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="p-2 rounded-lg bg-red-500/20 text-red-500">
+                                <ShieldAlert size={20} />
+                            </div>
+                            <div>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-red-500">High-Priority Directive</h4>
+                                <p className="text-white text-xs font-bold uppercase tracking-tight">Sovereign Hotline Active</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-red-500">
+                            <span className="text-[9px] font-black uppercase tracking-widest">Connect</span>
+                            <Globe size={14} className="animate-spin-slow" />
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="flex items-center justify-between mb-8">
                 <div>
                     <h2 className="text-2xl font-black bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent uppercase tracking-widest">
@@ -26,6 +61,30 @@ export const SovereignDashboard: React.FC<SovereignDashboardProps> = ({ status, 
                         <span className="text-sm font-mono text-cyan-400/80">{status.currentTime || 'Syncing...'}</span>
                     </div>
                     <Clock className="text-cyan-400/50 animate-pulse" size={18} />
+                </div>
+            </div>
+
+            {/* 🔊 VOICE CALIBRATION (CRITICAL FOR DRIVE-TIME) */}
+            <div className="bg-[#121212]/60 backdrop-blur-3xl border-2 border-[#0BF9EA]/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(11,249,234,0.1)]">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <Volume2 className="text-[#0BF9EA]" size={20} />
+                        <h3 className="text-[#0BF9EA] font-black uppercase tracking-widest text-sm">Voice Calibration</h3>
+                    </div>
+                    <span className="text-[#0BF9EA] font-mono text-xs">{Math.round(volume * 100)}%</span>
+                </div>
+                <input
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="0.05"
+                    value={volume}
+                    onChange={(e) => onVolumeChange?.(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-[#121212] rounded-lg appearance-none cursor-pointer accent-[#0BF9EA] border border-[#0BF9EA]/20"
+                />
+                <div className="flex justify-between mt-2">
+                    <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Mute</span>
+                    <span className="text-[9px] font-black text-[#0BF9EA]/40 uppercase tracking-widest">Max Boost (2x)</span>
                 </div>
             </div>
 
@@ -65,6 +124,28 @@ export const SovereignDashboard: React.FC<SovereignDashboardProps> = ({ status, 
                     </div>
                     <p className="text-xs text-white/40 leading-relaxed">
                         Monitoring for internal rogue behavior and external anomalies. Integrity Hash: <span className="text-cyan-400 font-mono">0x7F...9A</span>
+                    </p>
+                </div>
+
+                {/* 📺 NEW: Strategy Vault Quick-Link */}
+                <div
+                    onClick={() => (window as any).novaSetView?.("vault")}
+                    className="p-6 rounded-2xl border-2 border-[#0BF9EA]/20 bg-[#121212]/40 hover:border-[#0BF9EA] transition-all cursor-pointer group col-span-1 md:col-span-2"
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 rounded-xl bg-[#0BF9EA]/10 text-[#0BF9EA]">
+                                <Zap size={24} />
+                            </div>
+                            <div>
+                                <h3 className="font-black uppercase tracking-widest text-sm leading-none mb-1 group-hover:text-[#0BF9EA] transition-colors">Strategy Vault</h3>
+                                <span className="text-[10px] text-[#0BF9EA]/60 uppercase font-black tracking-[0.2em]">YouTube Intelligence Hub</span>
+                            </div>
+                        </div>
+                        <Activity className="text-[#0BF9EA]/20 group-hover:animate-pulse" size={20} />
+                    </div>
+                    <p className="text-[11px] text-white/40 font-bold uppercase tracking-tight">
+                        Access processed SOPs and tactical business logic extracted from global resources.
                     </p>
                 </div>
             </div>

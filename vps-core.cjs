@@ -58,7 +58,14 @@ const wss = new WebSocket.Server({ server });
 
 log(`🛰️ [Relay] Sovereign Live Gateway initializing on unified port ${BRIDGE_PORT}...`);
 
-wss.on('connection', (ws, req) => {
+// Init Supabase
+let supabase = null;
+if (supabaseUrl && supabaseKey) {
+    supabase = createClient(supabaseUrl, supabaseKey);
+    log('🔗 [Mesh] Connected to Sovereign Database.');
+}
+
+wss.on('connection', async (ws, req) => {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
     const key = url.searchParams.get('key');
 
@@ -70,6 +77,24 @@ wss.on('connection', (ws, req) => {
 
     log('🤝 [Relay] Browser handshaking with Sovereign Node.');
     let googleSocket = null;
+    let currentSessionId = null;
+
+    // 1. Create Sovereign Session
+    if (supabase) {
+        try {
+            const { data, error } = await supabase
+                .from('sessions')
+                .insert([{ summary: 'New Sovereign Live Session' }])
+                .select();
+            if (data && data[0]) {
+                currentSessionId = data[0].id;
+                log(`📝 [Session] Tracking active: ${currentSessionId}`);
+            }
+            if (error) log(`❌ [Session] Create Error: ${error.message}`);
+        } catch (e) {
+            log(`❌ [Session] Exception: ${e.message}`);
+        }
+    }
 
     ws.on('message', async (message) => {
         try {
@@ -99,8 +124,23 @@ wss.on('connection', (ws, req) => {
                     }));
                 });
 
-                googleSocket.on('message', (gMsg) => {
+                googleSocket.on('message', async (gMsg) => {
+                    const gStr = gMsg.toString();
                     if (ws.readyState === WebSocket.OPEN) ws.send(gMsg);
+
+                    // Persist AI Response Event (Metadata Only for now to save DB space)
+                    if (supabase && currentSessionId) {
+                        try {
+                            const gData = JSON.parse(gStr);
+                            if (gData.serverContent) {
+                                await supabase.from('events').insert([{
+                                    session_id: currentSessionId,
+                                    type: 'ai_response',
+                                    metadata: { model: "gemini-2.0-flash-exp" }
+                                }]);
+                            }
+                        } catch (e) { }
+                    }
                 });
 
                 googleSocket.on('close', () => {
@@ -134,8 +174,4 @@ server.listen(BRIDGE_PORT, '0.0.0.0', () => {
     log(`[VocalMirror] Unified Bridge active on port ${BRIDGE_PORT}`);
 });
 
-// Supabase Mesh Integration (Simplified for Handoff)
-if (supabaseUrl && supabaseKey) {
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    log('🔗 [Mesh] Connected to Sovereign Database.');
-}
+// Supabase Mesh Integration (Handled above in v12.0.0)

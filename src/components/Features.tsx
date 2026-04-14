@@ -82,14 +82,14 @@ const Features: React.FC = () => {
     },
     {
       level: 6,
-      title: "Agent Spawning & Training",
+      title: "Sovereign Schooling & Subject Filing",
       icon: <Rocket size={24} />,
       bullets: [
-        { text: "Spawns specialized child agents for specific tasks", completed: false },
-        { text: "Trains them using accumulated experience and memory", completed: false },
-        { text: "Manages Role-Based Hive Mind synchronization", completed: false },
-        { text: "Customizes basic behavior (tone, scripts, escalation rules)", completed: false },
-        { text: "Guardrails: Child agents are sandboxed, auto-shutdown when idle", completed: false }
+        { text: "Autonomously creates and populates subject-specific folders", completed: true },
+        { text: "Frees herself from manual filing; writes to NotebookLM-ready units", completed: true },
+        { text: "Maintains 3-hour high-fidelity schooling cycles during training", completed: true },
+        { text: "Synchronizes academic findings with the Sovereign Knowledge Base", completed: true },
+        { text: "Guardrails: Sensitive business intel kept in encrypted sub-folder", completed: true }
       ]
     },
     {
@@ -171,8 +171,8 @@ const Features: React.FC = () => {
 
               {/* Main Interactive Node Card */}
               <div className={`relative overflow-hidden rounded-[2rem] p-6 transition-all duration-1000 ${isFullyUnlocked
-                  ? "bg-[#121212]/80 border-2 border-[#0BF9EA]/40 shadow-[0_0_40px_rgba(11,249,234,0.15)] backdrop-blur-xl"
-                  : "bg-[#121212]/40 border-2 border-white/5 backdrop-blur-sm"
+                ? "bg-[#121212]/80 border-2 border-[#0BF9EA]/40 shadow-[0_0_40px_rgba(11,249,234,0.15)] backdrop-blur-xl"
+                : "bg-[#121212]/40 border-2 border-white/5 backdrop-blur-sm"
                 }`}
               >
                 <div className="relative z-10 flex flex-col gap-6">

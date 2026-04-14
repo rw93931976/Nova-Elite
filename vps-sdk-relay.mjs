@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 var GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-var MODEL_NAME = 'gemini-2.5-flash-native-audio-latest';
+var MODEL_NAME = 'gemini-2.0-flash-exp';
 var GEMINI_WS_URL = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=' + GEMINI_API_KEY;
 
 var SYSTEM_PROMPT = 'You are Nova, Ray\'s Elite Personal Partner. ' +

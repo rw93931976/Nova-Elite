@@ -1,0 +1,33 @@
+
+> nova-elite-shielded@10.0.0 build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[plugin vite:resolve] Module "child_process" has been externalized for browser compatibility, imported by "C:/Users/Ray/.gemini/antigravity/Nova-Elite/src/core/agents/NotebookWriter.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "util" has been externalized for browser compatibility, imported by "C:/Users/Ray/.gemini/antigravity/Nova-Elite/src/core/agents/NotebookWriter.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "fs" has been externalized for browser compatibility, imported by "C:/Users/Ray/.gemini/antigravity/Nova-Elite/src/core/agents/NotebookWriter.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "path" has been externalized for browser compatibility, imported by "C:/Users/Ray/.gemini/antigravity/Nova-Elite/src/core/agents/NotebookWriter.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[32mΓ£ô[39m 1818 modules transformed.
+Γ£ù Build failed in 4.59s
+error during build:
+[vite-plugin-pwa:build] There was an error during the build:
+  src/core/agents/NotebookWriter.ts (2:9): "promisify" is not exported by "__vite-browser-external", imported by "src/core/agents/NotebookWriter.ts".
+Additionally, handling the error in the 'buildEnd' hook caused the following error:
+  src/core/agents/NotebookWriter.ts (2:9): "promisify" is not exported by "__vite-browser-external", imported by "src/core/agents/NotebookWriter.ts".
+file: C:/Users/Ray/.gemini/antigravity/Nova-Elite/src/core/agents/NotebookWriter.ts:2:9
+
+1: import { exec } from 'child_process';
+2: import { promisify } from 'util';
+            ^
+3: import * as fs from 'fs';
+4: import * as path from 'path';
+
+    at getRollupError (file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/node_modules/rollup/dist/es/shared/parseAst.js:402:41)
+    at file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/node_modules/rollup/dist/es/shared/node-entry.js:23467:39
+    at async catchUnfinishedHookActions (file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/node_modules/rollup/dist/es/shared/node-entry.js:22925:16)
+    at async rollupInternal (file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/node_modules/rollup/dist/es/shared/node-entry.js:23450:5)
+    at async buildEnvironment (file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/node_modules/vite/dist/node/chunks/config.js:33541:12)
+    at async Object.build (file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/node_modules/vite/dist/node/chunks/config.js:33900:19)
+    at async Object.buildApp (file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/node_modules/vite/dist/node/chunks/config.js:33897:153)
+    at async CAC.<anonymous> (file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/node_modules/vite/dist/node/cli.js:629:3)

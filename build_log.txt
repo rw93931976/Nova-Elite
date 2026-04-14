@@ -1,23 +1,27 @@
+
+> nova-elite-shielded@10.0.0 build
+> vite build
+
 [36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
 transforming...
-[32mΓ£ô[39m 1733 modules transformed.
-Γ£ù Build failed in 6.23s
+[32mΓ£ô[39m 1747 modules transformed.
+Γ£ù Build failed in 4.80s
 error during build:
-[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] src/hooks/useSpeech.ts (101:7): There was an error during the build:
+[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] src/core/agents/LiveEngine.ts (39:25): There was an error during the build:
   Transform failed with 1 error:
-C:/Users/Ray/.gemini/antigravity/Nova-Elite/src/hooks/useSpeech.ts:101:7: ERROR: Expected identifier but found "1400"
+C:/Users/Ray/.gemini/antigravity/Nova-Elite/src/core/agents/LiveEngine.ts:39:25: ERROR: Expected ";" but found ":"
 Additionally, handling the error in the 'buildEnd' hook caused the following error:
   Transform failed with 1 error:
-C:/Users/Ray/.gemini/antigravity/Nova-Elite/src/hooks/useSpeech.ts:101:7: ERROR: Expected identifier but found "1400"
-file: C:/Users/Ray/.gemini/antigravity/Nova-Elite/src/hooks/useSpeech.ts:101:7
+C:/Users/Ray/.gemini/antigravity/Nova-Elite/src/core/agents/LiveEngine.ts:39:25: ERROR: Expected ";" but found ":"
+file: C:/Users/Ray/.gemini/antigravity/Nova-Elite/src/core/agents/LiveEngine.ts:39:25
 
-Expected identifier but found "1400"
-99 |              onResultRef.current(text);
-100|          }
-101|      }, 1400);
-   |         ^
-102|  }
-103|          };
+Expected ";" but found ":"
+37 |                          - You handle the 25% lead leakage problem.
+38 |                          - TASK: ${_systemInstruction}`,
+39 |                      voice: 'shimmer', // OPTIONS: alloy, ash, ballad, coral, echo, sage, shimmer, verse
+   |                           ^
+40 |                          input_audio_format: 'pcm16',
+41 |                              output_audio_format: 'pcm16',
 
     at getRollupError (file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/node_modules/rollup/dist/es/shared/parseAst.js:402:41)
     at file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/node_modules/rollup/dist/es/shared/node-entry.js:23467:39

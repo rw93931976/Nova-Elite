@@ -115,7 +115,7 @@ wss.on('connection', (ws) => {
 });
 
 const BRIDGE_PORT = 3505;
-const http = require('http');
+
 const app = http.createServer((req, res) => {
     if (req.url === '/health') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
