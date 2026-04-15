@@ -7,8 +7,7 @@ dotenv.config({ path: '/home/aims/nova/.env' });
 const PORT = 3505;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// NUCLEAR OVERRIDE: Hardcoded for trial stabilization
-const OPENAI_API_KEY = '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';
+const OPENAI_API_KEY = process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
 
 const GEMINI_URL = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BiDiGenerateContent?key=' + GEMINI_API_KEY;
 const OPENAI_URL = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
