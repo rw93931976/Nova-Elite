@@ -33,7 +33,7 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const { messages, toggleListening, isHalted, toggleHalt, handleHardRefresh, hasNewArchMsg, resetArchAlert } = nova;
+  const { messages, toggleListening, isHalted, toggleHalt, hasNewArchMsg, resetArchAlert } = nova;
 
   const handleHardRefresh = useCallback(async () => {
     const confirmed = window.confirm("PERFORM NUCLEAR CACHE CLEAR?\nThis will purge all local data and force a fresh fetch from the server.");
