@@ -12,6 +12,7 @@ import { useLiveVoice } from "./hooks/useLiveVoice";
 import { SovereignDashboard } from "./components/SovereignDashboard";
 import { MissionControl } from "./components/MissionControl";
 
+// [v11.0] Sovereign Mastery - Production Sync
 const CURRENT_VERSION = '1.11.0 Elite';
 
 function App() {
