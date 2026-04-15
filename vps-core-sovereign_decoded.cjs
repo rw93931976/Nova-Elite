@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 // --- ENVIRONMENT LOADER ---
-const envPath = '/home/aims/nova/.env';
+const envPath = '.env';
 if (fs.existsSync(envPath)) {
     require('dotenv').config({ path: envPath });
 }

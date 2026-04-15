@@ -51,6 +51,6 @@ Nova is currently reaching for 100-subject mastery. Her autonomous cycles are se
 ---
 
 ## 📖 ACTIVE RESEARCH TARGETS
-- [v6.0] Study: **Automated Financial Forensics** & **Handling: De-escalation** [GRADUATED 2026-04-15T17:06:06.928Z]
+- [v6.0] Study: **Social Media Platform Rules, Compliance & "AI Posting" Cans/Can'ts** & **Handling: De-escalation** [GRADUATED 2026-04-15T19:22:11.337Z]
 
 > For full historical logs, see [Syllabus_Archive.md](file:///C:/Users/Ray/.gemini/antigravity/Nova-Elite/Syllabus_Archive.md).

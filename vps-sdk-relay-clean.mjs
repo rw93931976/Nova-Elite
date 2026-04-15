@@ -17,7 +17,7 @@ const log = (msg) => {
 log('RELAY_BOOT: Initializing...');
 
 try {
-    dotenv.config({ path: '/home/aims/nova/.env' });
+    dotenv.config();
     const API_KEY = process.env.GEMINI_API_KEY;
     const PORT = process.env.PORT || 3505;
 

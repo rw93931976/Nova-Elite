@@ -1,4 +1,4 @@
-require('dotenv').config({ path: '/home/aims/vanguard-agents/MySimpleAIHelp/.env' });
+require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 const https = require('https');
 

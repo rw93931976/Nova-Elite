@@ -2,7 +2,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: '/home/aims/nova/.env' });
+dotenv.config();
 
 const PORT = 3505;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
