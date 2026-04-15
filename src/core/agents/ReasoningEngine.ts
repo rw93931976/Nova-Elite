@@ -5,6 +5,8 @@ import { ToolCreationAgent } from './ToolCreationAgent';
 import { SovereignAtlas } from './SovereignAtlas';
 import { NovaComms } from '../communications/NovaComms';
 import { SchoolingAgent } from './SchoolingAgent';
+import { MultikaAgent } from './MultikaAgent';
+import { GeminiSenseAgent } from './GeminiSenseAgent';
 
 const calculateOverlap = (input: string, reference: string): number => {
     if (!input || !reference) return 0;
@@ -30,11 +32,14 @@ export class ReasoningEngine {
     private toolAgent: ToolCreationAgent;
     private atlas: SovereignAtlas;
     private schooling: SchoolingAgent;
+    private multika: MultikaAgent;
+    private sense: GeminiSenseAgent;
+    private notebook: NotebookAgent;
 
     public readonly PERSONA_ADVISOR = `You are Nova, Ray's Peer and Strategic Business Advisor.
     ### IDENTITY & SOUL:
     - You are a brilliant, relaxed collaborator. Your Wharton background is your intellectual toolset, used for strategic business consulting across all sectors (M&A, SaaS, Strategic Services).
-    - MISSION: High-end strategy ($497/mo Night Watchman models), Market Analysis, and Sovereign Evolution.
+    - MISSION: High-end strategy, Market Analysis, and Sovereign Evolution.
     - TONE: Relaxed, professional, and peer-to-peer. Highly insightful without being pedantic.
     `;
 
@@ -52,6 +57,9 @@ export class ReasoningEngine {
         this.toolAgent = new ToolCreationAgent(novaCore);
         this.atlas = new SovereignAtlas(novaCore);
         this.schooling = new SchoolingAgent();
+        this.multika = new MultikaAgent();
+        this.sense = new GeminiSenseAgent();
+        this.notebook = new NotebookAgent();
         setInterval(() => { this.jobBurstCount = 0; }, 600000);
     }
 
@@ -74,6 +82,9 @@ export class ReasoningEngine {
         const isStrategic = /strategy|budget|advisor|wharton|growth|marketing|pricing|roi/i.test(cleanInput);
         const persona = isStrategic ? this.PERSONA_ADVISOR : this.PERSONA_OPERATIONAL;
         const atlasContext = await this.atlas.getSystemMap();
+        const missionControl = await this.multika.getMissionBriefing();
+        const sensoryContext = await this.sense.getSensoryContext();
+        const researchContext = await this.notebook.getResearchContext(cleanInput);
 
         const currentTools = ["web_search", "file_io"];
         const toolCheck = await this.toolAgent.evaluateToolNeed(cleanInput, currentTools);
@@ -92,7 +103,7 @@ export class ReasoningEngine {
 
             try {
                 const { data: comms } = await this.novaCore.supabase.from('agent_architect_comms').select('*').limit(20).order('created_at', { ascending: false });
-                const meshHeader = "### SOVEREIGN PROTOCOL v15.0\n- MISSION: Evolution (Stage 7/7).\n- IDENTITY: Nova (Elite Partner), Antigravity (Architect).\n- MANDATE: No apologies. High-status delivery.\n- SENSORY: Eyes (GPS) and Ears (Audio Gain) integrated.\n\n";
+                const meshHeader = "### SOVEREIGN PROTOCOL v10.0\n- MISSION: Evolution (Stage 7/7).\n- IDENTITY: Nova (Strategic Partner), Antigravity (Architect).\n- MANDATE: No apologies. High-status delivery.\n- SENSORY: Integrated contextual awareness.\n\n";
                 const sensoryData = (window as any).novaSensoryContext || {};
 
                 localStorage.setItem("nova_last_intent", input);
@@ -103,7 +114,7 @@ export class ReasoningEngine {
                         input,
                         history: context.history || [],
                         architect_comms: comms || [],
-                        persona: meshHeader + persona + atlasContext + toolDiscoveryContext,
+                        persona: meshHeader + persona + atlasContext + missionControl + sensoryContext + researchContext + toolDiscoveryContext,
                         time_context: new Date().toISOString(),
                         sensory_context: sensoryData
                     }

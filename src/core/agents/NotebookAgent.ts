@@ -37,6 +37,7 @@ export class NotebookAgent {
 
     /**
      * Provides metadata for the Sovereign brain to trigger its own research.
+     * v10.0: Re-wired to use the localized 'notebooklm' skill.
      */
     public async getResearchContext(query: string): Promise<string> {
         const relevant = this.activeNotebooks.find(n =>
@@ -45,10 +46,12 @@ export class NotebookAgent {
         );
 
         if (relevant) {
-            return `[SOVEREIGN_RESOURCE]: Notebook "${relevant.name}" is available at ${relevant.url}. Use your 'read_notebook' tool for deep study.`;
+            return `[SOVEREIGN_RESOURCE]: Notebook "${relevant.name}" (ID: ${relevant.id}) is available. 
+            EXECUTION_DIRECTIVE: Use the 'notebooklm' skill to query this specific ID for source-grounded answers. 
+            PROTOCOL: python scripts/run.py ask_question.py --question "${query}" --notebook-id "${relevant.id}"`;
         }
 
-        return "No specific notebook identified for this query.";
+        return "No specific notebook identified for this query. Use general knowledge or propose a new notebook addition via the 'notebooklm' add tool.";
     }
 
     public getRegistry(): NotebookMetadata[] {

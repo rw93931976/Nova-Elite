@@ -7,6 +7,9 @@ import { SecuritySentinel } from './SecuritySentinel';
 import { BackupAgent } from './BackupAgent';
 import { SelfHealer } from './SelfHealer';
 import { SelfAuditAgent } from './SelfAuditAgent';
+import { MultikaAgent } from './MultikaAgent';
+import { GeminiSenseAgent } from './GeminiSenseAgent';
+import { NotebookAgent } from './NotebookAgent';
 
 export interface AgentRole {
     name: string;
@@ -31,7 +34,10 @@ export class AgentFactory {
         { name: "strategy", description: "Market analysis and strategic planning", skills: ["market-scan", "strategic-proposal"] },
         { name: "revenue", description: "Revenue tracking and credit management", skills: ["revenue-logging", "credit-monitoring"] },
         { name: "fleet", description: "Global node coordination", skills: ["heartbeat-broadcast", "peer-discovery"] },
-        { name: "self-audit", description: "Wharton-compliance and bug pattern detection", skills: ["compliance-check", "bug-patterns"] }
+        { name: "self-audit", description: "Wharton-compliance and bug pattern detection", skills: ["compliance-check", "bug-patterns"] },
+        { name: "multika", description: "Mission Control / Collaborative Sandbox", skills: ["task-orchestration", "collaboration"] },
+        { name: "sense", description: "Multimodal Ingestion (Eyes)", skills: ["vision", "audio-processing", "video-analysis"] },
+        { name: "notebook", description: "Source-grounded research (NotebookLM)", skills: ["research", "grounding", "citations"] }
     ];
 
     public static getRole(name: string): AgentRole | undefined {
@@ -73,6 +79,12 @@ export class AgentFactory {
                 return new SelfHealer(core);
             case 'self-audit':
                 return new SelfAuditAgent();
+            case 'multika':
+                return new MultikaAgent();
+            case 'sense':
+                return new GeminiSenseAgent();
+            case 'notebook':
+                return new NotebookAgent();
             default:
                 return role;
         }

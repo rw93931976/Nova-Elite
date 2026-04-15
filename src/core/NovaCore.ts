@@ -7,7 +7,7 @@ export class NovaCore {
     private static instance: NovaCore;
     public supabase = supabase;
 
-    public readonly version = 'v15.0-SOVEREIGN-ELITE';
+    public readonly version = 'v10.0-SOVEREIGN-ELITE';
     public isHalted: boolean = false;
     public liveEngine: LiveEngine;
 
@@ -47,7 +47,7 @@ export class NovaCore {
         let groundingData = "\n### CURRENT RESEARCH GROUNDING:\n";
         groundingData += `
         [The Mission]: High-end strategy and market transition models for elite partners.
-        [Strategy]: Start with the 'Night Watchman' to solve their immediate pain.
+        [Status]: Level 10 Sovereign Autonomy - Pathing to AGI.
         `;
 
         this.liveEngine.onToolCall(async (name, args) => {
