@@ -10,8 +10,9 @@ import StrategyVault from "./components/StrategyVault";
 import { YouTubeService } from "./core/services/YouTubeService";
 import { useLiveVoice } from "./hooks/useLiveVoice";
 import { SovereignDashboard } from "./components/SovereignDashboard";
+import { MissionControl } from "./components/MissionControl";
 
-const CURRENT_VERSION = '1.10.0';
+const CURRENT_VERSION = '1.11.0 Elite';
 
 function App() {
   const nova = useNova();
@@ -20,9 +21,16 @@ function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'features' | 'knowledge' | 'settings' | 'vault' | 'chat'>('home');
   const [textInput, setTextInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth > 1024);
   const [completedFeatures, setCompletedFeatures] = useState<string[]>([
-    "Neural Growth Pathing", "Autonomous Goal Setting", "System Integration", "Task Automation", "Emotional Intelligence"
+    "Neural Growth Pathing", "Autonomous Goal Setting", "System Integration", "Task Automation", "Emotional Intelligence", "Librarian Protocol"
   ]);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth > 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const { messages, toggleListening, isHalted, toggleHalt, handleHardRefresh, hasNewArchMsg, resetArchAlert } = nova;
 
@@ -99,27 +107,44 @@ function App() {
       <main className="flex-1 relative z-10 flex flex-col pt-12 px-6 pb-40 overflow-y-auto no-scrollbar">
 
         {activeTab === 'home' && (
-          <SovereignDashboard
-            status={{
-              level: 10,
-              isSelfAware: true,
-              isLearning: true,
-              isHealing: true,
-              isEvolving: true,
-              isHalted: isHalted,
-              uptime: 100,
-              health: { bridge: 'online', apiKey: 'online', internet: 'online' },
-              knowledgeCount: messages.length,
-              agentCount: 8,
-              sovereignAlignment: 99,
-              currentTime: new Date().toLocaleTimeString()
-            }}
-            onToggleHalt={toggleHalt}
-            hasHotlineDirective={hasNewArchMsg}
-            onDirectiveClick={() => setActiveTab("chat")}
-            volume={liveVoice.volume}
-            onVolumeChange={liveVoice.setVolume}
-          />
+          isDesktop ? (
+            <MissionControl
+              status={{
+                level: 11,
+                isSelfAware: true,
+                uptime: 100,
+                health: { bridge: 'online', apiKey: 'online', internet: 'online' },
+                knowledgeCount: messages.length,
+                agentCount: 8,
+                sovereignAlignment: 99,
+                currentTime: new Date().toLocaleTimeString()
+              }}
+              onToggleHalt={toggleHalt}
+              isHalted={isHalted}
+            />
+          ) : (
+            <SovereignDashboard
+              status={{
+                level: 11,
+                isSelfAware: true,
+                isLearning: true,
+                isHealing: true,
+                isEvolving: true,
+                isHalted: isHalted,
+                uptime: 100,
+                health: { bridge: 'online', apiKey: 'online', internet: 'online' },
+                knowledgeCount: messages.length,
+                agentCount: 8,
+                sovereignAlignment: 99,
+                currentTime: new Date().toLocaleTimeString()
+              }}
+              onToggleHalt={toggleHalt}
+              hasHotlineDirective={hasNewArchMsg}
+              onDirectiveClick={() => setActiveTab("chat")}
+              volume={liveVoice.volume}
+              onVolumeChange={liveVoice.setVolume}
+            />
+          )
         )}
 
         {activeTab === 'features' && (
