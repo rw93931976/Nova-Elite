@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=8.9" />
+  <link rel="icon" type="image/png" href="/pwa-512x512.png" />
+  <link rel="apple-touch-icon" href="/pwa-512x512.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#121212" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Nova Elite</title>
+  <script>
+    // 🛡️ SOVEREIGN ARMOR: Ensure TTS classes are never undefined (Fixes Error 117)
+    if (typeof window !== 'undefined' && typeof window.SpeechSynthesisUtterance === 'undefined') {
+      window.SpeechSynthesisUtterance = function () { return { pitch: 1, rate: 1, text: "" }; };
+    }
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('purge')) {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) registration.unregister();
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = window.location.pathname + '?v=' + Date.now();
+        });
+      }
+    }
+    window.onerror = function (msg, url, line) {
+      console.error("❌ FATAL NOVA ERROR:", msg, "File:", url, "Line:", line);
+    };
+    window.NOVA_USE_BROWSER_TTS = true;
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

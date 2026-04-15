@@ -1,0 +1,327 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --charcoal: #121212;
+  --sovereign-neon: #0BF9EA;
+  --neon-glow: rgba(11, 249, 234, 0.4);
+  --charcoal-glow: rgba(18, 18, 18, 0.8);
+  /* 3D Glass Tokens */
+  --glass-top: rgba(255, 255, 255, 0.25);
+  --glass-bot: rgba(0, 0, 0, 0.4);
+  --elite-aqua: #0BF9EA;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  background-color: var(--charcoal);
+  color: var(--sovereign-neon);
+  overflow: hidden;
+  height: 100dvh;
+  width: 100vw;
+  position: fixed;
+}
+
+#root {
+  height: 100%;
+  background-color: var(--charcoal);
+}
+
+/* 📱 MOBILE OPTIMIZED LAYOUT */
+.main-content {
+  padding: 1rem;
+  padding-bottom: 100px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 💎 THE SOVEREIGN CARD (Premium Aqua Bloom v3.1 - ELITE) */
+.sovereign-card {
+  /* Volumetric Gradient Background */
+  background: linear-gradient(165deg,
+      rgba(11, 249, 234, 0.9) 0%,
+      rgba(11, 249, 234, 0.7) 100%) !important;
+
+  color: #121212 !important;
+  border-radius: 2rem;
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  position: relative;
+
+  /* 3D Volumetric Glow: The 'Gradient Coming Out' Effect */
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.4),
+    0 0 60px rgba(11, 249, 234, 0.3),
+    inset 0 0 30px rgba(255, 255, 255, 0.2);
+
+  /* Floating Animation */
+  animation: float 6s ease-in-out infinite;
+
+  /* Inner Detail */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    /* Hard White Top Edge */
+    inset 0 -4px 10px rgba(0, 0, 0, 0.1);
+  /* Subtle Lower Shadow */
+
+  /* The Frost (Elite Glassmorphism) */
+  backdrop-filter: blur(25px) saturate(220%);
+  -webkit-backdrop-filter: blur(25px) saturate(220%);
+
+  /* 6px Elite Border (The Heavy Frame) */
+  border: 6px solid var(--elite-aqua);
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: -8px;
+
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex !important;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sovereign-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 1.6rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* The 'Ambient Reflection' for 3D presence */
+.sovereign-card::after {
+  content: "";
+  position: absolute;
+  bottom: -60px;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: radial-gradient(ellipse at center, rgba(11, 249, 234, 0.3) 0%, transparent 80%);
+  filter: blur(20px);
+  opacity: 1;
+  pointer-events: none;
+}
+
+.sovereign-card:active {
+  transform: translateY(8px) scale(0.95);
+  filter: drop-shadow(0 0 25px rgba(11, 249, 234, 0.4)) brightness(0.9);
+}
+
+.sovereign-card h2,
+.sovereign-card h3 {
+  color: #121212 !important;
+  font-weight: 900 !important;
+  text-transform: uppercase;
+  letter-spacing: -0.06em;
+  font-size: 1.6rem;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  position: relative;
+  z-index: 2;
+}
+
+.sovereign-card p,
+.sovereign-card span {
+  color: #121212 !important;
+  font-weight: 800 !important;
+  opacity: 1 !important;
+  line-height: 1.1;
+  position: relative;
+  z-index: 2;
+}
+
+.sovereign-card.locked {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.glass-highlight {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--glass-top);
+}
+
+.bright-card {
+  background: var(--card-bright);
+  color: #000;
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  border: 6px solid var(--elite-aqua);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--neon-glow);
+  margin-bottom: 1.25rem;
+  transition: transform 0.2s ease;
+}
+
+.bright-card:active {
+  transform: scale(0.98);
+}
+
+.bright-card h3 {
+  color: #000;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.bright-card p {
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+/* 🎙️ THE MIC BUTTON - ELITE */
+.mic-button {
+  width: 180px;
+  height: 180px;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: var(--charcoal);
+  border: 4px solid var(--sovereign-neon);
+  box-shadow:
+    0 0 40px var(--neon-glow),
+    0 0 80px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mic-button:hover {
+  transform: scale(1.05) rotate(2deg);
+  box-shadow:
+    0 0 60px var(--neon-glow),
+    0 0 100px rgba(0, 0, 0, 0.6);
+  border-color: #fff;
+}
+
+.mic-button:active {
+  transform: scale(0.95);
+  transition: all 0.1s ease;
+}
+
+.mic-button.active {
+  animation: pulse-neon 2s infinite;
+  background: var(--sovereign-neon);
+  transform: scale(1.05);
+}
+
+.mic-button svg {
+  color: var(--sovereign-neon);
+  width: 60px;
+  height: 60px;
+  transition: all 0.3s ease;
+}
+
+.mic-button.active svg {
+  color: var(--charcoal);
+}
+
+@keyframes pulse-neon {
+  0% {
+    box-shadow: 0 0 0 0 rgba(11, 249, 10, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 40px rgba(11, 249, 10, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(11, 249, 10, 0);
+  }
+}
+
+/* 🛸 SOVEREIGN NAV PILL (screenshot aligned) */
+.nav-bar {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(25px);
+  border: 2px solid var(--sovereign-neon);
+  border-radius: 3rem;
+  padding: 0.6rem 1rem;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.9),
+    0 0 30px var(--neon-glow),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  display: flex !important;
+  gap: 0.75rem;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.nav-item {
+  border-radius: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item.active {
+  background: var(--sovereign-neon);
+  color: var(--charcoal);
+  box-shadow: 0 0 20px var(--neon-glow);
+  transform: translateY(-4px);
+}
+
+/* UTILS */
+.text-glow {
+  text-shadow: 0 0 20px var(--neon-glow);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: rotate-slow 6s linear infinite;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+/* Elite Glass Overlay */
+.sovereign-card::before {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, transparent 40%, rgba(0, 0, 0, 0.1) 100%);
+}

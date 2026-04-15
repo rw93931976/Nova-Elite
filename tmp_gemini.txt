@@ -1,0 +1,66 @@
+// ... existing imports
+// Update the response extraction in both executeStandardResponse and absoluteGoogleFallback
+
+    public async absoluteGoogleFallback(systemPrompt: string, input: string) {
+        try {
+            console.log(`[Reasoning] absoluteGoogleFallback queueing to Relay Jobs bypass...`);
+            const jobResult = await this.executeRelayJob('llm', {
+                provider: 'gemini',
+                payload: {
+                    model: 'gemini-1.5-flash',
+                    contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser says: ${input}` }] }]
+                }
+            });
+            
+            // FIX: Access candidates directly on jobResult (which is job.result)
+            const textResponse = 
+                jobResult?.candidates?.[0]?.content?.parts?.[0]?.text || 
+                jobResult?.choices?.[0]?.message?.content || 
+                (typeof jobResult === 'string' ? jobResult : "I am Nova. I am standing by.");
+                
+            return { content: textResponse };
+        } catch (e) {
+            return { content: "I am Nova. I am standing by." };
+        }
+    }
+
+    private async executeStandardResponse(plan: any, observation: any) {
+        // ... (History and prompt logic remains same)
+        const prompt = `${this.PERSONA}\n\nCONVERSATION HISTORY:\n${historyText}${observation.context.memories}\n\nSTRATEGIC INSTRUCTION: ${greetingPrompt}\n\nTask: ${observation.input}\n\nRespond concisely as Ray's partner:`;
+
+        try {
+            console.log(`[Reasoning] Dispatching LLM logic to Relay queue (Firewall Bypass)...`);
+            const jobResult = await this.executeRelayJob('llm', {
+                provider: 'gemini',
+                payload: {
+                    model: 'gemini-1.5-flash',
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }]
+                }
+            });
+
+            // FIX: Robust extraction for jobResult which is the raw LLM object
+            let textResponse = "I'm experiencing a minor sync delay, but I'm here.";
+
+            if (jobResult?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                // Standard Gemini structure
+                textResponse = jobResult.candidates[0].content.parts[0].text;
+            } else if (jobResult?.choices?.[0]?.message?.content) {
+                // Standard OpenAI structure
+                textResponse = jobResult.choices[0].message.content;
+            } else if (typeof jobResult === 'string') {
+                textResponse = jobResult;
+            } else if (jobResult?.response) {
+                // Fallback if VPS ever wraps it again
+                textResponse = typeof jobResult.response === 'string' ? jobResult.response : JSON.stringify(jobResult.response);
+            }
+
+            return {
+                response: textResponse,
+                diagnostic: 'Relay Queue extraction corrected',
+                tool_calls: null
+            };
+        } catch (e: any) {
+            console.error('[Reasoning] Standard response execution failed:', e);
+            throw e;
+        }
+    }

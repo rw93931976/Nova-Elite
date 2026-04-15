@@ -1,0 +1,5 @@
+- [x] Update Sovereign_Core_V18_3.js to suppress redundant preambles.
+- [x] Refine Supabase query filters for audio_url IS NULL.
+- [x] Restart Sovereign Bridge and verify audio generation.
+- [x] Create HANDOFF_V18_3.md for session transition.
+- [x] Confirm with Ray that the voice is clear and preamble-free.

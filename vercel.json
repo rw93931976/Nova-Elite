@@ -1,0 +1,32 @@
+{
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-cache, no-store, must-revalidate"
+                }
+            ]
+        },
+        {
+            "source": "/assets/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=0, must-revalidate"
+                }
+            ]
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/bridge-vps/(.*)",
+            "destination": "https://nova.mysimpleaihelp.com/$1"
+        },
+        {
+            "source": "/((?!assets/|rescue.html|exorcism.html|icon.png|manifest.json|manifest.webmanifest).*)",
+            "destination": "/index.html"
+        }
+    ]
+}

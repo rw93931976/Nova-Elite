@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="white" />
+  <defs>
+    <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00ffff" />
+      <stop offset="100%" stop-color="#0088ff" stop-opacity="0" />
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- The 'N' Structure -->
+  <path d="M120 100 L200 100 L320 320 L320 100 L400 100 L400 412 L320 412 L200 192 L200 412 L120 412 Z" fill="#00ffff" filter="url(#glow)" opacity="0.8" />
+  <path d="M140 120 L180 120 L300 340 L300 120 L380 120 L380 392 L340 392 L180 150 L180 392 L140 392 Z" fill="#004488" />
+  <!-- Central Eye -->
+  <circle cx="260" cy="256" r="60" fill="#002244" stroke="#00ffff" stroke-width="8" filter="url(#glow)" />
+  <circle cx="260" cy="256" r="40" fill="url(#eyeGlow)" />
+  <ellipse cx="260" cy="256" rx="8" ry="30" fill="black" />
+</svg>

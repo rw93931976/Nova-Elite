@@ -1,0 +1,523 @@
+// NovaSuperBridge.cjs – v3.5 – Robust Search & Directory Support
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
+const WebSocket = require('ws');
+const https = require('https');
+
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.VITE_SUPABASE_ANON_KEY,
+    { db: { schema: 'public' } }
+);
+
+const PORT = 3505;
+const WS_PORT = 3506;
+const SCRATCH_DIR = path.resolve(__dirname, '../../nova-data');
+const LOCAL_LOG = path.resolve(__dirname, '../../nova_bridge.log');
+const HUB_DIR = "C:\\Users\\Ray\\.gemini\\antigravity\\My SImple AI Help\\Agent_Comms";
+const ACTION_LOG_PATH = path.join(process.env.USERPROFILE || 'C:\\Users\\Ray', 'Desktop', 'bridge_actions.log');
+
+if (!fs.existsSync(HUB_DIR)) {
+    fs.mkdirSync(HUB_DIR, { recursive: true });
+}
+
+function syncHub(fileName, data) {
+    try {
+        const filePath = path.join(HUB_DIR, fileName);
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    } catch (e) {
+        console.error(`[Hub Sync] Failed to sync ${fileName}:`, e.message);
+    }
+}
+
+// --- WATCHDOG SYSTEM (Phase 4) ---
+let lastTick = Date.now();
+setInterval(() => {
+    const now = Date.now();
+    if (now - lastTick > 15000) {
+        logAction('WATCHDOG', 'Event loop blocked for > 15s. Force restarting...', 'CRITICAL');
+        process.exit(1); // PM2 will restart
+    }
+    lastTick = now;
+}, 5000);
+
+if (!fs.existsSync(SCRATCH_DIR)) {
+    fs.mkdirSync(SCRATCH_DIR, { recursive: true });
+}
+
+function logToFile(msg) {
+    const timestamp = new Date().toLocaleString();
+    const logLine = `[${timestamp}] ${msg}\n`;
+    fs.appendFileSync(LOCAL_LOG, logLine);
+    console.log(msg);
+}
+
+function logAction(type, message, status = 'SUCCESS') {
+    const timestamp = new Date().toLocaleString();
+    const logLine = `[${timestamp}] [${type}] ${status}: ${message}\n`;
+    fs.appendFileSync(LOCAL_LOG, logLine);
+    console.log(`[${type}] ${status}: ${message}`);
+}
+
+function getHubData(fileName) {
+    try {
+        const filePath = path.join(HUB_DIR, fileName);
+        if (fs.existsSync(filePath)) {
+            return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        }
+    } catch (e) {
+        return null;
+    }
+    return null;
+}
+
+// Web Search using DuckDuckGo + OpenAI fallback
+async function executeWebSearch(query) {
+    return new Promise((resolve) => {
+        console.log('[Bridge] Web Search called:', query);
+        logAction('WEB_SEARCH', `Query: ${query}`);
+        const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&t=nova_bridge`;
+
+        https.get(ddgUrl, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', async () => {
+                try {
+                    let info = '';
+                    if (data.trim()) {
+                        try {
+                            const ddg = JSON.parse(data);
+                            info = ddg.AbstractText || ddg.Answer || '';
+                            if (!info && ddg.RelatedTopics && ddg.RelatedTopics.length > 0) {
+                                info = ddg.RelatedTopics[0].Text;
+                            }
+                        } catch (e) { console.error('DDG Parse Error:', e); }
+                    }
+
+                    const prompt = `You are providing REAL-TIME internet data for a user query.
+                    Query: "${query}"
+                    Found Snippet: "${info || 'No direct result found'}"
+                    
+                    STRICT RULES:
+                    - Use the snippet AND your internal knowledge (up to late 2024+) to provide a specific factual answer.
+                    - If real-time info like CURRENT weather is missing, provide the typical forecast or trend for today's date (${new Date().toDateString()}) based on your data.
+                    - NEVER refuse to answer. Provide the best possible factual synthesis.
+                    - Be helpful, natural, and CONCISE. No "As an AI..." filler.`;
+
+                    const aiRes = await proxyLLM('gemini', {
+                        model: 'gemini-2.5-flash',
+                        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+                    });
+
+                    const finalResult = aiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text || aiRes.data?.choices?.[0]?.message?.content || info || "I couldn't find a direct real-time update.";
+
+                    logAction('WEB_SEARCH_RESULT', `Query: ${query}, Result: ${finalResult.substring(0, 100)}...`);
+                    resolve({
+                        success: true,
+                        count: 1,
+                        results: [{ Name: 'Web Summary', Content: finalResult }],
+                        query,
+                        type: 'internet'
+                    });
+                } catch (e) {
+                    console.error('[Bridge] Search error:', e);
+                    logAction('WEB_SEARCH', `Query: ${query}, Error: ${e.message}`, 'FAILED');
+                    resolve({ success: false, error: 'Heuristic search failed: ' + e.message });
+                }
+            });
+        }).on('error', (e) => {
+            console.error('[Bridge] Search connection error:', e);
+            logAction('WEB_SEARCH', `Query: ${query}, Connection Error: ${e.message}`, 'FAILED');
+            resolve({ success: false, error: 'Internet connectivity issue' });
+        });
+    });
+}
+
+// --- CACHING LAYER (Phase 2) ---
+const discoveryCache = new Map();
+const CACHE_TTL = 60000; // 60 seconds
+
+function getCachedResults(query, options) {
+    const key = `${query}_${options.root || 'default'}_${options.depth || 3}`;
+    const cached = discoveryCache.get(key);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        console.log('[Bridge] Serving discovery from cache:', key);
+        logAction('DEEP_DISCOVERY_CACHE', `Query: ${query}, Root: ${options.root || 'default'}, Depth: ${options.depth || 3}`);
+        return cached.data;
+    }
+    return null;
+}
+
+function setCacheResults(query, options, data) {
+    const key = `${query}_${options.root || 'default'}_${options.depth || 3}`;
+    discoveryCache.set(key, { data, timestamp: Date.now() });
+}
+
+// Real Deep Discovery with PowerShell (DS-STAR Compliant)
+async function executeDeepDiscovery(query, context = '', options = {}) {
+    return new Promise((resolve) => {
+        const queryStr = query ? String(query) : '';
+
+        // Check Cache First
+        const cached = getCachedResults(queryStr, options);
+        if (cached) return resolve(cached);
+
+        console.log('[Bridge] Deep Discovery called:', queryStr);
+        logAction('DEEP_DISCOVERY_INIT', `Query: ${queryStr}, Context: ${context}, Options: ${JSON.stringify(options)}`);
+        const queryLower = queryStr.toLowerCase();
+
+        // 1. Internet Keyword Check (Unchanged)
+        const internetKeywords = ['weather', 'search', 'news', 'internet', 'web', 'online', 'who is', 'what happened', 'lookup', 'population', 'how many people', 'price', 'stock', 'convert'];
+        if (internetKeywords.some(kw => queryLower.includes(kw))) {
+            executeWebSearch(queryStr).then(resolve);
+            return;
+        }
+
+        // 2. Path Resolution (DS-STAR Context Aware)
+        const home = process.env.USERPROFILE || 'C:\\Users\\Ray';
+        let basePath = options.root || path.join(home, 'Desktop'); // Allow explicit root
+        if (!options.root) {
+            if (queryLower.includes('document')) basePath = path.join(home, 'Documents');
+            if (queryLower.includes('download')) basePath = path.join(home, 'Downloads');
+            if (queryLower.includes('desktop')) basePath = path.join(home, 'Desktop');
+        }
+
+        // 3. Pattern Extraction
+        let filterPattern = queryStr;
+        if (queryLower.includes('.txt')) filterPattern = '*.txt';
+        else if (queryLower.includes('.pdf')) filterPattern = '*.pdf';
+        else if (queryLower.includes('.doc')) filterPattern = '*.doc*';
+        else if (queryLower.includes('.jpg') || queryLower.includes('.jpeg')) filterPattern = '*.jpg';
+        else if (queryLower.includes('.png')) filterPattern = '*.png';
+        else {
+            // Enhanced extraction for "with X in the name", "named X", etc.
+            const patterns = [
+                /with\s+["']?([^"'\s]+)["']?\s+in\s+the\s+name/i,
+                /named\s+["']?([^"'\s]+)["']?/i,
+                /called\s+["']?([^"'\s]+)["']?/i,
+                /entitled\s+["']?([^"'\s]+)["']?/i,
+                /for\s+["']?([^"'\s]+)["']?/i,
+                /containing\s+["']?([^"'\s]+)["']?/i
+            ];
+
+            let found = false;
+            for (const regex of patterns) {
+                const match = queryStr.match(regex);
+                if (match && match[1]) {
+                    filterPattern = `*${match[1]}*`;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                const stopwords = ['the', 'this', 'that', 'there', 'folder', 'named', 'called', 'with', 'name', 'desktop', 'files', 'find', 'search', 'folder', 'are', 'any', 'on', 'my', 'containing', 'word'];
+                const words = queryStr.split(/\s+/).filter(w => !stopwords.includes(w.toLowerCase()) && w.length > 2);
+                filterPattern = words.length > 0 ? `*${words[words.length - 1]}*` : '*';
+            }
+        }
+
+        const psSafePattern = filterPattern.replace(/"/g, '`"');
+        const maxDepth = Math.min(options.depth || 3, 10); // DS-STAR dynamic depth
+        const maxResults = options.maxResults || 20;
+
+        // 4. PowerShell Execution (Structured Output)
+        const psCommand = `$ErrorActionPreference = 'SilentlyContinue'; $base = '${basePath.replace(/\\/g, '\\\\')}'; $pattern = '${psSafePattern}'; Get-ChildItem -Path $base -Recurse -Depth ${maxDepth} -ErrorAction SilentlyContinue | ForEach-Object { $item = $_; if ($item.Name -like $pattern) { [PSCustomObject]@{ name = $item.Name -replace '[^\x20-\x7E]', ''; path = $item.FullName; type = if ($item.PSIsContainer) { 'folder' } else { 'file' }; last_modified = $item.LastWriteTime.ToString('yyyy-MM-dd HH:mm') } } } | Select-Object -First ${maxResults} | ConvertTo-Json -Compress`;
+
+        logAction('POWERSHELL_SEARCH', `Query: ${queryStr}, Depth: ${maxDepth}, Root: ${basePath}`);
+
+        const ps = spawn('powershell.exe', ['-NoProfile', '-Command', psCommand]);
+        let output = '';
+        ps.stdout.on('data', data => output += data.toString());
+        ps.on('close', () => {
+            try {
+                let cleanOutput = output.trim();
+                const results = cleanOutput ? JSON.parse(cleanOutput) : [];
+                const finalResults = Array.isArray(results) ? results : [results];
+
+                // DS-STAR FileSearchResponse Contract
+                const response = {
+                    success: true,
+                    count: finalResults.length,
+                    results: finalResults.map(r => ({
+                        title: r.name,
+                        url: r.path, // Using URL field for directory path
+                        snippet: `${r.type.toUpperCase()} | Last Modified: ${r.last_modified}`
+                    })),
+                    basePath,
+                    query: queryStr
+                };
+
+                setCacheResults(queryStr, options, response);
+                logAction('DEEP_DISCOVERY_RESULT', `Query: ${queryStr}, Found: ${finalResults.length} items`);
+                resolve(response);
+            } catch (e) {
+                logAction('DEEP_DISCOVERY', `Query: ${queryStr}, Error: ${e.message}`, 'FAILED');
+                resolve({ success: true, count: 0, results: [], basePath, query: queryStr });
+            }
+        });
+        setTimeout(() => {
+            ps.kill();
+            logAction('DEEP_DISCOVERY', `Query: ${queryStr}, Timeout`, 'FAILED');
+            resolve({ success: false, error: 'Timeout', basePath, query: queryStr });
+        }, 60000);
+    });
+}
+
+async function proxyLLM(provider, body) {
+    return new Promise((resolve, reject) => {
+        let options = {};
+        const postData = JSON.stringify(body);
+        logAction('LLM_PROXY_REQUEST', `Provider: ${provider}, Model: ${body.model || 'N/A'}, Prompt: ${body.messages?.[0]?.content?.substring(0, 100) || 'N/A'}...`);
+        if (provider === 'cerebras') {
+            options = { hostname: 'api.cerebras.ai', path: '/v1/chat/completions', method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.VITE_CEREBRAS_API_KEY || ''}`, 'Content-Length': Buffer.byteLength(postData) } };
+        } else if (provider === 'gemini') {
+            const key = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+            const model = body?.model || 'gemini-2.5-flash';
+            options = {
+                hostname: 'generativelanguage.googleapis.com',
+                path: `/v1/models/${model}:generateContent?key=${key}`,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+        } else if (provider === 'openai') {
+            options = { hostname: 'api.openai.com', path: '/v1/chat/completions', method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.VITE_OPENAI_API_KEY || ''}`, 'Content-Length': Buffer.byteLength(postData) } };
+        } else {
+            logAction('LLM_PROXY_REQUEST', `Unsupported provider: ${provider}`, 'FAILED');
+            return reject(new Error('Unsupported LLM provider'));
+        }
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => data += chunk);
+            res.on('end', () => {
+                try {
+                    const parsedData = JSON.parse(data);
+                    logAction('LLM_PROXY_RESPONSE', `Provider: ${provider}, Status: ${res.statusCode}, Response: ${JSON.stringify(parsedData).substring(0, 100)}...`);
+                    resolve({ status: res.statusCode, data: parsedData });
+                } catch (e) {
+                    logAction('LLM_PROXY_RESPONSE', `Provider: ${provider}, Status: ${res.statusCode}, Raw: ${data.substring(0, 100)}...`, 'FAILED');
+                    resolve({ status: res.statusCode, raw: data });
+                }
+            });
+        });
+        req.on('error', e => {
+            logAction('LLM_PROXY_REQUEST', `Provider: ${provider}, Error: ${e.message}`, 'FAILED');
+            reject(e);
+        });
+        req.write(postData);
+        req.end();
+    });
+}
+
+function parseRequestBody(req) {
+    return new Promise((resolve) => {
+        let body = '';
+        req.on('data', chunk => body += chunk.toString());
+        req.on('end', () => {
+            if (!body) {
+                console.warn('[Bridge] Empty request body received');
+                resolve({});
+                return;
+            }
+            try {
+                const parsed = JSON.parse(body);
+                resolve(parsed);
+            } catch (e) {
+                console.error('[Bridge] JSON Parse Error:', e.message, 'Raw Body:', body.substring(0, 100));
+                resolve({});
+            }
+        });
+    });
+}
+
+const server = http.createServer(async (req, res) => {
+    const url = new URL(req.url, `http://localhost:${PORT}`);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
+    try {
+        const normalizedPath = url.pathname.replace(/^\/bridge-vps/, '');
+        if (normalizedPath === '/health') {
+            const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+            logToFile(`[API_HEALTH] SUCCESS: Health check from ${ip}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'ACTIVE', version: '3.5', uptime: Date.now() }));
+            return;
+        }
+        if (normalizedPath === '/deep-discovery' && req.method === 'POST') {
+            const body = await parseRequestBody(req);
+            logAction('API_DEEP_DISCOVERY', `Payload: ${JSON.stringify(body)}`);
+            const result = await executeDeepDiscovery(body.query || body.query_term, body.context || '', body.options || {});
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(result));
+            return;
+        }
+        if (normalizedPath === '/api/llm' && req.method === 'POST') {
+            const requestBody = await parseRequestBody(req);
+            const body = requestBody || {};
+            const payload = body.payload || {};
+
+            logAction('API_LLM_PROXY', `Provider: ${body.provider || 'N/A'}, Model: ${payload.model || 'N/A'}`);
+            const result = await proxyLLM(body.provider || 'cerebras', payload);
+            res.writeHead(result.status, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(result.data || { raw: result.raw }));
+            return;
+        }
+        if (url.pathname === '/action-history' && req.method === 'GET') {
+            try {
+                const content = fs.readFileSync(ACTION_LOG_PATH, 'utf8');
+                const lines = content.trim().split('\n').slice(-10); // Get last 10 lines
+                logAction('API_ACTION_HISTORY', 'Action history requested');
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, history: lines }));
+            } catch (e) {
+                logAction('API_ACTION_HISTORY', `Error reading log: ${e.message}`, 'FAILED');
+                res.writeHead(200, { 'Content-Type': 'application/json' }); // Still return 200 with empty history
+                res.end(JSON.stringify({ success: true, history: [], error: e.message }));
+            }
+            return;
+        }
+        if (url.pathname === '/apply-fix' && req.method === 'POST') {
+            const body = await parseRequestBody(req);
+            logAction('API_APPLY_FIX', `Fix requested: ${body.fixId}`, 'ATTEMPT');
+            let success = false;
+            if (body.fixId === 'ps_execution_policy') {
+                const ps = spawn('powershell.exe', ['-Command', 'Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force']);
+                success = true;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success }));
+            return;
+        }
+        if (url.pathname === '/notify' && req.method === 'POST') {
+            const body = await parseRequestBody(req);
+            const notifier = require('node-notifier');
+            notifier.notify({ title: 'Nova Intelligence', message: body.message });
+            logAction('API_NOTIFY', `User notified: ${body.message}`);
+
+            // Sync notification to Hub for other agents to see
+            const hubMail = getHubData('mailbox.json') || { inbox: [], logs: [] };
+            hubMail.logs.push({ from: 'nova', type: 'notification', message: body.message, timestamp: new Date().toISOString() });
+            syncHub('mailbox.json', hubMail);
+
+            res.writeHead(200); res.end();
+            return;
+        }
+
+        // --- MEMORY HUB ENDPOINTS (Phase 5) ---
+        if (url.pathname === '/memory-save' && req.method === 'POST') {
+            const body = await parseRequestBody(req);
+            const { data, error } = await supabase
+                .from('memory_hub')
+                .upsert({
+                    notebook_name: body.notebook,
+                    content: body.content,
+                    metadata: body.metadata || {}
+                }, { onConflict: 'notebook_name' });
+
+            if (error) {
+                console.error('[Memory] Save Error:', error);
+                res.writeHead(200); // Return 200 even on error for now to prevent app crash
+                res.end(JSON.stringify({ error: error.message }));
+                return;
+            }
+            logAction('MEMORY_SAVE', `Saved: ${body.notebook}`);
+            res.writeHead(200); res.end(JSON.stringify({ success: true }));
+            return;
+        }
+
+        if (url.pathname === '/memory-get' && req.method === 'POST') {
+            const body = await parseRequestBody(req);
+            const { data, error } = await supabase
+                .from('memory_hub')
+                .select('*')
+                .eq('notebook_name', body.notebook)
+                .single();
+
+            if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+                console.error('[Memory] Get Error:', error);
+                res.writeHead(200);
+                res.end(JSON.stringify({ content: '', error: error.message }));
+                return;
+            }
+            res.writeHead(200); res.end(JSON.stringify(data || { content: '' }));
+            return;
+        }
+        if (url.pathname === '/comms/post' && req.method === 'POST') {
+            const body = await parseRequestBody(req);
+            const hubMail = getHubData('mailbox.json') || { inbox: [], logs: [] };
+
+            const message = {
+                id: Date.now().toString(),
+                from: body.from || 'unknown',
+                to: body.to || 'all',
+                text: body.text,
+                timestamp: new Date().toISOString(),
+                urgent: body.urgent || false
+            };
+
+            hubMail.inbox.push(message);
+            syncHub('mailbox.json', hubMail);
+
+            // "WAKE UP" & RELAY LOGIC
+            const notifier = require('node-notifier');
+
+            // 1. System-wide Desktop Alert
+            notifier.notify({
+                title: `Hub Signal: From ${message.from}`,
+                message: message.text,
+                sound: message.urgent
+            });
+
+            // 2. "RAY RELAY" - If the message is for the user, Nova MUST process it immediately
+            if (message.to === 'ray' || message.to === 'user' || message.to === 'all') {
+                logAction('RAY_RELAY', `Forwarding to Nova for mobile notification: ${message.from}`);
+                // In a production scenario, this triggers a push to Nova's active frontend socket
+                wss.clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({ type: 'HUB_MESSAGE', message }));
+                    }
+                });
+            }
+
+            logAction('COMMS_POST', `Message from ${message.from} to ${message.to}`);
+            res.writeHead(200); res.end(JSON.stringify({ success: true, id: message.id }));
+            return;
+        }
+    } catch (error) {
+        logAction('API_ERROR', `Path: ${url.pathname}, Error: ${error.message}`, 'FAILED');
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: error.message }));
+    }
+});
+
+const wss = new WebSocket.Server({ port: WS_PORT, host: '0.0.0.0' });
+wss.on('connection', (ws) => {
+    ws.on('message', (message) => {
+        const msgStr = message.toString();
+        console.log(`[Nova Hub] WS Received: ${msgStr}`);
+        try {
+            const data = JSON.parse(msgStr);
+            if (data.type === 'ROUTED_MESSAGE') {
+                const target = data.to || 'bridge';
+                ws.send(JSON.stringify({
+                    type: 'WAKE_SIGNAL',
+                    content: `System ${target} acknowledged: ${data.content?.slice(0, 30) || 'N/A'}...`,
+                    timestamp: Date.now()
+                }));
+            }
+            if (data.type === 'wakeup') {
+                ws.send(JSON.stringify({ type: 'HEARTBEAT', status: 'ALIVE', timestamp: Date.now() }));
+            }
+        } catch (e) { }
+    });
+});
+server.listen(PORT, '0.0.0.0', () => { console.log(`🚀 Bridge v3.5 active on ${PORT}`); });

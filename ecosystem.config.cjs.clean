@@ -1,0 +1,24 @@
+module.exports = {
+  apps: [
+    {
+      name: "nova-bridge",
+      script: "./vps-core-sovereign-native-fixed.cjs",
+      watch: false,
+      autorestart: true,
+      restart_delay: 5000,
+      env: {
+        NODE_ENV: "production",
+      }
+    },
+    {
+      name: "nova-schooling",
+      script: "./scripts/autonomous_schooling.cjs",
+      watch: false,
+      autorestart: false,
+      cron_restart: "6 0,6,12,18 * * *",
+      env: {
+        NODE_ENV: "production",
+      }
+    }
+  ]
+};

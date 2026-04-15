@@ -1,0 +1,17 @@
+{
+    "preferences": {
+        "volume": 0.3,
+        "voice": "default",
+        "theme": "dark",
+        "autonomyLevel": 5
+    },
+    "routine": {
+        "lastActive": null,
+        "habits": [],
+        "preferredAgents": [
+            "Sentinel",
+            "Analytical"
+        ]
+    },
+    "history": []
+}
