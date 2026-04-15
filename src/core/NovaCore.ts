@@ -7,7 +7,7 @@ export class NovaCore {
     private static instance: NovaCore;
     public supabase = supabase;
 
-    public readonly version = 'v10.0-SOVEREIGN-ELITE';
+    public readonly version = 'v11.0.0-ELITE-RESTORED';
     public isHalted: boolean = false;
     public liveEngine: LiveEngine;
 
