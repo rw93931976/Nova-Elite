@@ -34,3 +34,6 @@ dist-ssr/
 .env*.local
 
 .env
+
+# Data
+nova-data/
