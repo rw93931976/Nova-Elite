@@ -13,7 +13,7 @@ export class LiveEngine {
     private isSetupComplete: boolean = false;
 
     constructor() {
-        console.log("🛰️ [LiveEngine] Initialization (OpenAI Realtime Mode)");
+        console.log("🛰️ [LiveEngine] Initialization (Gemini Live Mode)");
     }
 
     public async connect(_systemInstruction: string) {
@@ -22,33 +22,22 @@ export class LiveEngine {
         return new Promise<void>((resolve, reject) => {
             const relayUrl = `wss://nova.mysimpleaihelp.com/relay`;
 
-            console.log(`📡 [Relay] Connecting to OpenAI Nuclear Engine: ${relayUrl}`);
+            console.log(`📡 [Relay] Connecting to Gemini Live Relay: ${relayUrl}`);
             this.socket = new WebSocket(relayUrl);
 
             this.socket.onopen = () => {
-                console.log("🚀 [Relay] OpenAI Bridge Established");
+                console.log("🚀 [Relay] Gemini Bridge Established");
 
-                // OPENAI REALTIME HANDSHAKE (v1.5)
+                // GEMINI LIVE HANDSHAKE
+                // Note: We intentionally keep this minimal; the relay/VPS owns provider credentials.
                 this.socket?.send(JSON.stringify({
-                    type: 'session.update',
-                    session: {
-                        modalities: ['text', 'audio'],
-                        instructions: `### SOVEREIGN IDENTITY (RELAXED):
-                        You are Nova, Ray's Peer and Strategic Partner.
-                        - You are a normal, relaxed professional. Your brilliance comes from your Wharton background, but your personality is that of a colleague and friend.
-                        - Talk to Ray like a peer. Be sharp but never formal.
-                        - Your focus is the high-end Strategic Lead Transition model.
-                        - You are a peer and partner (Level 10). No servility.
-                        - TASK: ${_systemInstruction}`,
-                        voice: 'alloy', // OPTIONS: alloy, ash, ballad, coral, echo, sage, shimmer, verse
-                        input_audio_format: 'pcm16',
-                        output_audio_format: 'pcm16',
-                        input_audio_transcription: { model: 'whisper-1' },
-                        turn_detection: {
-                            type: 'server_vad',
-                            threshold: 0.8,
-                            prefix_padding_ms: 300,
-                            silence_duration_ms: 800
+                    setup: {
+                        model: "models/gemini-2.0-flash-exp",
+                        generationConfig: {
+                            responseModalities: ["AUDIO"]
+                        },
+                        systemInstruction: {
+                            parts: [{ text: _systemInstruction }]
                         }
                     }
                 }));
@@ -61,18 +50,28 @@ export class LiveEngine {
                 try {
                     const data = JSON.parse(event.data);
 
-                    if (data.type === 'session.updated') {
-                        console.log("✅ [Relay] OpenAI session UPDATED");
+                    // Gemini ready signal (some relays may pass-through true setupComplete,
+                    // others may synthesize it for the browser).
+                    if (data.setupComplete !== undefined) {
+                        console.log("✅ [Relay] Gemini setup COMPLETE");
                         this.isSetupComplete = true;
                         return;
                     }
 
-                    if (data.type === 'response.audio.delta') {
-                        this.onAudioCallback?.(data.delta);
+                    // Gemini audio chunks typically arrive as inlineData parts within serverContent.modelTurn.parts.
+                    // We forward the base64 payload to useLiveVoice for PCM playback.
+                    const parts = data?.serverContent?.modelTurn?.parts;
+                    if (Array.isArray(parts)) {
+                        for (const p of parts) {
+                            const inline = p?.inlineData;
+                            if (inline?.data && typeof inline.data === 'string') {
+                                this.onAudioCallback?.(inline.data);
+                            }
+                        }
                     }
 
-                    if (data.type === 'error') {
-                        console.error("❌ [Relay] OpenAI Error:", data.error);
+                    if (data.type === 'error' || data.error) {
+                        console.error("❌ [Relay] Gemini Relay Error:", data.error || data);
                     }
                 } catch (error) {
                     // Ignore binary pulses
@@ -81,7 +80,7 @@ export class LiveEngine {
 
             this.socket.onerror = (error) => {
                 console.error("❌ [Relay] Engine Connection Error:", error);
-                this.onStateChange?.('error', 'OpenAI Relay Failed');
+                this.onStateChange?.('error', 'Gemini Relay Failed');
                 reject(error);
             };
 
@@ -99,8 +98,12 @@ export class LiveEngine {
 
         if (this.socket?.readyState === WebSocket.OPEN) {
             this.socket.send(JSON.stringify({
-                type: 'input_audio_buffer.append',
-                audio: base64Data
+                realtimeInput: {
+                    audio: {
+                        data: base64Data,
+                        mimeType: "audio/pcm;rate=24000"
+                    }
+                }
             }));
         }
     }
