@@ -6,13 +6,13 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from livekit import api
 
 HOST = "127.0.0.1"
 PORT = 8787
 ENV_PATH = Path("/root/nova/.env.local")
-ROOM = "ray-nova"
 IDENTITY = "ray"
 
 
@@ -30,16 +30,17 @@ def load_env(path: Path) -> dict[str, str]:
     return env
 
 
-def mint_token() -> str:
+def mint_token() -> tuple[str, str]:
     env = load_env(ENV_PATH)
-    return (
+    room_name = f"ray-nova-{uuid4().hex[:8]}"
+    token = (
         api.AccessToken(env["LIVEKIT_API_KEY"], env["LIVEKIT_API_SECRET"])
         .with_identity(IDENTITY)
         .with_name(IDENTITY)
         .with_grants(
             api.VideoGrants(
                 room_join=True,
-                room=ROOM,
+                room=room_name,
                 can_publish=True,
                 can_subscribe=True,
                 can_publish_data=True,
@@ -47,6 +48,7 @@ def mint_token() -> str:
         )
         .to_jwt()
     )
+    return token, room_name
 
 
 class TokenHandler(BaseHTTPRequestHandler):
@@ -55,7 +57,8 @@ class TokenHandler(BaseHTTPRequestHandler):
             self.send_error(404)
             return
         try:
-            body = json.dumps({"token": mint_token()}).encode("utf-8")
+            token, room = mint_token()
+            body = json.dumps({"token": token, "room": room}).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Cache-Control", "no-store")

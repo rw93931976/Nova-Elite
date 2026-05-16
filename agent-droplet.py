@@ -14,17 +14,18 @@ from livekit.agents import (
 )
 from livekit.agents.types import APIConnectOptions
 from livekit.agents.voice.agent_session import SessionConnectOptions
+from livekit.agents.voice.turn import TurnHandlingOptions
 from livekit.plugins import silero
 
 logger = logging.getLogger("agent")
 
 load_dotenv(".env.local")
 
-# Patient retries for live STT streams (429 bursts on one provider).
+# No connect retries on STT: FallbackAdapter + 429 backoff must not hammer the gateway.
 _STT_CONN = APIConnectOptions(
-    max_retry=6,
-    retry_interval=4.0,
-    timeout=15.0,
+    max_retry=0,
+    retry_interval=8.0,
+    timeout=20.0,
 )
 # TTS + gateway fallbacks; separate from STT so we can tune independently.
 _TTS_CONN = APIConnectOptions(
@@ -136,7 +137,6 @@ async def my_agent(ctx: JobContext):
                 inference.STT(
                     model="deepgram/nova-3",
                     language="multi",
-                    fallback="assemblyai/universal-streaming-multilingual",
                     conn_options=_STT_CONN,
                 ),
                 inference.STT(
@@ -144,8 +144,9 @@ async def my_agent(ctx: JobContext):
                     conn_options=_STT_CONN,
                 ),
             ],
-            max_retry_per_stt=2,
-            retry_interval=4.0,
+            max_retry_per_stt=0,
+            retry_interval=8.0,
+            attempt_timeout=20.0,
         ),
         # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
         # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
@@ -158,9 +159,10 @@ async def my_agent(ctx: JobContext):
         # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
         # See more at https://docs.livekit.io/agents/build/turns
         vad=ctx.proc.userdata["vad"],
-        # allow the LLM to generate a response while waiting for the end of turn
-        # See more at https://docs.livekit.io/agents/build/audio/#preemptive-generation
-        preemptive_generation=True,
+        turn_handling=TurnHandlingOptions(
+            interruption={"mode": "vad"},
+            preemptive_generation=True,
+        ),
         conn_options=SessionConnectOptions(
             stt_conn_options=_STT_CONN,
             tts_conn_options=_TTS_CONN,
