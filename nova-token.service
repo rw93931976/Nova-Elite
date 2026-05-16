@@ -1,0 +1,12 @@
+[Unit]
+Description=Nova LiveKit token issuer (localhost)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/root/nova-env/bin/python /root/nova-token-server.py
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
