@@ -11,6 +11,7 @@ export class LiveEngine {
     private onToolCallCallback: ((name: string, args: any) => Promise<any>) | null = null;
     private onStateChange: ((state: 'connected' | 'disconnected' | 'error', msg?: string) => void) | null = null;
     private isSetupComplete: boolean = false;
+    private connectAttempt: number = 0;
 
     constructor() {
         console.log("🛰️ [LiveEngine] Initialization (Gemini Live Mode)");
@@ -22,25 +23,42 @@ export class LiveEngine {
         return new Promise<void>((resolve, reject) => {
             const relayUrl = `wss://nova.mysimpleaihelp.com/relay`;
 
-            console.log(`📡 [Relay] Connecting to Gemini Live Relay: ${relayUrl}`);
+            this.connectAttempt++;
+            const attempt = this.connectAttempt;
+            console.log(`📡 [Relay] Connecting to Gemini Live Relay: ${relayUrl} (attempt ${attempt})`);
             this.socket = new WebSocket(relayUrl);
 
             this.socket.onopen = () => {
-                console.log("🚀 [Relay] Gemini Bridge Established");
+                console.log(`🚀 [Relay] Gemini Bridge Established (attempt ${attempt})`);
 
-                // GEMINI LIVE HANDSHAKE
-                // Note: We intentionally keep this minimal; the relay/VPS owns provider credentials.
-                this.socket?.send(JSON.stringify({
+                /**
+                 * IMPORTANT:
+                 * Our VPS relay expects a browser "setup" envelope shaped like:
+                 *   { type: "setup", ... }
+                 * and it will create the provider session itself.
+                 *
+                 * When we send provider-style setup directly (camelCase / wrong endpoint),
+                 * Google can hard-close the bridge with 1007 (invalid payload).
+                 */
+                const setupPayload = {
+                    type: "setup",
+                    // Optional data the relay may use now or later.
                     setup: {
                         model: "models/gemini-2.0-flash-exp",
-                        generationConfig: {
-                            responseModalities: ["AUDIO"]
+                        generation_config: {
+                            response_modalities: ["AUDIO"]
                         },
-                        systemInstruction: {
+                        system_instruction: {
                             parts: [{ text: _systemInstruction }]
                         }
                     }
-                }));
+                };
+                const setupJson = JSON.stringify(setupPayload);
+                console.log(`📤 [Relay] Sending setup payload (attempt ${attempt})`, setupPayload);
+                console.log(`📤 [Relay] Setup JSON (attempt ${attempt}): ${setupJson}`);
+                console.log(`📤 [Relay] WS readyState before send (attempt ${attempt}): ${this.socket?.readyState}`);
+                this.socket?.send(setupJson);
+                console.log(`📤 [Relay] Setup sent (attempt ${attempt})`);
 
                 this.onStateChange?.('connected');
                 resolve();
@@ -49,6 +67,9 @@ export class LiveEngine {
             this.socket.onmessage = async (event) => {
                 try {
                     const data = JSON.parse(event.data);
+                    if (data?.type || data?.error || data?.setupComplete !== undefined) {
+                        console.log(`📥 [Relay] Message (attempt ${attempt})`, data);
+                    }
 
                     // Gemini ready signal (some relays may pass-through true setupComplete,
                     // others may synthesize it for the browser).
@@ -85,7 +106,11 @@ export class LiveEngine {
             };
 
             this.socket.onclose = (event) => {
-                console.log(`🔌 [Relay] Connection Closed (Code: ${event.code})`);
+                console.log(`🔌 [Relay] Connection Closed (attempt ${attempt})`, {
+                    code: event.code,
+                    reason: event.reason,
+                    wasClean: event.wasClean
+                });
                 this.onStateChange?.('disconnected');
                 this.socket = null;
                 this.isSetupComplete = false;

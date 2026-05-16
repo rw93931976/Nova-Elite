@@ -10,7 +10,8 @@ export default defineConfig({
     VitePWA({
       selfDestroying: true, // Reset service worker to clear caching conflicts
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'icon.png', 'vite.svg'],
+      // Note: this repo does not ship a PNG icon; keep the manifest aligned to shipped assets.
+      includeAssets: ['favicon.ico', 'favicon.svg', 'icon.svg', 'vite.svg'],
       manifest: {
         name: 'Nova Elite Sovereign',
         short_name: 'Nova',
@@ -21,20 +22,16 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: 'icon.png',
-            sizes: '192x192',
-            type: 'image/png'
+            src: 'icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any'
           },
           {
-            src: 'icon.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: 'icon.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
+            src: 'icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'maskable'
           }
         ]
       }
