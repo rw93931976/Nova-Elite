@@ -32,17 +32,8 @@ module.exports = {
       env: {
         NODE_ENV: "development",
       }
-    },
-    {
-      name: "nova-schooling",
-      script: "./scripts/autonomous_schooling.cjs",
-      watch: false,
-      autorestart: false,
-      cron_restart: "6 0,6,12,18 * * *",
-      env: {
-        NODE_ENV: "production",
-      }
     }
+    // nova-schooling removed 2026-05-18 (autonomous cycles paused — API cost).
     // Note: Sentinel is now handled by the VPS to save local memory.
   ]
 };

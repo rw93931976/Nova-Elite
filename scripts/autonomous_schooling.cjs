@@ -8,7 +8,17 @@ const path = require('path');
  * -------------------------------------------
  * Triggers Doctoral Research cycles and syncs to both local files 
  * and Supabase Memory/Mastery tables.
+ *
+ * PAUSED 2026-05-18: Set NOVA_AUTONOMOUS_SCHOOLING=1 to run (after NotebookLM archival).
  */
+
+const schoolingEnabled = (process.env.NOVA_AUTONOMOUS_SCHOOLING || '').trim() === '1';
+if (!schoolingEnabled) {
+    console.log(
+        '[SCHOOLING] Autonomous schooling is OFF (NOVA_AUTONOMOUS_SCHOOLING!=1). Exiting without API calls.'
+    );
+    process.exit(0);
+}
 
 // 🛠️ CONFIG
 const supabaseUrl = process.env['VITE_SUPABASE_URL'];

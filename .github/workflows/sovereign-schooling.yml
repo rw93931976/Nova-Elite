@@ -1,12 +1,13 @@
+# DISABLED 2026-05-18: Ray paused all autonomous schooling (API cost).
+# Re-enable schedule + workflow_dispatch when NotebookLM archival is wired.
 name: Nova Sovereign Schooling
 
 on:
-  schedule:
-    - cron: '0 */6 * * *' # Every 6 hours
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   schooling:
+    if: false # Hard stop: no API burn until NotebookLM homework archival is wired.
     runs-on: ubuntu-latest
     permissions:
       contents: write # Allow pushing updates to syllabus/vault
