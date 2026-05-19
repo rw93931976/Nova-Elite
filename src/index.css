@@ -29,7 +29,13 @@ body {
   overflow: hidden;
   height: 100dvh;
   width: 100vw;
+}
+
+body.control-room-active,
+body:has(.control-room) {
+  overflow: hidden;
   position: fixed;
+  inset: 0;
 }
 
 #root {
