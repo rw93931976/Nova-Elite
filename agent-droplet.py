@@ -182,7 +182,7 @@ async def my_agent(ctx: JobContext):
         stt=deepgram.STT(model="nova-3", language="multi"),
         tts=cartesia.TTS(
             model="sonic-3",
-            voice="9626c31c-bec5-4cca-baa8-f8ba9e84c8bc",
+            voice="f9836c6e-a0bd-460e-9d3c-f7299fa60f94",
         ),
         vad=ctx.proc.userdata["vad"],
         turn_handling=TurnHandlingOptions(
