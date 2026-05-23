@@ -33,7 +33,8 @@ PUBLIC_HOST = os.environ.get("NOVA_PUBLIC_HOST", "nova.mysimpleaihelp.com")
 # Deepgram: suppress Pushover on single blips (503 ~minutes). Worker/token alerts stay on 1-min watchdog.
 DEEPGRAM_ALERT_MIN_FAILURES = 2
 DEEPGRAM_ALERT_WINDOW_SEC = 900  # 15 min; at 5-min cron ≈ 10 min sustained fail
-DEEPGRAM_RETRY_PROVIDERS = frozenset({"deepgram"})
+VOICE_RESTART_SPIKE_HOUR = 5  # Pushover if this many PM2 restarts within 1 hour
+VOICE_RESTART_SPIKE_STEP = 3  # Pushover if +3 restarts since last monitor run
 
 # Cloud APIs
 CLOUD_PROVIDERS = ("livekit", "openai", "deepgram", "cartesia")
@@ -187,6 +188,34 @@ def _read_pm2_pid_file(name: str) -> int | None:
         return None
 
 
+def get_nova_voice_pm2_stats() -> tuple[str, int]:
+    """Return (status, restart_count) for nova-voice from PM2."""
+    pm2_env = {
+        **os.environ,
+        "PATH": f"/root/.nvm/versions/node/v24.15.0/bin:{os.environ.get('PATH', '')}",
+    }
+    try:
+        out = subprocess.run(
+            [PM2_BIN, "jlist"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            env=pm2_env,
+        )
+        if out.returncode != 0:
+            return "unknown", 0
+        for proc in json.loads(out.stdout):
+            if proc.get("name") != "nova-voice":
+                continue
+            env = proc.get("pm2_env") or {}
+            status = env.get("status") or "unknown"
+            restarts = int(env.get("restart_time") or 0)
+            return str(status), restarts
+        return "missing", 0
+    except Exception:
+        return "error", 0
+
+
 def check_nova_worker() -> CheckResult:
     """Production voice worker: PM2 nova-voice (src/agent.py start), not dev mode."""
     pm2_env = {
@@ -210,7 +239,7 @@ def check_nova_worker() -> CheckResult:
             status = env.get("status")
             pid = proc.get("pid") or _read_pm2_pid_file("nova-voice")
             if status == "online":
-                detail = f"pm2 online pid {pid}" if pid else "pm2 online"
+                detail = f"pm2 online pid {pid} restarts={env.get('restart_time', 0)}" if pid else f"pm2 online restarts={env.get('restart_time', 0)}"
                 return CheckResult("nova_worker", True, detail, "pass")
             if status in ("launching", "stopping"):
                 return CheckResult("nova_worker", True, f"pm2 {status}", "pass")
@@ -327,6 +356,35 @@ def run_checks(env: dict[str, str]) -> list[CheckResult]:
         check_browser_path(host),
         check_droplet_health(),
     ]
+
+
+def track_voice_restart_spike(state: dict) -> str | None:
+    """Alert when nova-voice PM2 restarts spike (crash loop early warning)."""
+    status, restarts = get_nova_voice_pm2_stats()
+    if status in ("missing", "error", "unknown"):
+        return None
+
+    prev = int(state.get("nova_voice_restart_count", restarts))
+    now = time.time()
+    history: list[float] = [t for t in state.get("nova_voice_restart_ts", []) if now - t <= 3600]
+
+    if restarts > prev:
+        for _ in range(restarts - prev):
+            history.append(now)
+        if restarts - prev >= VOICE_RESTART_SPIKE_STEP:
+            state["nova_voice_restart_ts"] = history
+            state["nova_voice_restart_count"] = restarts
+            return (
+                f"nova-voice PM2 restarts jumped +{restarts - prev} "
+                f"(total={restarts}, status={status})"
+            )
+
+    state["nova_voice_restart_ts"] = history
+    state["nova_voice_restart_count"] = restarts
+
+    if len(history) >= VOICE_RESTART_SPIKE_HOUR:
+        return f"nova-voice restart spike: {len(history)} PM2 restarts in the last hour (total={restarts})"
+    return None
 
 
 def format_report(results: list[CheckResult]) -> str:
@@ -479,6 +537,15 @@ def main() -> int:
         prev = state.get(r.name)
         process_check_alert(r, prev, state, alerts, recoveries)
         state[r.name] = {"ok": r.ok, "code": r.code, "detail": r.detail, "ts": time.time()}
+
+    restart_alert = track_voice_restart_spike(state)
+    if restart_alert and not state.get("nova_voice_restart_alerting"):
+        alerts.append(restart_alert)
+        state["nova_voice_restart_alerting"] = True
+    elif not restart_alert:
+        if state.get("nova_voice_restart_alerting"):
+            recoveries.append("nova-voice restart rate normalized")
+        state["nova_voice_restart_alerting"] = False
 
     # Migrate legacy state key
     if "droplet_worker" in state and "nova_worker" not in state:

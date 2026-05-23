@@ -1,7 +1,7 @@
 import React from 'react';
 import { FEATURE_GROUPS } from '../data/featureGroups';
 import { GlassPanel } from '../components/GlassPanel';
-import { LevelSlider } from '../components/LevelSlider';
+import { GlowSlider } from '../components/GlowSlider';
 
 interface FeatureGroupsPageProps {
   featureProgress: Record<string, number>;
@@ -19,13 +19,13 @@ export const FeatureGroupsPage: React.FC<FeatureGroupsPageProps> = ({
   <div className="control-room-page">
     <header className="control-room-page__hero">
       <div>
-        <p className="control-room-eyebrow">Systems map</p>
-        <h1 className="control-room-title">Feature groups</h1>
-        <p className="control-room-version">Source: NOVA_ADVANCED_FEATURES (guidelines)</p>
+        <p className="control-room-eyebrow">Capability map</p>
+        <h1 className="control-room-title">Features</h1>
+        <p className="control-room-version">Guideline: NOVA_ADVANCED_FEATURES — activation 0–100</p>
       </div>
     </header>
 
-    <div className="control-room-grid">
+    <div className="control-room-stack">
       {FEATURE_GROUPS.map(group => {
         const groupValue = featureProgress[group.id] ?? 30;
         return (
@@ -35,16 +35,16 @@ export const FeatureGroupsPage: React.FC<FeatureGroupsPageProps> = ({
             title={group.title}
             subtitle={group.description}
           >
-            <LevelSlider
+            <GlowSlider
               id={`fg_${group.id}`}
-              label="Group activation"
+              label="Group activation (0–100)"
               value={groupValue}
               onChange={v => onGroupChange(group.id, v, false)}
               onValueSettled={v => onGroupChange(group.id, v, true)}
             />
             <div className="level-items">
               {group.items.map(item => (
-                <LevelSlider
+                <GlowSlider
                   key={item.id}
                   id={item.id}
                   label={item.label}

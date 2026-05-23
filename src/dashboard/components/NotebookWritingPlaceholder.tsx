@@ -26,13 +26,13 @@ export const NotebookWritingPlaceholder: React.FC<NotebookWritingPlaceholderProp
       <div className="notebook-cap__flow" aria-label="Planned notebook flow">
         <span className="notebook-cap__step">1 · Study</span>
         <span className="notebook-cap__arrow">→</span>
-        <span className="notebook-cap__step">2 · Write Nova version</span>
+        <span className="notebook-cap__step">2 · Write Kate version</span>
         <span className="notebook-cap__arrow">→</span>
         <span className="notebook-cap__step">3 · File or create notebook</span>
       </div>
       <ol className="notebook-cap__steps">
         <li>Study assigned subject (business and/or emotional track)</li>
-        <li>Write Nova&apos;s synthesized version</li>
+        <li>Write Kate&apos;s synthesized version</li>
         <li>File into the correct notebook, or create a new notebook if none exists</li>
       </ol>
       <button

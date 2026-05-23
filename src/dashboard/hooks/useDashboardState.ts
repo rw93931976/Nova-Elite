@@ -8,7 +8,7 @@ const STORAGE_KEY = 'nova_control_room_v2';
 const REVIEW_DEBOUNCE_MS = 400;
 
 const NOTEBOOK_WRITING_DESCRIPTION =
-  'Nova studies a subject, writes her version, and files it into the correct notebook—or creates a new notebook when needed.';
+  'Kate studies a subject, writes her version, and files it into the correct notebook—or creates a new notebook when needed.';
 
 const EMPTY_REVIEW: SecondReviewState = {
   context: '',
@@ -40,7 +40,7 @@ function buildDefaults(): DashboardPersistedState {
   const bootLog: NotebookWritingLogEntry = {
     at: new Date().toISOString(),
     message:
-      'Capability registered (disabled): study → write Nova version → file or create notebook.',
+      'Capability registered (disabled): study → write Kate version → file or create notebook.',
   };
 
   return {
@@ -54,15 +54,7 @@ function buildDefaults(): DashboardPersistedState {
       log: [bootLog],
     },
     locationOpsEnabled: false,
-    secondReview: {
-      ...EMPTY_REVIEW,
-      context: 'Control room',
-      recommendation:
-        'Nova review: Sliders reflect readiness only—not live promotion. You remain the final approver on any change.',
-      acknowledged: false,
-      finalApproved: false,
-      updatedAt: new Date().toISOString(),
-    },
+    secondReview: { ...EMPTY_REVIEW },
   };
 }
 
@@ -146,6 +138,13 @@ export function useDashboardState() {
     }));
   }, []);
 
+  const dismissReview = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      secondReview: { ...EMPTY_REVIEW },
+    }));
+  }, []);
+
   const setLevelProgress = useCallback(
     (level: number, value: number, emitReview = false) => {
       const def = AUTONOMY_LEVELS.find(l => l.level === level);
@@ -213,7 +212,7 @@ export function useDashboardState() {
   const requestNotebookWrite = useCallback(
     (subject: string) => {
       logNotebookCapability(
-        `Write blocked (flag off): "${subject}" — flow: study → write Nova version → file or create notebook.`,
+        `Write blocked (flag off): "${subject}" — flow: study → write Kate version → file or create notebook.`,
       );
       postSecondReviewNow('Study · notebook authoring', `Notebook write: ${subject}`, 0);
     },
@@ -229,5 +228,6 @@ export function useDashboardState() {
     requestNotebookWrite,
     acknowledgeReview,
     finalApproveReview,
+    dismissReview,
   };
 }

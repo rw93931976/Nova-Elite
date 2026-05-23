@@ -110,3 +110,22 @@ done < <(find "${BACKUP_ROOT}" -maxdepth 1 -type f \
 } > "${INDEX}"
 
 log "DONE ${BASENAME} size=${BYTES} sha256=${SUM:0:16}... pruned_old=${DELETED}"
+
+# Offsite copy to DO Spaces (set NOVA_BACKUP_OFFSITE=0 to disable).
+if [[ "${NOVA_BACKUP_OFFSITE:-1}" == "1" ]]; then
+  PY="${NOVA_PYTHON:-/root/nova/.venv/bin/python3}"
+  PUSH="${BACKUP_ROOT%/backups}/nova/scripts/push_backup_to_spaces.py"
+  if [[ ! -f "$PUSH" ]]; then
+    PUSH="/root/nova/scripts/push_backup_to_spaces.py"
+  fi
+  if [[ -x "$PY" && -f "$PUSH" ]]; then
+    if ( cd /root/nova && set -a && source .env 2>/dev/null; source .env.local 2>/dev/null; set +a
+         "$PY" "$PUSH" "$ARCHIVE" "$MANIFEST" "$CHECKSUM" ); then
+      log "OFFSITE ${BASENAME} pushed to DO Spaces"
+    else
+      log "WARN offsite push failed for ${BASENAME} (local backup still OK)"
+    fi
+  else
+    log "WARN offsite push skipped (python or push_backup_to_spaces.py missing)"
+  fi
+fi

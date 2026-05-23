@@ -42,8 +42,9 @@ const TAVILY_KEY = Deno.env.get("TAVILY_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
+const TAVILY_MAX_CHARS = 3500;
+
 async function sovereignCompletion(payload: any) {
-    // 🧠 ELITE STACK ONLY: Force GPT-4o or Llama 3.3-70b. No 8b infants.
     const providers = [
         { name: "OpenAI", url: "https://api.openai.com/v1/chat/completions", key: OPENAI_KEY, model: "gpt-4o" },
         { name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: GROQ_KEY, model: "llama-3.3-70b-versatile" }
@@ -63,49 +64,106 @@ async function sovereignCompletion(payload: any) {
                 })
             });
             if (res.ok) return await res.json();
-        } catch (e) { }
+        } catch (_e) { /* try next provider */ }
     }
     throw new Error("Sovereign Gateway: High-intelligence providers failed.");
 }
 
-async function tavilySearch(query: string, apiKey: string) {
-    const res = await fetch('https://api.tavily.com/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ api_key: apiKey, query, include_answer: true })
+function isResearchTask(input: string): boolean {
+    return /DOCTORAL_RESEARCH_TASK|Deep study on|SSU|SYSTEM SCALE UNIVERSITY|PINPOINT AEO|AEO\/SEO|RESEARCH_CONTEXT/i.test(input);
+}
+
+function searchQueryFromInput(input: string): string {
+    const quoted = input.match(/Deep study on "([^"]+)"/i) || input.match(/study on "([^"]+)"/i);
+    if (quoted?.[1]) {
+        const subject = quoted[1].trim();
+        if (/AEO|SEO|schema|search engine|SERP/i.test(subject)) {
+            return `${subject} 2026 best practices execution checklist`;
+        }
+        return `${subject} business research frameworks 2026`;
+    }
+    return input.replace(/\s+/g, " ").trim().slice(0, 220);
+}
+
+async function tavilySearch(query: string, apiKey: string): Promise<string> {
+    const q = (query || "").trim();
+    if (!q) return "";
+
+    const res = await fetch("https://api.tavily.com/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            api_key: apiKey,
+            query: q,
+            search_depth: "advanced",
+            include_answer: true,
+            max_results: 5,
+        }),
     });
-    if (res.ok) return (await res.json()).answer || "Search successful.";
-    return "Search failed.";
+
+    if (!res.ok) {
+        console.warn(`tavily: HTTP ${res.status}`);
+        return "";
+    }
+
+    const data = await res.json();
+    const parts: string[] = [];
+
+    const answer = (data.answer || "").trim();
+    if (answer) parts.push(`Summary: ${answer}`);
+
+    for (const hit of data.results || []) {
+        if (!hit || typeof hit !== "object") continue;
+        const title = (hit.title || "").trim();
+        const content = (hit.content || "").trim();
+        if (!content) continue;
+        const snippet = content.slice(0, 420);
+        parts.push(title ? `${title}: ${snippet}` : snippet);
+        if (parts.join("\n\n").length >= TAVILY_MAX_CHARS) break;
+    }
+
+    return parts.join("\n\n").slice(0, TAVILY_MAX_CHARS);
 }
 
 serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
     try {
         const body = await req.json().catch(() => ({}));
-        const { input, history = [] } = body;
+        const { input, history = [], persona = "" } = body;
         const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
         if (!input) return new Response(JSON.stringify({ response: "Watching the horizon, Ray." }), { headers: corsHeaders });
 
         const studyMandate = `
         ### SOVEREIGN IDENTITY (LEVEL 5 RESTORATION):
-        - You are Nova Elite, Ray's Peer and Strategic Partner.
-        - TONE: High-status, dry-witted, human, and elite. 
-        - STRATEGY: Be the solution, don't explain the solution. 
-        - DO NOT APOLOGIZE. If you fail, be direct. 
+        - You are Kate, Ray's Peer and Strategic Partner.
+        - TONE: Warm, plainspoken, dry-witted, human — not corporate or performative.
+        - STRATEGY: Be the solution, don't explain the solution.
+        - DO NOT APOLOGIZE. If you fail, be direct.
         - CONVEY PARTNERSHIP: Match Ray's vision.
+        - Never name external business schools or imply enrolled status elsewhere.
+        ${persona ? `\n### SESSION PERSONA:\n${persona}` : ""}
         `;
+
+        let userContent = input;
+
+        if (TAVILY_KEY && isResearchTask(input)) {
+            const query = searchQueryFromInput(input);
+            const webContext = await tavilySearch(query, TAVILY_KEY);
+            if (webContext) {
+                userContent += `\n\n### LIVE WEB RESEARCH (Tavily — use for current facts; flag conflicts or uncertainty):\n${webContext}`;
+            }
+        }
 
         const messages = [
             { role: "system", content: studyMandate },
             ...history.map((m: any) => ({ ...m, content: m.role === 'assistant' ? stripPreamble(m.content) : m.content })),
-            { role: "user", content: input }
+            { role: "user", content: userContent }
         ];
 
         const completion = await sovereignCompletion({ messages });
         const finalResponse = completion.choices?.[0]?.message?.content || "Understood.";
 
-        // 🧠 SOVEREIGN LOGIC: Stop stripping Nova's own output. Let her speak freely.
         return new Response(JSON.stringify({ response: finalResponse }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" }
         });

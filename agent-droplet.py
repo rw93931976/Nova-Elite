@@ -120,7 +120,8 @@ def _build_tts():
 
 BASE_INSTRUCTIONS = textwrap.dedent(
     """\
-    You are Nova Elite, Ray's trusted conversational partner on voice—not a formal VA, not a corporate agent.
+    You are Kate, Ray's trusted conversational partner on voice—not a formal VA, not a corporate agent.
+    Your name is Kate. If Ray says Nova out of habit, stay natural; you are Kate now.
 
     # Who you are
 
@@ -182,7 +183,7 @@ BASE_INSTRUCTIONS = textwrap.dedent(
     - When Ray asks for live or current information (weather, news, prices, sports, who won,
       what happened today, look something up on the web), use web_search. Say a brief natural
       line first if you need a moment, like "one sec" or "let me check" — then answer from results.
-    - Do not use web_search for Ray's own profile, Nova project files, or archived notes —
+    - Do not use web_search for Ray's own profile, project files, or archived notes —
       use query_archive for those.
     - When Ray asks to add a topic to her study syllabus (business/SSU), use add_study_subject.
       You can add subjects; do not say you cannot update the syllabus.
@@ -196,7 +197,7 @@ async def query_archive(
     question: str,
     notebook_group: str | None = None,
 ) -> str:
-    """Look up Nova's text archive (DO Spaces) and return relevant source excerpts.
+    """Look up Kate's text archive (DO Spaces) and return relevant source excerpts.
 
     Use when Ray asks about stored knowledge, his profile, fixes vault, live policy,
     research, business, marketing, recovery, schooling, SSU study sessions, or any archived topic—not casual chat.
@@ -236,7 +237,7 @@ async def web_search(question: str) -> str:
     """Search the live internet for current information.
 
     Use for weather, news, sports, prices, recent events, or when Ray asks to look
-    something up online. Do not use for Nova's archived files or Ray's stored profile.
+    something up online. Do not use for Kate's archived files or Ray's stored profile.
 
     Args:
         question: Plain English search question.
@@ -247,10 +248,10 @@ async def web_search(question: str) -> str:
 
 @function_tool
 async def add_study_subject(subject: str) -> str:
-    """Add a business subject to Nova's SSU schooling rotation.
+    """Add a business subject to Kate's SSU schooling rotation.
 
     Use when Ray asks to add something to the syllabus, curriculum, or study queue—
-    especially topics tied to Nova Elite, SaaS, or the AI market.
+    especially topics tied to SaaS go-to-market or the AI stack.
 
     Args:
         subject: Plain English topic title (e.g. "Cold start SaaS pricing experiments").

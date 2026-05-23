@@ -10,6 +10,9 @@ import { SelfAuditAgent } from './SelfAuditAgent';
 import { MultikaAgent } from './MultikaAgent';
 import { GeminiSenseAgent } from './GeminiSenseAgent';
 import { NotebookAgent } from './NotebookAgent';
+import { ContentArchitectAgent } from './ContentArchitectAgent';
+import { OutboundProspectAgent } from './OutboundProspectAgent';
+import type { SandboxTenant } from '../sandbox/SandboxTenants';
 
 export interface AgentRole {
     name: string;
@@ -19,6 +22,18 @@ export interface AgentRole {
 
 export class AgentFactory {
     public static isBeastModeBlocked: boolean = true;
+    /** L7 sandbox training roles — allowed when KATE_SANDBOX_MODE is on (human gate stays). */
+    private static sandboxUnlocked = false;
+    private static readonly SANDBOX_ROLES = new Set([
+        'content-architect',
+        'outbound-prospect',
+        'multika',
+        'researcher',
+    ]);
+
+    public static enableSandboxRoles(): void {
+        this.sandboxUnlocked = true;
+    }
 
     private static roles: AgentRole[] = [
         // ... (roles remain for metadata)
@@ -37,15 +52,22 @@ export class AgentFactory {
         { name: "self-audit", description: "Wharton-compliance and bug pattern detection", skills: ["compliance-check", "bug-patterns"] },
         { name: "multika", description: "Mission Control / Collaborative Sandbox", skills: ["task-orchestration", "collaboration"] },
         { name: "sense", description: "Multimodal Ingestion (Eyes)", skills: ["vision", "audio-processing", "video-analysis"] },
-        { name: "notebook", description: "Source-grounded research (NotebookLM)", skills: ["research", "grounding", "citations"] }
+        { name: "notebook", description: "Source-grounded research (NotebookLM)", skills: ["research", "grounding", "citations"] },
+        { name: "content-architect", description: "Sandbox social drafts (X, Pinterest, LinkedIn)", skills: ["content-cascade", "brand-voice", "human-gate-queue"] },
+        { name: "outbound-prospect", description: "Pain search, company research, hyper-specific email drafts", skills: ["tavily-search", "prospect-research", "human-gate-queue"] }
     ];
 
     public static getRole(name: string): AgentRole | undefined {
         return this.roles.find(r => r.name === name);
     }
 
-    public static spawn(name: string, core: NovaCore): any {
-        if (this.isBeastModeBlocked && !core.beastModeEnabled) {
+    public static spawn(name: string, core: NovaCore, tenant?: SandboxTenant): any {
+        const sandboxAllowed =
+            this.sandboxUnlocked &&
+            core.sandboxModeEnabled &&
+            this.SANDBOX_ROLES.has(name);
+
+        if (this.isBeastModeBlocked && !core.beastModeEnabled && !sandboxAllowed) {
             console.warn(`🚫 [AgentFactory] Spawn blocked for: ${name} (Safety Switch: OFF)`);
             return {
                 name,
@@ -85,6 +107,11 @@ export class AgentFactory {
                 return new GeminiSenseAgent();
             case 'notebook':
                 return new NotebookAgent();
+            case 'content-architect':
+                if (!tenant) throw new Error('content-architect spawn requires a SandboxTenant.');
+                return new ContentArchitectAgent(tenant);
+            case 'outbound-prospect':
+                return new OutboundProspectAgent();
             default:
                 return role;
         }

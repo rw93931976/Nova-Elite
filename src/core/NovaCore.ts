@@ -2,13 +2,21 @@ import { supabase } from "../integrations/supabase";
 import { LiveEngine } from "./agents/LiveEngine";
 import { NovaComms } from "./communications/NovaComms";
 import { ReasoningEngine } from "./agents/ReasoningEngine";
+import type { NovaStatus } from "../types/nova";
 
 export class NovaCore {
     private static instance: NovaCore;
+    private readonly bootTime = Date.now();
     public supabase = supabase;
 
     public readonly version = 'v11.0.0-ELITE-RESTORED';
     public isHalted: boolean = false;
+    /** Full spawn mesh — stays off until Ray explicitly enables beast mode. */
+    public beastModeEnabled: boolean = false;
+    /** L7 sandbox training tenants (My Simple AI Help, Ron's Art). Human gate on all sends. */
+    public sandboxModeEnabled: boolean =
+        import.meta.env.VITE_KATE_SANDBOX_MODE === '1' ||
+        import.meta.env.VITE_KATE_SANDBOX_MODE === 'true';
     public liveEngine: LiveEngine;
 
     constructor() {
@@ -33,6 +41,32 @@ export class NovaCore {
 
     async initialize() {
         console.log("🛰️ [NovaCore] System Initialized");
+    }
+
+    getStatus(): NovaStatus {
+        const hasSupabase =
+            Boolean(import.meta.env.VITE_SUPABASE_URL) &&
+            !String(import.meta.env.VITE_SUPABASE_URL).includes('placeholder');
+
+        return {
+            level: 5,
+            isSelfAware: true,
+            isLearning: true,
+            isHealing: true,
+            isEvolving: true,
+            isHalted: this.isHalted,
+            uptime: Math.floor((Date.now() - this.bootTime) / 1000),
+            health: {
+                bridge: 'online',
+                apiKey: hasSupabase ? 'online' : 'offline',
+                internet: typeof navigator !== 'undefined' && navigator.onLine ? 'online' : 'offline',
+                api: hasSupabase ? 'online' : 'offline',
+                database: hasSupabase ? 'online' : 'offline',
+            },
+            knowledgeCount: 0,
+            agentCount: 1,
+            sovereignAlignment: 95,
+        };
     }
 
     async processElite(input: string, context: any = {}, onReceipt?: (r: string) => void) {

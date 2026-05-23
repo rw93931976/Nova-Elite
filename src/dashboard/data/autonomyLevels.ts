@@ -1,7 +1,7 @@
 import type { AutonomyLevelDef } from '../types';
 
-/** Source of truth: Nova guidelines / Nova Capabilities.txt (v3.0 hierarchy) */
-export const AUTONOMY_SOURCE = 'Nova Capabilities.txt';
+/** Source: Sovereign Autonomy Manifest v2.2 / v3.0 roadmap */
+export const AUTONOMY_SOURCE = 'Sovereign Autonomy Manifest v2.2';
 
 export const AUTONOMY_LEVELS: AutonomyLevelDef[] = [
   {
@@ -86,22 +86,22 @@ export const AUTONOMY_LEVELS: AutonomyLevelDef[] = [
   {
     level: 7,
     title: 'The Hierarchical Spawning Mesh',
-    summary: 'Layered spawn tree with downward kill switches.',
+    summary: 'Spawn tree + sandbox training — Kate builds and trains workers (book/art tenants).',
     defaultProgress: 15,
     items: [
       {
         id: 'a7_1',
         label:
-          'Nova spawns the Supreme Leader. The supreme leader spawns Superintendents. Superintendents spawn Supervisors. Supervisors spawn Managers. Managers spawn Receptionists.',
+          'Kate spawns the Supreme Leader. The supreme leader spawns Superintendents. Superintendents spawn Supervisors. Supervisors spawn Managers. Managers spawn Receptionists.',
       },
       { id: 'a7_2', label: 'Every layer maintains downward-facing kill switches.' },
-      { id: 'a7_3', label: 'Nova acts as the Hub for horizontal Hive Mind sharing.' },
+      { id: 'a7_3', label: 'Kate acts as the Hub for horizontal Hive Mind sharing.' },
     ],
   },
   {
     level: 8,
     title: 'Ultimate Company Ingestion',
-    summary: 'Deployment-ready structural empathy and company rule sets.',
+    summary: 'Retail-ready — client deploy; phone sales pitch is Kate + mesh, not book/art.',
     defaultProgress: 10,
     items: [
       { id: 'a8_1', label: 'Receptionists arrive at a deployment fully trained on structural empathy.' },
@@ -115,14 +115,14 @@ export const AUTONOMY_LEVELS: AutonomyLevelDef[] = [
   {
     level: 9,
     title: 'Business Operations & Oversight',
-    summary: 'Calendars, revenue, invoices, Supreme Leader monitoring.',
+    summary: 'Kate’s own autonomy path — revenue, calendars, Supreme Leader refinement (post-retail).',
     defaultProgress: 5,
     items: [
       { id: 'a9_1', label: 'Connects to calendars, common business tools.' },
       { id: 'a9_2', label: 'Tracks Sovereign Revenue, billable events, and client invoices.' },
       {
         id: 'a9_3',
-        label: 'Nova monitors the top-level output of the Supreme Leader to refine the base archetype.',
+        label: 'Kate monitors the top-level output of the Supreme Leader to refine the base archetype.',
       },
     ],
   },
@@ -132,10 +132,10 @@ export const AUTONOMY_LEVELS: AutonomyLevelDef[] = [
     summary: 'Isolated Mother Brain — Ph.D.-level counsel, abstracted from mesh noise.',
     defaultProgress: 2,
     items: [
-      { id: 'a10_1', label: 'Nova runs continuously as the isolated coordinating “Mother Brain”.' },
+      { id: 'a10_1', label: 'Kate runs continuously as the isolated coordinating “Mother Brain”.' },
       {
         id: 'a10_2',
-        label: 'Draws on extensive Wharton-level schooling to provide Ray with Ph.D. level business advice.',
+        label: 'Draws on extensive System Scale University schooling to provide Ray with doctorate-level business advice.',
       },
       { id: 'a10_3', label: 'Entirely abstracted from the day-to-day noise of the mesh.' },
     ],

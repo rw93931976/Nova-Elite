@@ -1,70 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nova</title>
-  <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
-  <style>
-    body { background:#0f172a; color:white; text-align:center; padding:50px; font-family:sans-serif; }
-    button { font-size:18px; padding:12px 20px; border-radius:10px; border:none; cursor:pointer; margin-top:20px; }
-  </style>
-</head>
-<body>
-  <h1>Nova</h1>
-  <p id="status">Tap Start.</p>
-  <button id="startBtn">Start Nova</button>
-  <div id="audio-container"></div>
-
-  <script>
-    const status = document.getElementById('status');
-    const startBtn = document.getElementById('startBtn');
-    const audioContainer = document.getElementById('audio-container');
-
-    async function start() {
-      startBtn.disabled = true;
-      try {
-        const room = new LivekitClient.Room();
-        console.log('room created');
-
-        room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
-          console.log('track subscribed', track.kind, participant.identity);
-          if (track.kind === LivekitClient.Track.Kind.Audio) {
-            const el = track.attach();
-            el.autoplay = true;
-            el.controls = true;
-            audioContainer.innerHTML = '';
-            audioContainer.appendChild(el);
-            status.innerHTML = "✅ Connected. Nova audio subscribed.";
-          }
-        });
-
-        room.on(LivekitClient.RoomEvent.ParticipantConnected, p => console.log('participant connected', p.identity));
-        room.on(LivekitClient.RoomEvent.ParticipantDisconnected, p => console.log('participant disconnected', p.identity));
-        room.on(LivekitClient.RoomEvent.ActiveSpeakersChanged, speakers => console.log('active speakers', speakers.map(s => s.identity)));
-        room.on(LivekitClient.RoomEvent.ConnectionStateChanged, state => console.log('connection state', state));
-        status.innerHTML = "Getting token...";
-        const tokenRes = await fetch("/api/token");
-        if (!tokenRes.ok) throw new Error("Could not get token");
-        const { token } = await tokenRes.json();
-        await room.connect(
-          "wss://nova-2fds3yq3.livekit.cloud",
-          token
-        );
-
-        const micTrack = await LivekitClient.createLocalAudioTrack();
-        await room.localParticipant.publishTrack(micTrack);
-
-        status.innerHTML = "✅ Connected to Nova. Speak now.";
-        console.log("connected, mic published");
-      } catch (e) {
-        console.error(e);
-        status.innerHTML = "❌ Failed: " + e.message;
-        startBtn.disabled = false;
-      }
-    }
-
-    startBtn.addEventListener('click', start);
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#121212" />
+    <meta name="description" content="Kate — sovereign voice AI control room" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Kate" />
+    <title>Kate</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

@@ -34,6 +34,7 @@ dist-ssr/
 .env*.local
 
 .env
+secrets/
 
 # Data
 nova-data/

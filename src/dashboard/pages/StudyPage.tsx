@@ -11,6 +11,8 @@ import {
 import { GlassPanel } from '../components/GlassPanel';
 import { LevelSlider } from '../components/LevelSlider';
 import { NotebookWritingPlaceholder } from '../components/NotebookWritingPlaceholder';
+import { StudyLiveScorecard } from '../components/StudyLiveScorecard';
+import { useStudyProgress } from '../hooks/useStudyProgress';
 import type { NotebookWritingCapability, StudyTrackDef } from '../types';
 
 interface StudyPageProps {
@@ -27,6 +29,7 @@ export const StudyPage: React.FC<StudyPageProps> = ({
   onNotebookLog,
 }) => {
   const [draftSubject, setDraftSubject] = useState('');
+  const { snapshot, loading, error, refresh } = useStudyProgress();
 
   const emotional = SYLLABUS_MODULES.filter(t => t.isEmotional);
   const academic = SYLLABUS_MODULES.filter(t => !t.isEmotional);
@@ -38,10 +41,19 @@ export const StudyPage: React.FC<StudyPageProps> = ({
           <p className="control-room-eyebrow">Doctorate track</p>
           <h1 className="control-room-title">Syllabus & study</h1>
           <p className="control-room-version">
-            {SYLLABUS_SOURCE} {SYLLABUS_VERSION} · {SYLLABUS_SUBJECT_COUNT} subjects · EQ UI-only
+            {SYLLABUS_SOURCE} {SYLLABUS_VERSION} · {SYLLABUS_SUBJECT_COUNT} subjects · live scorecard from Spaces
           </p>
         </div>
       </header>
+
+      <GlassPanel accent="cyan" title="Autonomous schooling" subtitle="Mirrored from DO Spaces via Supabase">
+        <StudyLiveScorecard
+          snapshot={snapshot}
+          loading={loading}
+          error={error}
+          onRefresh={() => void refresh()}
+        />
+      </GlassPanel>
 
       <GlassPanel accent="cyan" title={SYLLABUS_META.project} subtitle={SYLLABUS_META.status}>
         <dl className="syllabus-meta">

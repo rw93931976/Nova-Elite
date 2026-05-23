@@ -555,7 +555,7 @@ def _identity_to_plain(content: str) -> list[str]:
         return [_clip(content, 280)]
 
     lines: list[str] = []
-    name = (data.get("name") or "Nova Elite").strip()
+    name = (data.get("name") or "Kate").strip()
     lines.append(f"You are {name}. You are speaking with Ray.")
 
     mission = (data.get("mission") or "").strip()

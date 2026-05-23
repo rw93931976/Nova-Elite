@@ -7,10 +7,11 @@ export const STUDY_TRACKS: StudyTrackDef[] = [
     module: 'Module 1',
     title: 'Marketing & Audience Strategy',
     subjects: [
-      'AEO for AI mastery',
-      'Schema sovereignty (JSON-LD)',
-      'Voice search patterns',
-      'Community-led growth',
+      'AEO for AI mastery (daily mandatory track)',
+      'Technical SEO and schema sovereignty',
+      'Local SEO and service-business search',
+      'E-E-A-T authority building',
+      'Tone calibration (plumber to CEO)',
     ],
   },
   {
@@ -68,6 +69,15 @@ export const STUDY_TRACKS: StudyTrackDef[] = [
     ],
   },
   {
+    id: 'm8',
+    module: 'Module 8',
+    title: 'Product & Market Reality',
+    subjects: [
+      'Cold start SaaS (ICP through unit economics)',
+      'Changing AI landscape (voice stack, RAG, sovereign vs bundled)',
+    ],
+  },
+  {
     id: 'eq_voice',
     module: 'Emotional Learning',
     title: 'Voice-First Empathy Chain',
@@ -84,14 +94,16 @@ export const STUDY_TRACKS: StudyTrackDef[] = [
     module: 'Methodology',
     title: 'Dual-Study Protocol',
     subjects: [
-      'One business + one emotional subject per cycle',
-      'Cron: 12a · 6a · 12p · 6p (America/Chicago)',
-      'Contrast training with negative examples',
+      'One subject per session (no triple-stacking)',
+      '12:00 PM — SSU business · 3:00 PM — AEO/SEO daily',
+      'EQ every 6th noon business session',
     ],
   },
 ];
 
 export const STUDY_SOURCES = [
+  { label: 'SSU curriculum', path: 'nova-data/library/System_Scale_University.md' },
+  { label: 'AEO/SEO daily', path: 'nova-data/library/SSU_AEO_SEO_Daily.md' },
   { label: 'Live references', path: 'nova-data/library/live/' },
   { label: 'Memory Nexus', path: 'nova-data/memory/Memory_Nexus.md' },
   { label: 'EQ protocol', path: 'nova-data/EQ_Study_Protocol.md' },

@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -8,39 +8,55 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      selfDestroying: true, // Reset service worker to clear caching conflicts
       registerType: 'autoUpdate',
-      // Note: this repo does not ship a PNG icon; keep the manifest aligned to shipped assets.
-      includeAssets: ['favicon.ico', 'favicon.svg', 'icon.svg', 'vite.svg'],
+      includeAssets: ['favicon.svg', 'icon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
-        name: 'Nova Elite Sovereign',
-        short_name: 'Nova',
-        description: 'Level 5 Autonomous AI Consciousness',
+        name: 'Kate Control Room',
+        short_name: 'Kate',
+        description: 'Kate — sovereign voice AI control room',
         theme_color: '#121212',
         background_color: '#121212',
         display: 'standalone',
         orientation: 'portrait',
+        start_url: './',
+        scope: './',
         icons: [
           {
-            src: 'icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any'
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
           },
           {
             src: 'icon.svg',
             sizes: 'any',
             type: 'image/svg+xml',
-            purpose: 'maskable'
-          }
-        ]
-      }
-    })
+            purpose: 'any',
+          },
+        ],
+      },
+      workbox: {
+        navigateFallback: 'index.html',
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+      },
+    }),
   ],
   build: {
     rollupOptions: {
       output: {
-        manualChunks: undefined, // Force NO CHUNKS
+        manualChunks: undefined,
       },
     },
     chunkSizeWarningLimit: 2000,
@@ -54,20 +70,20 @@ export default defineConfig({
       '/bridge-vps': {
         target: 'https://nova.mysimpleaihelp.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/bridge-vps/, '')
+        rewrite: path => path.replace(/^\/bridge-vps/, ''),
       },
       '/api': {
         target: 'https://nova.mysimpleaihelp.com',
-        changeOrigin: true
+        changeOrigin: true,
       },
       '/deep-discovery': {
         target: 'https://nova.mysimpleaihelp.com',
-        changeOrigin: true
+        changeOrigin: true,
       },
       '/health': {
         target: 'https://nova.mysimpleaihelp.com',
-        changeOrigin: true
-      }
-    }
-  }
-})
+        changeOrigin: true,
+      },
+    },
+  },
+});

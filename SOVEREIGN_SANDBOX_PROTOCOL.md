@@ -29,4 +29,4 @@ The hidden `architect_daemon.cjs` monitors Nova's CPU and network usage. If an u
 3. Lock the SSH tunnel.
 
 ---
-*Status: Sandbox Active. Spawning Neutralized.*
+*Status: Sandbox Active. Full spawn mesh neutralized. **Training tenant spawn** (content-architect, outbound-prospect) allowed when `KATE_SANDBOX_MODE=1` — human gate on all posts and emails.*

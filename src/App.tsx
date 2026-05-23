@@ -4,7 +4,7 @@ import { useLiveVoice } from './hooks/useLiveVoice';
 import { ControlRoomShell } from './dashboard/ControlRoomShell';
 import { NovaCore } from './core/NovaCore';
 
-const CURRENT_VERSION = '1.13.1 Sovereign Elite — Control Room';
+const CURRENT_VERSION = '1.14.0 Kate — Control Room';
 
 function App() {
   const nova = useNova();
@@ -20,6 +20,7 @@ function App() {
     );
     if (!confirmed) return;
     try {
+      const savedVolume = localStorage.getItem('nova_voice_volume');
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const reg of registrations) await reg.unregister();
@@ -30,6 +31,7 @@ function App() {
       }
       localStorage.clear();
       sessionStorage.clear();
+      if (savedVolume) localStorage.setItem('nova_voice_volume', savedVolume);
       window.location.href = `${window.location.origin}?t=${Date.now()}`;
     } catch {
       window.location.reload();
@@ -42,13 +44,16 @@ function App() {
   }, [liveVoice]);
 
   return (
-    <ControlRoomShell
+    <>
+      <div id="nova-audio-root" aria-hidden="true" style={{ display: 'none' }} />
+      <ControlRoomShell
       status={status}
       version={CURRENT_VERSION}
       isHalted={isHalted}
       onToggleHalt={toggleHalt}
       isLiveActive={liveVoice.isLiveActive}
       isConnecting={liveVoice.isConnecting}
+      isAgentSpeaking={liveVoice.isAgentSpeaking}
       onToggleVoice={toggleVoice}
       messageCount={messages.length}
       lastError={liveVoice.lastError}
@@ -56,6 +61,7 @@ function App() {
       onVolumeChange={liveVoice.setVolume}
       onHardRefresh={handleHardRefresh}
     />
+    </>
   );
 }
 

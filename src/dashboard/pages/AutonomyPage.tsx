@@ -1,5 +1,5 @@
 import React from 'react';
-import { AUTONOMY_LEVELS, AUTONOMY_SOURCE, EMERGING_CAPABILITIES } from '../data/autonomyLevels';
+import { AUTONOMY_LEVELS, AUTONOMY_SOURCE } from '../data/autonomyLevels';
 import { GlassPanel } from '../components/GlassPanel';
 import { GlowSlider } from '../components/GlowSlider';
 
@@ -20,8 +20,8 @@ export const AutonomyPage: React.FC<AutonomyPageProps> = ({
     <header className="control-room-page__hero">
       <div>
         <p className="control-room-eyebrow">Sovereign agency</p>
-        <h1 className="control-room-title">Autonomy 0–10</h1>
-        <p className="control-room-version">Source of truth: {AUTONOMY_SOURCE}</p>
+        <h1 className="control-room-title">Autonomy</h1>
+        <p className="control-room-version">Levels 0–10 · {AUTONOMY_SOURCE}</p>
       </div>
     </header>
 
@@ -58,14 +58,6 @@ export const AutonomyPage: React.FC<AutonomyPageProps> = ({
           </GlassPanel>
         );
       })}
-
-      <GlassPanel accent="amber" title="Emerging capabilities (AGI / ASI)" subtitle="Not leveled — reference only">
-        <ul className="emerging-list">
-          {EMERGING_CAPABILITIES.map((line, i) => (
-            <li key={i}>{line}</li>
-          ))}
-        </ul>
-      </GlassPanel>
     </div>
   </div>
 );

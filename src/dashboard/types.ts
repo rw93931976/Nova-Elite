@@ -1,11 +1,11 @@
-/** Locked five-section control room — do not add routes without explicit approval */
-export type DashboardPageId = 'home' | 'autonomy' | 'features' | 'study' | 'settings';
+/** Four-page desktop control room + study */
+export type DashboardPageId = 'home' | 'study' | 'autonomy' | 'features' | 'settings';
 
 export const DASHBOARD_SECTIONS: readonly { id: DashboardPageId; label: string }[] = [
   { id: 'home', label: 'Home' },
+  { id: 'study', label: 'Study' },
   { id: 'autonomy', label: 'Autonomy' },
   { id: 'features', label: 'Features' },
-  { id: 'study', label: 'Study' },
   { id: 'settings', label: 'Settings' },
 ] as const;
 

@@ -1,16 +1,16 @@
 import type { StudyTrackDef } from '../types';
 
-/** Source of truth: repo complete_syllabus.md (v5.1-CONSOLIDATED) */
+/** Source of truth: repo complete_syllabus.md (v5.2-CONSOLIDATED) */
 export const SYLLABUS_SOURCE = 'complete_syllabus.md';
-export const SYLLABUS_VERSION = 'v5.1';
-export const SYLLABUS_SUBJECT_COUNT = 82;
+export const SYLLABUS_VERSION = 'SSU-5.2';
+export const SYLLABUS_SUBJECT_COUNT = 110;
 
 export const SYLLABUS_META = {
   project: 'Sovereign Business & Emotional Mastery',
   status: 'Active Research Track (2026)',
-  intervals: '12:00 AM · 6:00 AM · 12:00 PM · 6:00 PM',
+  intervals: '6:00 AM · 12:00 PM · 3:00 PM · 6:00 PM (America/Chicago)',
   dualStudy:
-    'Each cycle selects one Business subject and one Emotional subject. Findings archive to notebooks (UI-only EQ sliders).',
+    'One subject per session. Business at 6 AM / noon / 6 PM. 3 PM = AEO every other day (EQ on off-days). Active rotation: SSU_Business_Courses.md on DO Spaces.',
 };
 
 /** Parsed modules from complete_syllabus.md */
@@ -151,9 +151,35 @@ export const SYLLABUS_MODULES: StudyTrackDef[] = [
     ],
   },
   {
+    id: 'm8_saas',
+    module: 'MODULE 8',
+    title: 'Cold Start SaaS',
+    subjects: [
+      'ICP, Problem-Solution Fit, and First Offer',
+      'MVP Scope, Time-to-Value, and Launch Sequencing',
+      'Founder-Led Sales and the First 10 Customers',
+      'Pricing Experiments Before Product-Market Fit',
+      'Activation, Onboarding, and Early Retention Loops',
+      'Unit Economics at Pre-Scale (CAC, LTV, Payback)',
+    ],
+  },
+  {
+    id: 'm8_ai',
+    module: 'MODULE 8',
+    title: 'Changing AI Landscape',
+    subjects: [
+      'Capability Shifts, Reliability, and Cost Curves (2026)',
+      'Voice Agents (STT, LLM, TTS) and Realtime Economics',
+      'Agent Memory, RAG, Archives, and Grounded Answers',
+      'Sovereign Stack vs Bundled Vendor Lock-In',
+      'SMB AI Adoption and AI Setup Service Models',
+      'Trust, Compliance, and Data Handling for Small Business AI',
+    ],
+  },
+  {
     id: 'method',
     module: 'METHODOLOGY',
-    title: 'How Nova Studies',
+    title: 'How Kate Studies',
     subjects: [
       'Dual-Study Protocol: one business + one emotional subject per cycle',
       'Contrast Training: study bad examples to learn what NOT to do',

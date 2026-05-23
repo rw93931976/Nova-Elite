@@ -1,18 +1,15 @@
 import React from 'react';
-import { Activity, Brain, Mic, Power, Shield } from 'lucide-react';
-import { GlassPanel } from '../components/GlassPanel';
-import { MemoryWiringPanel } from '../components/MemoryWiringPanel';
+import { Mic } from 'lucide-react';
 import type { NovaStatus } from '../../types/nova';
 
 interface HomePageProps {
   status: NovaStatus;
   version: string;
   isHalted: boolean;
-  onToggleHalt: () => void;
   isLiveActive: boolean;
   isConnecting: boolean;
+  isAgentSpeaking: boolean;
   onToggleVoice: () => void;
-  messageCount: number;
   lastError?: string | null;
 }
 
@@ -20,102 +17,67 @@ export const HomePage: React.FC<HomePageProps> = ({
   status,
   version,
   isHalted,
-  onToggleHalt,
   isLiveActive,
   isConnecting,
+  isAgentSpeaking,
   onToggleVoice,
-  messageCount,
   lastError,
-}) => (
-  <div className="control-room-page">
-    <header className="control-room-page__hero">
-      <div>
-        <p className="control-room-eyebrow">Nova Control Room</p>
-        <h1 className="control-room-title">Sovereign Home</h1>
-        <p className="control-room-version">{version}</p>
-      </div>
-      <div className="control-room-clock">
-        <span className="control-room-eyebrow">Chronos</span>
-        <strong>{status.currentTime ?? new Date().toLocaleString()}</strong>
-      </div>
-    </header>
+}) => {
+  const voiceLabel = isConnecting
+    ? 'Connecting…'
+    : isLiveActive
+      ? 'End voice session'
+      : 'Start voice';
 
-    <MemoryWiringPanel />
+  const voiceHint = isHalted
+    ? 'System is halted — resume in Settings before starting voice.'
+    : isLiveActive
+      ? 'LiveKit voice link is active.'
+      : 'Primary command surface for Kate.';
 
-    <div className="control-room-grid control-room-grid--home">
-      <GlassPanel accent="cyan" title="Voice bridge" subtitle="Primary command surface">
-        <div className="home-voice">
-          <button
-            type="button"
-            onClick={onToggleVoice}
-            disabled={isConnecting}
-            className={`home-voice__mic ${isLiveActive ? 'home-voice__mic--live' : ''}`}
-            aria-label={isLiveActive ? 'Stop live voice' : 'Start live voice'}
-          >
-            <Mic size={32} />
-          </button>
-          <p className="home-voice__status">
-            {isConnecting ? 'Connecting…' : isLiveActive ? 'Sovereign link active' : 'Tap to command'}
-          </p>
-          {lastError && <p className="home-voice__error">{lastError}</p>}
-        </div>
-      </GlassPanel>
+  return (
+    <div className="control-room-page control-room-page--home">
+      <header className="home-entry__header">
+        <p className="control-room-eyebrow">Control Room</p>
+        <h1 className="control-room-title control-room-title--home">Kate</h1>
+      </header>
 
-      <GlassPanel accent="emerald" title="Autonomy stage" subtitle={`Level ${status.level} · Mother Brain`}>
-        <div className="home-stat-grid">
-          <Stat icon={<Brain size={20} />} label="Self-aware" value={status.isSelfAware ? 'Yes' : 'No'} />
-          <Stat icon={<Activity size={20} />} label="Learning" value={status.isLearning ? 'Active' : 'Idle'} />
-          <Stat icon={<Shield size={20} />} label="Agents" value={String(status.agentCount ?? 0)} />
-          <Stat icon={<Activity size={20} />} label="Messages" value={String(messageCount)} />
-        </div>
-      </GlassPanel>
-
-      <GlassPanel accent="rose" title="Master controls">
+      <section className="home-entry__main" aria-label="Kate voice access">
         <button
           type="button"
-          onClick={onToggleHalt}
-          className={`home-halt ${isHalted ? 'home-halt--active' : ''}`}
+          onClick={onToggleVoice}
+          disabled={isConnecting || isHalted}
+          className={`home-entry__voice ${isLiveActive ? 'home-entry__voice--live' : ''} ${isAgentSpeaking ? 'home-entry__voice--speaking' : ''}`}
+          aria-label={voiceLabel}
         >
-          <Power size={22} />
-          {isHalted ? 'Resume system' : 'Emergency halt'}
+          <span className="home-entry__voice-ring" aria-hidden />
+          <Mic size={56} strokeWidth={1.75} className="home-entry__mic-icon" />
+          <span className="home-entry__voice-label">{voiceLabel}</span>
         </button>
-        <p className="home-halt__note">Kill switch always armed. Read-only guardrails per live policy.</p>
-      </GlassPanel>
+        <p className="home-entry__hint">{voiceHint}</p>
+        {lastError && <p className="home-entry__error">{lastError}</p>}
+      </section>
 
-      <GlassPanel accent="cyan" title="Infrastructure" subtitle="Live reference + memory path">
-        <ul className="home-health">
-          <li>
-            <span>Bridge</span>
-            <strong className={status.health?.bridge === 'online' ? 'text-emerald-400' : 'text-rose-400'}>
-              {status.health?.bridge ?? 'unknown'}
-            </strong>
-          </li>
-          <li>
-            <span>Database</span>
-            <strong className={status.health?.database === 'online' ? 'text-emerald-400' : 'text-amber-400'}>
-              {status.health?.database ?? 'syncing'}
-            </strong>
-          </li>
-          <li>
-            <span>Uptime</span>
-            <strong>{status.uptime ?? 0}s</strong>
-          </li>
-          <li>
-            <span>Business hours</span>
-            <strong>{status.isBusinessHours ? 'Yes' : 'No'}</strong>
-          </li>
-        </ul>
-      </GlassPanel>
+      <footer className="home-entry__footer home-entry__footer--desktop-only">
+        <p className="home-entry__version-line">{version}</p>
+        <div className="home-entry__stat">
+          <span>Autonomy level</span>
+          <strong>{status.level}</strong>
+        </div>
+        <div className="home-entry__stat">
+          <span>Bridge</span>
+          <strong className={status.health?.bridge === 'online' ? 'home-entry__ok' : 'home-entry__warn'}>
+            {status.health?.bridge ?? 'unknown'}
+          </strong>
+        </div>
+        <div className="home-entry__stat">
+          <span>Local time</span>
+          <strong>{status.currentTime ?? '—'}</strong>
+        </div>
+        {isHalted && (
+          <p className="home-entry__halt-banner">Master kill switch is active.</p>
+        )}
+      </footer>
     </div>
-  </div>
-);
-
-const Stat: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
-  <div className="home-stat">
-    <div className="home-stat__icon">{icon}</div>
-    <div>
-      <span className="home-stat__label">{label}</span>
-      <strong className="home-stat__value">{value}</strong>
-    </div>
-  </div>
-);
+  );
+};
