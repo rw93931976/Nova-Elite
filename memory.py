@@ -47,8 +47,9 @@ _LOAD_CATEGORIES = (
     *_RECENT_VOICE_CATEGORIES,
     _REGISTRY_CATEGORY,
 )
-_MAX_LINES = 42
+_MAX_LINES = 52
 _MAX_CONTENT_CHARS = 360
+_REGISTRY_BREADCRUMB_LINES = 8
 
 _W_NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
@@ -80,6 +81,7 @@ _LIVE_REF_BREADCRUMBS: tuple[tuple[str, str], ...] = (
 )
 
 _NOTEBOOK_MAP_PATH = "nova-data/library/notebook_subject_map.json"
+_NOTEBOOK_GROUPS_PATH = "nova-data/library/notebook_subject_groups.json"
 
 
 def _voice_memory_session_limit() -> int:
@@ -290,7 +292,7 @@ def _load_study_index_context() -> str:
         return ""
     logger.info("memory: loaded study index from %s", path.name)
     return (
-        "Study index (syllabus and recovery pointers; do not read aloud unless Ray asks):\n"
+        "Study index (grounding only; TODAY = completed sessions line, not the whole archive):\n"
         f"- {_clip(summary, 520)}\n"
     )
 
@@ -321,17 +323,35 @@ def _load_scheduling_context() -> str:
     return "\n".join(lines) + "\n"
 
 
+def _archive_query_enabled() -> bool:
+    flag = (os.getenv("NOVA_ARCHIVE_QUERY") or "1").strip().lower()
+    return flag not in ("0", "false", "no", "off")
+
+
 def _load_voice_runtime_context() -> str:
     """Ground voice agent on what this runtime can and cannot access."""
     limit = _voice_memory_session_limit()
+    if _archive_query_enabled():
+        archive_line = (
+            "- Text archive (DO Spaces): you CAN look up stored documents during this call "
+            "with query_archive. Use it for profile, fixes vault, policy, research, business, "
+            "schooling, SSU study sessions, or project topics—not casual chat. When Ray asks "
+            "what you studied or whether you can see your study files, call query_archive first; "
+            "never claim you have no study files without looking. Summarize excerpts for voice; "
+            "never read URLs or tool names aloud; do not invent source text."
+        )
+    else:
+        archive_line = (
+            "- Archive lookup is not configured on this worker—do not claim you are reading "
+            "stored documents live; do not invent source text."
+        )
     return (
         "Voice runtime boundaries (accurate; do not claim otherwise):\n"
         f"- Cross-call memory: last {limit} voice session summaries and related facts from Supabase (below).\n"
-        "- NotebookLM is a real knowledge source path (registry plus topic map)—not manual-only; use breadcrumbs to name the right notebook.\n"
-        "- Live NotebookLM read/create is NOT on this voice worker yet; creating and registering new notebooks runs on study or bridge wiring when enabled.\n"
-        "- Do not tell Ray to open NotebookLM himself as the only option; do not invent notebook contents.\n"
-        "- Policy/manifest/blueprint/decision log exist on disk as breadcrumbs only (not full text in this call).\n"
-        "- Autonomous study is paused; doctoral archives stay in Supabase/notebooks until retrieval is wired.\n"
+        "- Nova's organized archive lives in DO Spaces only (not NotebookLM). Voice reads Spaces via query_archive.\n"
+        f"{archive_line}\n"
+        "- Live policy files on disk are clipped/breadcrumb-only in this call unless loaded below.\n"
+        "- Autonomous study adds text to DO Spaces; Supabase holds session summaries when retrieved.\n"
     )
 
 
@@ -399,7 +419,8 @@ def resolve_notebook_for_topic(query: str) -> dict[str, str] | None:
                 "registry_id": str(entry.get("registry_id") or ""),
                 "name": str(entry.get("name") or ""),
                 "source_path": str(entry.get("source_path") or ""),
-                "notebooklm_url": str(entry.get("notebooklm_url") or "") or "",
+                "notebook_group": str(entry.get("notebook_group") or ""),
+                "archive_key": str(entry.get("registry_id") or ""),
             }
     return best if best_hits else None
 
@@ -435,24 +456,68 @@ def _fetch_notebook_registry_rows() -> list[dict]:
     return out
 
 
+def _notebook_subject_groups() -> dict[str, Any]:
+    path = (_repo_root() / _NOTEBOOK_GROUPS_PATH).resolve()
+    if not path.is_file():
+        alt = _live_ref_dir().parent / "notebook_subject_groups.json"
+        path = alt if alt.is_file() else path
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception as e:
+        logger.debug("memory: notebook_subject_groups skipped: %s", e)
+        return {}
+
+
+def _notebook_group_summary_lines() -> list[str]:
+    lines: list[str] = []
+    for g in _notebook_subject_groups().get("groups") or []:
+        if not isinstance(g, dict):
+            continue
+        gid = g.get("group_id") or ""
+        name = g.get("notebook_name") or gid
+        count = g.get("row_count") or len(g.get("registry_ids") or [])
+        lines.append(f"- {name} ({gid}, {count} topics): spaces://{gid}/")
+    return lines
+
+
 def _notebook_breadcrumb_lines() -> list[str]:
     lines: list[str] = [
-        "- NotebookLM: real archive path via registry and topic map (not manual-only); live read/create pending on voice."
+        "- DO Spaces archive: use group map first, then topic rows."
     ]
-    for entry in _notebook_subject_map().get("subjects") or []:
+    group_lines = _notebook_group_summary_lines()
+    if group_lines:
+        lines.append("- Subject notebooks:")
+        lines.extend(group_lines[:14])
+    priority_ids = (
+        "ray_profile",
+        "solutions_vault",
+        "ray_briefing",
+        "marketing-v1",
+        "expert_skills",
+    )
+    subjects = _notebook_subject_map().get("subjects") or []
+    priority = [e for e in subjects if e.get("registry_id") in priority_ids]
+    rest = [e for e in subjects if e.get("registry_id") not in priority_ids]
+    ordered = priority + rest
+    for entry in ordered[:18]:
         if not isinstance(entry, dict):
             continue
-        topics = ", ".join(t for t in (entry.get("topics") or [])[:4] if isinstance(t, str))
+        topics = ", ".join(t for t in (entry.get("topics") or [])[:3] if isinstance(t, str))
         rid = entry.get("registry_id") or ""
         path = entry.get("source_path") or ""
-        url = entry.get("notebooklm_url")
-        url_note = url if url else "notebooklm_url pending verification"
-        lines.append(f"- Topics [{topics}] → registry:{rid} path:{path} ({url_note})")
+        group = entry.get("notebook_group") or ""
+        rid = entry.get("registry_id") or ""
+        lines.append(
+            f"- [{group}] {topics} → {rid} (spaces://{group}/{rid}.md)"
+        )
     for nb in _fetch_notebook_registry_rows()[:4]:
         name = nb.get("name") or nb.get("id") or "notebook"
         url = nb.get("url") or ""
         lines.append(f"- Registry: {name} ({_clip(url, 80)})")
-    return lines[:10]
+    return lines[:28]
 
 
 def _live_ref_breadcrumb_lines() -> list[str]:
@@ -650,11 +715,11 @@ def _load_supabase_memory_context(user_id: str = DEFAULT_USER_ID) -> str:
     reg_row = _pick_managed_row(by_cat.get(_REGISTRY_CATEGORY, []))
     if reg_row:
         crumbs = _registry_breadcrumb_lines(reg_row.get("content", ""))
-        add_lines("Knowledge store (breadcrumbs only):", crumbs, 14)
+        add_lines("Knowledge store (breadcrumbs only):", crumbs, _REGISTRY_BREADCRUMB_LINES)
     else:
         fallback_crumbs = _live_ref_breadcrumb_lines() + _notebook_breadcrumb_lines()
         if fallback_crumbs:
-            add_lines("Knowledge store (breadcrumbs only):", fallback_crumbs, 14)
+            add_lines("Knowledge store (breadcrumbs only):", fallback_crumbs, _REGISTRY_BREADCRUMB_LINES)
 
     session_limit = _voice_memory_session_limit()
     summaries = by_cat.get("session_summary", [])
@@ -666,9 +731,9 @@ def _load_supabase_memory_context(user_id: str = DEFAULT_USER_ID) -> str:
     ]
     summaries = (voice_summaries or summaries)[:session_limit]
     add_lines(
-        "Recent voice sessions:",
+        "Recent voice sessions (background hints only — use query_memory for recall questions):",
         [f"- {_clip(r.get('content', ''))}" for r in summaries],
-        min(session_limit, 4),
+        session_limit,
     )
 
     all_facts = by_cat.get("fact", [])
@@ -698,7 +763,15 @@ def load_memory_context(user_id: str = DEFAULT_USER_ID) -> str:
     study = _load_study_index_context()
     schedule = _load_scheduling_context()
     supabase_ctx = _load_supabase_memory_context(user_id)
-    parts = [p for p in (runtime, persona, live, study, schedule, supabase_ctx) if p]
+    notebook_catalog = ""
+    crumbs = _notebook_breadcrumb_lines()
+    if crumbs:
+        notebook_catalog = "Archive catalog (routing map; not full source text):\n" + "\n".join(crumbs)
+    parts = [
+        p
+        for p in (runtime, notebook_catalog, persona, live, study, schedule, supabase_ctx)
+        if p
+    ]
     if not parts:
         return ""
     return "\n\n".join(parts)
@@ -718,6 +791,7 @@ def memory_wiring_status() -> dict[str, Any]:
         "live_references_enabled": _live_references_enabled(),
         "study_index_enabled": _study_index_enabled(),
         "scheduling_enabled": _scheduling_enabled(),
+        "archive_query_enabled": _archive_query_enabled(),
         "live_dir": str(live_dir),
         "live_dir_exists": live_dir.is_dir(),
         "references_found": specs_ok,
@@ -778,10 +852,54 @@ def _insert_memory(
     _rest("nova_memories", method="POST", body=row)
 
 
+async def persist_voice_session_memory(
+    user_id: str,
+    summary: str,
+    facts: list[str],
+    metadata: dict | None = None,
+) -> None:
+    """Save voice session summary + facts with embeddings for semantic search."""
+    if not _client_configured():
+        return
+    meta = dict(metadata or {})
+    meta.setdefault("source", "voice")
+    if summary.strip():
+        emb = await embed_text(summary)
+        try:
+            _insert_memory(
+                user_id,
+                summary.strip(),
+                "session_summary",
+                9,
+                meta,
+                embedding=emb,
+            )
+            logger.info("memory: saved session_summary for %s (embedded=%s)", user_id, bool(emb))
+        except Exception as e:
+            logger.warning("memory: save_session_summary failed: %s", e)
+    saved = 0
+    for fact in facts[:5]:
+        fact = fact.strip()
+        if len(fact) < 8:
+            continue
+        category = (
+            "preference" if re.search(r"\b(prefer|likes|wants|avoid)\b", fact, re.I) else "fact"
+        )
+        emb = await embed_text(fact)
+        try:
+            _insert_memory(user_id, fact, category, 7, meta, embedding=emb)
+            saved += 1
+        except Exception as e:
+            logger.warning("memory: save_fact failed: %s", e)
+    if saved:
+        logger.info("memory: saved %d fact(s) for %s", saved, user_id)
+
+
 def save_session_summary(
     user_id: str,
     summary: str,
     metadata: dict | None = None,
+    embedding: list[float] | None = None,
 ) -> None:
     if not _client_configured() or not summary.strip():
         return
@@ -792,6 +910,7 @@ def save_session_summary(
             "session_summary",
             9,
             metadata,
+            embedding=embedding,
         )
         logger.info("memory: saved session_summary for %s", user_id)
     except Exception as e:
@@ -802,19 +921,42 @@ def save_facts(
     user_id: str,
     facts: list[str],
     metadata: dict | None = None,
+    *,
+    embeddings: list[list[float] | None] | None = None,
 ) -> None:
     if not _client_configured() or not facts:
         return
-    for fact in facts[:5]:
+    for i, fact in enumerate(facts[:5]):
         fact = fact.strip()
         if len(fact) < 8:
             continue
-        category = "preference" if re.search(r"\b(prefer|likes|wants|avoid)\b", fact, re.I) else "fact"
+        category = (
+            "preference" if re.search(r"\b(prefer|likes|wants|avoid)\b", fact, re.I) else "fact"
+        )
+        emb = embeddings[i] if embeddings and i < len(embeddings) else None
         try:
-            _insert_memory(user_id, fact, category, 7, metadata)
+            _insert_memory(user_id, fact, category, 7, metadata, embedding=emb)
         except Exception as e:
             logger.warning("memory: save_fact failed: %s", e)
     logger.info("memory: saved %d fact(s) for %s", min(len(facts), 5), user_id)
+
+
+def format_memory_search_results(rows: list[dict], *, max_chars: int = 1600) -> str:
+    if not rows:
+        return "No matching memories found in Supabase for that question."
+    lines: list[str] = ["Relevant memories (summarize for voice; do not read tool names):"]
+    total = 0
+    for row in rows[:5]:
+        cat = row.get("category") or "memory"
+        content = _clip(str(row.get("content") or ""), 320)
+        if not content:
+            continue
+        line = f"- [{cat}] {content}"
+        if total + len(line) > max_chars:
+            break
+        lines.append(line)
+        total += len(line)
+    return "\n".join(lines)
 
 
 async def search_memories(

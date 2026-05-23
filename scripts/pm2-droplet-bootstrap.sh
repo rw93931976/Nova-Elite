@@ -20,6 +20,8 @@ if [ -z "$PM2" ]; then
   exit 1
 fi
 
+sed -i 's/\r$//' "$NOVA_ROOT"/scripts/*.sh "$NOVA_ROOT"/pm2-droplet-bootstrap.sh 2>/dev/null || true
+
 echo "=== Stopping manual / duplicate voice workers ==="
 pkill -f "src/agent.py" 2>/dev/null || true
 sleep 2
