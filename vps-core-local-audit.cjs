@@ -431,7 +431,7 @@ const SCHOOLING_SUBJECTS = [
     { name: "AEO Mastery (2026 Edition)", is_ongoing: true, description: "Dominating AI search indexing and Answer Engine Optimization." },
     { name: "Advanced Search Engine Optimization (SEO)", is_ongoing: true, description: "High-authority organic visibility and dominance." },
     { name: "Answer Engine Optimization (AEO) for AI", is_ongoing: true, description: "Optimizing content for the AI retrieval era." },
-    { name: "Social Media Authority: X, Pinterest, LinkedIn", description: "Mastering the rules, reach, and authority metrics of key platforms." },
+    { name: "Social Media Authority: Pinterest, Instagram", description: "Mastering Pinterest and Instagram while LinkedIn and X are temporarily paused." },
     { name: "AI Social Media Rules: Posting & Content", description: "Navigating AI content 'Cans and Can'ts' for maximum authenticity and reach." },
     { name: "Email Marketing & High-Grade Communication", description: "Top-of-class email strategies and professional communication." },
     { name: "Top 1% Customer Service Mastery", description: "Elite level client interaction and satisfaction protocols." },

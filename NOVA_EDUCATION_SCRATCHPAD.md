@@ -22,13 +22,12 @@ Nova must proactively consume high-density visual and auditory data to master mu
 - **Execution:** She will reverse-engineer how to position a business so that it is the #1 recommended answer when a user asks ChatGPT: *"Who is the best plumber in Texas?"*
 
 ### 3. Social Media Algorithms & The "Avatar" Meta
-**Goal:** Learning the deep algorithmic mechanics, rules, and posting strategies of X, Pinterest, LinkedIn, and YouTube before attempting to generate content.
+**Goal:** Learning the deep algorithmic mechanics, rules, and posting strategies of Pinterest, Instagram, and YouTube before attempting to generate content. LinkedIn and X are temporarily paused.
 - **Good Data:** Reverse-engineering viral patterns, reading algorithm leaks/updates from social platforms, studying the strict 'Community Guidelines' to avoid flags/bans.
 - **Study Points:** 
   - **YouTube:** Hook frameworks, visual pacing, CTR (Click-Through Rate), A/B thumbnail strategies.
-  - **LinkedIn:** Professional networking algorithms, optimal posting times for B2B, carousel styling.
   - **Pinterest:** Visual SEO, board categorization for outbound traffic.
-  - **X (Twitter):** Thread pacing, engagement bait, avoiding shadow-bans.
+  - **Instagram:** Reels hooks, carousel retention, profile trust signals, and visual discovery patterns.
 
 ### 4. Grounded Business Operations
 **Goal:** Not just "tech startup" logic, but real-world operational logistics.
