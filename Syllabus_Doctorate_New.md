@@ -15,7 +15,7 @@ Nova is currently reaching for 100-subject mastery. Her autonomous cycles are se
 - Vertical Video Dominance & High-Dwell Persuasion
 
 ### Module 2: Social Media & Authority
-- **[SENTINEL]** **Authority Platforms: X (Twitter), Pinterest, LinkedIn**
+- **[SENTINEL]** **Authority Platforms: Pinterest, Instagram (LinkedIn/X paused)**
 - **[SENTINEL]** AI Social Media Rules: Posting Cans/Can'ts & Writing Ins and Outs (2026 Edition)
 - Sovereign Business Law & Digital Compliance
 - SaaS Contractual Integrity

@@ -21,7 +21,7 @@
 - Email Deliverability & Compliance Guidelines
 
 ## MODULE 2: Social Media & Authority
-- Top 1% Social Media Strategy: X (Twitter), Pinterest, LinkedIn
+- Top 1% Social Media Strategy: Pinterest, Instagram (LinkedIn/X paused)
 - Social Media Platform Rules, Compliance & "AI Posting" Cans/Can'ts
 - AI Content Writing Ins and Outs (Authenticity vs. Automation)
 - Advanced Copywriting & Persuasion

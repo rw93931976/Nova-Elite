@@ -3,7 +3,7 @@ export class SchoolingAgent {
     private wisdom: Map<string, string> = new Map();
     private subjects: string[] = [
         "AEO & AI Search Mastery",
-        "Social Media Authority: X, Pinterest, LinkedIn",
+        "Social Media Authority: Pinterest, Instagram",
         "AI Social Media Posting & Content Rules",
         "Email Marketing & High-Grade Communication",
         "Customer Service Elite Protocols",
